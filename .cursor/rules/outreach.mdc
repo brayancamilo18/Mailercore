@@ -1,0 +1,38 @@
+---
+description: Convenciones del proyecto outreach — Laravel 12, leads Overpass, SMTP nativo, cumplimiento legal
+alwaysApply: true
+---
+
+# Outreach — Reglas del proyecto
+
+## Stack y convenciones Laravel
+
+- Framework: **Laravel 12**, **PHP 8.3**.
+- Sigue las convenciones de Laravel 12: `bootstrap/app.php` slim y `routes/console.php` con la facade `Schedule`.
+- Todo el código y los comentarios en **español**.
+
+## Dependencias y fuentes de datos
+
+- **Sin dependencias de pago.**
+- Fuente de leads: **Overpass** (OpenStreetMap).
+- Correo: **SMTP nativo de Laravel** (`Mail`, `Mailable`, configuración en `config/mail.php`).
+- **No uses** Google Places ni Resend.
+
+## Base de datos y CRM
+
+- Base de datos: **SQLite**.
+- CRM: tabla `leads` vía **Eloquent** — no Google Sheets.
+
+## Cumplimiento legal en correos
+
+Cada correo enviado debe incluir obligatoriamente:
+
+1. **Identificación del remitente** (nombre y datos de contacto claros).
+2. **Opción de baja** visible en el cuerpo del mensaje.
+3. Cabecera **`List-Unsubscribe`** (y `List-Unsubscribe-Post` cuando aplique).
+
+## Estilo de código
+
+- Prioriza **claridad** sobre "listura".
+- Métodos cortos y tipados.
+- Añade **PHPDoc** cuando el tipo de retorno no sea obvio.

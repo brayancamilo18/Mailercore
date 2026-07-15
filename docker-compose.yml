@@ -1,0 +1,111 @@
+# Entorno de desarrollo / servidor del proyecto outreach.
+# Los servicios construyen la misma imagen y montan . → /app.
+#
+# Límites: mem_limit/cpus aplican en Compose; deploy.resources documenta Swarm.
+# Ajusta scraping_concurrency en config y el nº de servicios queue-scraping* (2–3).
+services:
+  app:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    mem_limit: 512m
+    cpus: 1.0
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    command: >
+      sh -c "composer install --no-interaction &&
+             (test -f database/database.sqlite || touch database/database.sqlite) &&
+             (grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) &&
+             php artisan migrate --force &&
+             php artisan serve --host=0.0.0.0 --port=8000"
+
+  scheduler:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - app
+    mem_limit: 256m
+    cpus: 0.25
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+    command: sh -c "sleep 15 && php artisan schedule:work"
+
+  # Jobs generales (RunSearchJob, RunSendJob, harvest Overpass). Sin cola scraping.
+  queue:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - app
+    mem_limit: 384m
+    cpus: 0.5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+    # max-jobs / max-time / memory: reinicio periódico (libera RAM de PHP).
+    # Valores alineados con outreach.harvest.worker_* (ajusta en ambos sitios).
+    command: >
+      sh -c "sleep 15 && php artisan queue:work --queue=default
+             --sleep=3 --tries=3 --timeout=3600
+             --max-jobs=30 --max-time=3600 --memory=320"
+
+  # Workers de scrape (POCOS: 2 por defecto). Ver README para añadir un 3º.
+  queue-scraping:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - app
+    mem_limit: 192m
+    cpus: 0.35
+    deploy:
+      resources:
+        limits:
+          cpus: "0.35"
+          memory: 192M
+    command: >
+      sh -c "sleep 15 && php artisan queue:work --queue=scraping
+             --sleep=2 --tries=2 --timeout=90
+             --max-jobs=50 --max-time=1800 --memory=160"
+
+  queue-scraping-2:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - app
+    mem_limit: 192m
+    cpus: 0.35
+    deploy:
+      resources:
+        limits:
+          cpus: "0.35"
+          memory: 192M
+    command: >
+      sh -c "sleep 15 && php artisan queue:work --queue=scraping
+             --sleep=2 --tries=2 --timeout=90
+             --max-jobs=50 --max-time=1800 --memory=160"
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    mem_limit: 128m
+    cpus: 0.25
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
