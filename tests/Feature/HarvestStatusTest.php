@@ -59,6 +59,69 @@ class HarvestStatusTest extends TestCase
             ]);
     }
 
+    public function test_progreso_solo_cuenta_areas_hechas(): void
+    {
+        HarvestArea::query()->create([
+            'name' => 'Madrid',
+            'admin_level' => 6,
+            'status' => HarvestArea::STATUS_HECHO,
+            'priority' => 1,
+            'leads_found' => 10,
+            'finished_at' => now(),
+        ]);
+        HarvestArea::query()->create([
+            'name' => 'Barcelona',
+            'admin_level' => 6,
+            'status' => HarvestArea::STATUS_EN_PROCESO,
+            'priority' => 2,
+            'started_at' => now(),
+            'leads_found' => 170,
+        ]);
+
+        // 1 hecho de 2 → 50%. En proceso no infla el %.
+        $this->getJson(route('harvest.status'))
+            ->assertOk()
+            ->assertJsonPath('progress_percent', 50);
+    }
+
+    public function test_area_hecha_con_contadores_cero_se_resincroniza_desde_leads(): void
+    {
+        $started = now()->subMinutes(10);
+        $finished = now()->subMinutes(5);
+
+        $area = HarvestArea::query()->create([
+            'name' => 'Madrid',
+            'admin_level' => 6,
+            'status' => HarvestArea::STATUS_HECHO,
+            'priority' => 1,
+            'leads_found' => 0,
+            'emails_found' => 0,
+            'started_at' => $started,
+            'finished_at' => $finished,
+        ]);
+
+        Lead::factory()->create([
+            'captured_at' => $started->copy()->addMinute(),
+            'email' => 'uno@madrid.test',
+            'status' => 'nuevo',
+        ]);
+        Lead::factory()->create([
+            'captured_at' => $started->copy()->addMinutes(2),
+            'email' => 'dos@madrid.test',
+            'status' => 'nuevo',
+        ]);
+
+        $response = $this->getJson(route('harvest.status'))->assertOk();
+
+        $response->assertJsonPath('ultimas_areas.0.name', 'Madrid');
+        $response->assertJsonPath('ultimas_areas.0.leads_found', 2);
+        $response->assertJsonPath('ultimas_areas.0.emails_found', 2);
+
+        $area->refresh();
+        $this->assertSame(2, $area->leads_found);
+        $this->assertSame(2, $area->emails_found);
+    }
+
     public function test_dashboard_incluye_seccion_cosecha(): void
     {
         $this->get(route('dashboard'))

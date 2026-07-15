@@ -25,6 +25,8 @@ class HarvestRestartRecoveryTest extends TestCase
             'outreach.harvest.enabled' => true,
             'outreach.harvest.pause_between_areas_seconds' => 0,
             'outreach.harvest.stale_area_seconds' => 900,
+            'outreach.harvest.overpass_delay' => 0,
+            'outreach.harvest.include_negocios' => false,
             'outreach.overpass.request_pause_ms' => 0,
             'outreach.overpass.filters' => [['office', 'marketing']],
             'outreach.overpass.filters_negocios' => [],

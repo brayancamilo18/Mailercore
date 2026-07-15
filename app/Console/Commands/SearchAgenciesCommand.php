@@ -119,6 +119,8 @@ class SearchAgenciesCommand extends Command
                         $this->line("⏭ {$result['name']} — omitido (email/dominio ya conocido o suprimido)");
                     } elseif ($result['reason'] === 'sin_web') {
                         $this->line("⏭ {$result['name']} — omitido (negocio sin web)");
+                    } elseif ($result['reason'] === 'sin_email' || $result['reason'] === 'email_invalido') {
+                        $this->line("⏭ {$result['name']} — omitido (sin email usable)");
                     }
                     $omitidos++;
 
@@ -131,24 +133,33 @@ class SearchAgenciesCommand extends Command
                     continue;
                 }
 
-                if (! $syncScrape && ! $dryRun && ($result['needs_scrape'] ?? false) && isset($result['lead_id'])) {
-                    ScrapeWebsiteJob::dispatch($result['lead_id']);
-                    $encolados++;
-                    $this->line("⏳ {$result['name']} — scrape encolado (#{$result['lead_id']})");
-                } else {
+                if ($result['outcome'] === 'pending_scrape') {
+                    if (! $syncScrape && ! $dryRun) {
+                        ScrapeWebsiteJob::dispatch($candidate->toArray());
+                        $encolados++;
+                        $this->line("⏳ {$result['name']} — scrape encolado (solo se guardará si hay email)");
+                    } else {
+                        $omitidos++;
+                        $this->line("⏭ {$result['name']} — sin email en fuente");
+                    }
+
+                    continue;
+                }
+
+                if ($result['outcome'] === 'created') {
                     $icon = $result['status'] === 'nuevo' ? '✅' : '⚠️';
                     $emailLabel = $result['email'] ?? 'sin email';
                     $checkLabel = isset($result['email_check']) && $result['email_check'] !== null
                         ? " [{$result['email_check']}]"
                         : '';
                     $this->line("{$icon} {$result['name']} — {$emailLabel}{$checkLabel}");
-                }
 
-                if (($result['status'] ?? null) === 'nuevo') {
-                    $conEmail++;
-                }
+                    if (($result['status'] ?? null) === 'nuevo') {
+                        $conEmail++;
+                    }
 
-                $nuevas++;
+                    $nuevas++;
+                }
             }
         }
 

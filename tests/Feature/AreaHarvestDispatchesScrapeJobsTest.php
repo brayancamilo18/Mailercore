@@ -6,7 +6,6 @@ use App\Jobs\ScrapeWebsiteJob;
 use App\Models\HarvestArea;
 use App\Models\Lead;
 use App\Services\AreaHarvestService;
-use Illuminate\Bus\PendingBatch;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
@@ -17,14 +16,16 @@ class AreaHarvestDispatchesScrapeJobsTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Al cosechar un área simulada: N leads base + batch de N ScrapeWebsiteJob.
+     * Sin email en OSM: no crea leads base; encola scrape al vuelo.
      */
-    public function test_cosecha_area_crea_leads_y_despacha_scrape_jobs(): void
+    public function test_cosecha_area_no_crea_leads_sin_email_y_despacha_scrape_jobs(): void
     {
         Bus::fake();
 
         config([
             'outreach.overpass.request_pause_ms' => 0,
+            'outreach.harvest.overpass_delay' => 0,
+            'outreach.harvest.include_negocios' => false,
             'outreach.overpass.filters' => [
                 ['office', 'marketing'],
             ],
@@ -72,22 +73,67 @@ class AreaHarvestDispatchesScrapeJobsTest extends TestCase
 
         $stats = app(AreaHarvestService::class)->harvest($area);
 
-        $this->assertSame(3, $stats['leads_created']);
+        $this->assertSame(0, $stats['leads_created']);
         $this->assertSame(3, $stats['jobs_dispatched']);
-        $this->assertSame(3, Lead::query()->count());
-        $this->assertSame(3, Lead::query()->where('status', 'sin_email')->count());
-        // El área queda en_proceso hasta que el batch de scrape termine.
+        $this->assertSame(0, Lead::query()->count());
         $this->assertSame(HarvestArea::STATUS_EN_PROCESO, $area->fresh()->status);
 
-        Bus::assertBatched(function (PendingBatch $batch) use ($area): bool {
-            return $batch->name === "harvest-area-{$area->id}"
-                && $batch->jobs->count() === 3
-                && $batch->jobs->every(fn ($job): bool => $job instanceof ScrapeWebsiteJob);
-        });
+        Bus::assertDispatched(ScrapeWebsiteJob::class, 3);
     }
 
     /**
-     * El comando agencies:search --area encola scrapes en batch (no en línea).
+     * Email en OSM: se persiste al momento sin encolar scrape.
+     */
+    public function test_cosecha_area_con_email_en_fuente_crea_lead_directo(): void
+    {
+        Bus::fake();
+
+        config([
+            'outreach.overpass.request_pause_ms' => 0,
+            'outreach.harvest.overpass_delay' => 0,
+            'outreach.harvest.include_negocios' => false,
+            'outreach.overpass.filters' => [['office', 'marketing']],
+            'outreach.overpass.filters_negocios' => [],
+            'outreach.verifier.smtp_probe' => false,
+        ]);
+
+        \Illuminate\Support\Facades\Cache::put('outreach:mx:directo-harvest.test', true, now()->addDay());
+
+        $area = HarvestArea::query()->create([
+            'name' => 'Área Email Directo',
+            'admin_level' => 8,
+            'status' => HarvestArea::STATUS_PENDIENTE,
+            'priority' => 1,
+        ]);
+
+        Http::fake([
+            '*' => Http::response([
+                'elements' => [
+                    [
+                        'type' => 'node',
+                        'id' => 710001,
+                        'tags' => [
+                            'name' => 'Agencia Directa',
+                            'email' => 'hola@directo-harvest.test',
+                            'website' => 'https://directo-harvest.test',
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $stats = app(AreaHarvestService::class)->harvest($area);
+
+        $this->assertSame(1, $stats['leads_created']);
+        $this->assertSame(0, $stats['jobs_dispatched']);
+        $this->assertSame(1, Lead::withEmail()->count());
+        Bus::assertNothingDispatched();
+        $this->assertSame(HarvestArea::STATUS_HECHO, $area->fresh()->status);
+        $this->assertSame(1, $area->fresh()->leads_found);
+    }
+
+    /**
+     * El comando agencies:search --area encola scrapes al vuelo.
      */
     public function test_comando_search_area_despacha_jobs(): void
     {
@@ -95,9 +141,12 @@ class AreaHarvestDispatchesScrapeJobsTest extends TestCase
 
         config([
             'outreach.overpass.request_pause_ms' => 0,
+            'outreach.harvest.overpass_delay' => 0,
+            'outreach.harvest.include_negocios' => false,
             'outreach.overpass.filters' => [
                 ['office', 'advertising_agency'],
             ],
+            'outreach.overpass.filters_negocios' => [],
             'outreach.verifier.smtp_probe' => false,
         ]);
 
@@ -134,7 +183,7 @@ class AreaHarvestDispatchesScrapeJobsTest extends TestCase
         $this->artisan('agencies:search', ['--area' => 'Ciudad CLI'])
             ->assertSuccessful();
 
-        $this->assertSame(2, Lead::query()->count());
-        Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->count() === 2);
+        $this->assertSame(0, Lead::query()->count());
+        Bus::assertDispatched(ScrapeWebsiteJob::class, 2);
     }
 }

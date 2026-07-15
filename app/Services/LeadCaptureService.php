@@ -8,6 +8,7 @@ use App\Services\Sources\LeadCandidate;
 
 /**
  * Dedup + scrape + verificación + persistencia compartidos por todas las fuentes.
+ * Solo persiste leads con email verificable (no se guarda ruido sin correo).
  */
 class LeadCaptureService
 {
@@ -18,11 +19,10 @@ class LeadCaptureService
     }
 
     /**
-     * Crea el lead base SIN scrapear la web.
-     * Si hay email en la fuente, lo verifica aquí. Si falta email pero hay web → needs_scrape.
+     * Evalúa un candidato: persiste solo si ya trae email válido; si no, encola scrape.
      *
      * @return array{
-     *     outcome: 'created'|'omitted'|'error',
+     *     outcome: 'created'|'omitted'|'error'|'pending_scrape',
      *     name: string,
      *     email: ?string,
      *     email_check: ?string,
@@ -76,44 +76,45 @@ class LeadCaptureService
                 ];
             }
 
-            $emailCheck = null;
-            $status = 'sin_email';
+            if ($email === null) {
+                $hasWebsite = $candidate->website !== null && trim($candidate->website) !== '';
 
-            if ($email !== null) {
-                $emailCheck = $this->verifier->verify($email);
-                $status = $emailCheck === 'invalido' ? 'sin_email' : 'nuevo';
+                if (! $hasWebsite) {
+                    return [...$base, 'outcome' => 'omitted', 'reason' => 'sin_email'];
+                }
+
+                return [
+                    ...$base,
+                    'outcome' => 'pending_scrape',
+                    'needs_scrape' => true,
+                ];
             }
 
-            $hasWebsite = $candidate->website !== null && trim($candidate->website) !== '';
-            // Scrapeo async solo si hay web y aún no hay email usable.
-            $needsScrape = $hasWebsite && ($email === null || $status === 'sin_email');
+            $emailCheck = $this->verifier->verify($email);
 
-            $leadId = null;
+            if ($emailCheck === 'invalido') {
+                return [...$base, 'outcome' => 'omitted', 'email' => $email, 'reason' => 'email_invalido'];
+            }
 
-            if (! $dryRun) {
-                $lead = Lead::create([
-                    'place_id' => $candidate->externalId,
-                    'name' => $candidate->name,
-                    'website' => $candidate->website,
+            if ($dryRun) {
+                return [
+                    ...$base,
+                    'outcome' => 'created',
                     'email' => $email,
                     'email_check' => $emailCheck,
-                    'phone' => $candidate->phone,
-                    'address' => $candidate->address,
-                    'status' => $status,
-                    'segmento' => $candidate->segmento,
-                    'captured_at' => now(),
-                ]);
-                $leadId = $lead->id;
+                    'status' => 'nuevo',
+                ];
             }
+
+            $lead = $this->persistLead($candidate, $email, $emailCheck);
 
             return [
                 ...$base,
                 'outcome' => 'created',
                 'email' => $email,
                 'email_check' => $emailCheck,
-                'status' => $status,
-                'lead_id' => $leadId,
-                'needs_scrape' => $needsScrape,
+                'status' => 'nuevo',
+                'lead_id' => $lead->id,
             ];
         } catch (\Throwable $e) {
             report($e);
@@ -127,7 +128,79 @@ class LeadCaptureService
     }
 
     /**
-     * Procesa un candidato en línea (incluye scrape síncrono). Preferir createBase + ScrapeWebsiteJob.
+     * Persiste un lead tras encontrar email en la web (scrape async o sync).
+     *
+     * @return array{
+     *     outcome: 'created'|'omitted'|'error',
+     *     name: string,
+     *     email: ?string,
+     *     email_check: ?string,
+     *     status: ?string,
+     *     reason: ?string,
+     *     error: ?string,
+     *     lead_id: ?int
+     * }
+     */
+    public function createFromScrapedEmail(LeadCandidate $candidate, string $rawEmail): array
+    {
+        $base = [
+            'name' => $candidate->name,
+            'email' => null,
+            'email_check' => null,
+            'status' => null,
+            'reason' => null,
+            'error' => null,
+            'lead_id' => null,
+        ];
+
+        try {
+            if (
+                $candidate->externalId !== null
+                && Lead::query()->where('place_id', $candidate->externalId)->exists()
+            ) {
+                return [...$base, 'outcome' => 'omitted', 'reason' => 'place_id'];
+            }
+
+            $email = Suppression::normalizeEmail($rawEmail);
+            $email = $email === '' ? null : $email;
+
+            if ($email === null) {
+                return [...$base, 'outcome' => 'omitted', 'reason' => 'sin_email'];
+            }
+
+            if ($this->debeOmitirPorEmailODominio($email, $candidate->website)) {
+                return [...$base, 'outcome' => 'omitted', 'email' => $email, 'reason' => 'email_o_dominio'];
+            }
+
+            $emailCheck = $this->verifier->verify($email);
+
+            if ($emailCheck === 'invalido') {
+                return [...$base, 'outcome' => 'omitted', 'email' => $email, 'reason' => 'email_invalido'];
+            }
+
+            $lead = $this->persistLead($candidate, $email, $emailCheck);
+
+            return [
+                ...$base,
+                'outcome' => 'created',
+                'email' => $email,
+                'email_check' => $emailCheck,
+                'status' => 'nuevo',
+                'lead_id' => $lead->id,
+            ];
+        } catch (\Throwable $e) {
+            report($e);
+
+            return [
+                ...$base,
+                'outcome' => 'error',
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Procesa un candidato en línea (scrape síncrono). Solo persiste si hay email usable.
      *
      * @return array{
      *     outcome: 'created'|'omitted'|'error',
@@ -143,57 +216,61 @@ class LeadCaptureService
     {
         $result = $this->createBase($candidate, $dryRun);
 
-        if ($result['outcome'] !== 'created' || ! ($result['needs_scrape'] ?? false)) {
+        if ($result['outcome'] !== 'pending_scrape') {
+            unset($result['needs_scrape'], $result['lead_id']);
+
             return $result;
         }
 
-        if ($dryRun || $result['lead_id'] === null) {
-            return $result;
-        }
-
-        // Modo síncrono legacy: scrapea ahora mismo.
-        $lead = Lead::query()->find($result['lead_id']);
-
-        if ($lead === null) {
-            return $result;
+        if ($dryRun) {
+            return [
+                'outcome' => 'omitted',
+                'name' => $candidate->name,
+                'email' => null,
+                'email_check' => null,
+                'status' => null,
+                'reason' => 'sin_email',
+                'error' => null,
+            ];
         }
 
         try {
-            $email = $this->scraper->findEmail($candidate->website);
-            $email = $email !== null ? Suppression::normalizeEmail($email) : null;
-            $email = $email === '' ? null : $email;
+            $email = $this->scraper->findEmail($candidate->website ?? '');
 
-            if ($email !== null && ! $this->debeOmitirPorEmailODominio($email, $candidate->website, $lead->id)) {
-                $emailCheck = $this->verifier->verify($email);
-                $status = $emailCheck === 'invalido' ? 'sin_email' : 'nuevo';
-                $lead->update([
-                    'email' => $email,
-                    'email_check' => $emailCheck,
-                    'status' => $status,
-                ]);
-
+            if ($email === null || trim($email) === '') {
                 return [
-                    'outcome' => 'created',
+                    'outcome' => 'omitted',
                     'name' => $candidate->name,
-                    'email' => $email,
-                    'email_check' => $emailCheck,
-                    'status' => $status,
-                    'reason' => null,
+                    'email' => null,
+                    'email_check' => null,
+                    'status' => null,
+                    'reason' => 'sin_email',
                     'error' => null,
                 ];
             }
+
+            $created = $this->createFromScrapedEmail($candidate, $email);
+            unset($created['lead_id']);
+
+            return $created;
         } catch (\Throwable $e) {
             report($e);
-        }
 
-        return $result;
+            return [
+                'outcome' => 'error',
+                'name' => $candidate->name,
+                'email' => null,
+                'email_check' => null,
+                'status' => null,
+                'reason' => null,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
     /**
      * Omite el lead si el email ya existe, está suprimido, el dominio web está
      * en suppressions, o el dominio de la web ya está en el CRM.
-     *
-     * @param  int|null  $exceptLeadId  Ignora este lead (p. ej. al actualizar tras scrape).
      */
     public function debeOmitirPorEmailODominio(?string $email, ?string $website, ?int $exceptLeadId = null): bool
     {
@@ -228,5 +305,21 @@ class LeadCaptureService
             ->when($exceptLeadId !== null, fn ($q) => $q->where('id', '!=', $exceptLeadId))
             ->get(['website'])
             ->contains(fn (Lead $lead): bool => Suppression::domainFromWebsite($lead->website) === $webDomain);
+    }
+
+    private function persistLead(LeadCandidate $candidate, string $email, string $emailCheck): Lead
+    {
+        return Lead::create([
+            'place_id' => $candidate->externalId,
+            'name' => $candidate->name,
+            'website' => $candidate->website,
+            'email' => $email,
+            'email_check' => $emailCheck,
+            'phone' => $candidate->phone,
+            'address' => $candidate->address,
+            'status' => 'nuevo',
+            'segmento' => $candidate->segmento,
+            'captured_at' => now(),
+        ]);
     }
 }

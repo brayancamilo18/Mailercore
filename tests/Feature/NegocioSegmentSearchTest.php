@@ -68,6 +68,8 @@ class NegocioSegmentSearchTest extends TestCase
     {
         config([
             'outreach.overpass.request_pause_ms' => 0,
+            'outreach.harvest.overpass_delay' => 0,
+            'outreach.harvest.include_negocios' => false,
             'outreach.overpass.areas' => [
                 ['name' => 'Test City', 'admin_level' => 8],
             ],

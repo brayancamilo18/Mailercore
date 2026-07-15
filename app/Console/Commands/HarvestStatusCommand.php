@@ -49,26 +49,23 @@ class HarvestStatusCommand extends Command
         }
 
         $this->line(sprintf(
-            'Leads: %d · Emails: %d · Emails hoy: %d',
+            'Leads: %d · Leads hoy: %d',
             $data['leads_total'],
-            $data['emails_total'],
             $data['emails_hoy'],
         ));
         $this->line(sprintf(
-            'Suma áreas: leads_found %d · emails_found %d',
+            'Suma áreas (leads): %d',
             $data['leads_found_sum'],
-            $data['emails_found_sum'],
         ));
 
         if ($data['ultimas_areas'] !== []) {
             $this->newLine();
             $this->table(
-                ['Área', 'Estado', 'Leads', 'Emails', 'Fin'],
+                ['Área', 'Estado', 'Leads', 'Fin'],
                 collect($data['ultimas_areas'])->map(fn (array $a): array => [
                     $a['name'],
                     HarvestArea::STATUSES[$a['status']] ?? $a['status'],
                     $a['leads_found'],
-                    $a['emails_found'],
                     $a['finished_at'] !== null
                         ? \Illuminate\Support\Carbon::parse($a['finished_at'])->format('d/m H:i')
                         : '—',

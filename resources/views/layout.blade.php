@@ -127,10 +127,6 @@
                 if (leads) {
                     leads.textContent = data.leads_total;
                 }
-                var emails = document.getElementById('harvest-emails-total');
-                if (emails) {
-                    emails.textContent = data.emails_total;
-                }
                 var emailsHoy = document.getElementById('harvest-emails-hoy');
                 if (emailsHoy) {
                     emailsHoy.textContent = data.emails_hoy;
@@ -148,15 +144,14 @@
                 var tbody = document.getElementById('harvest-ultimas-body');
                 if (tbody && Array.isArray(data.ultimas_areas)) {
                     if (data.ultimas_areas.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="py-3 text-slate-400">Todavía no hay áreas procesadas.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="3" class="py-3 text-slate-400">Todavía no hay áreas procesadas.</td></tr>';
                     } else {
                         tbody.innerHTML = data.ultimas_areas.map(function (row) {
                             var st = STATUS_LABELS[row.status] || row.status;
                             return '<tr>' +
                                 '<td class="py-2 pr-3 font-medium text-slate-800">' + escapeHtml(row.name) + '</td>' +
                                 '<td class="py-2 pr-3 text-slate-600">' + escapeHtml(st) + '</td>' +
-                                '<td class="py-2 pr-3">' + row.leads_found + '</td>' +
-                                '<td class="py-2">' + row.emails_found + '</td>' +
+                                '<td class="py-2">' + row.leads_found + '</td>' +
                                 '</tr>';
                         }).join('');
                     }

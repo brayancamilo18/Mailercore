@@ -30,7 +30,7 @@ class OverpassClient
     }
 
     /**
-     * Busca leads en Overpass aplicando áreas y el grupo de filtros indicado.
+     * Busca leads en Overpass (API estable: array completo).
      *
      * @param  'filters'|'filters_negocios'  $filtersKey
      * @return array<int, array{
@@ -45,12 +45,35 @@ class OverpassClient
      */
     public function search(string $filtersKey = 'filters'): array
     {
-        $leads = [];
+        return iterator_to_array($this->searchStream($filtersKey), false);
+    }
+
+    /**
+     * Emite candidatos filtro a filtro (el panel puede ir mostrando leads al vuelo).
+     *
+     * @param  'filters'|'filters_negocios'  $filtersKey
+     * @return \Generator<int, array{
+     *     place_id: string,
+     *     name: string,
+     *     website: ?string,
+     *     phone: ?string,
+     *     email: ?string,
+     *     address: ?string,
+     *     segmento: string
+     * }>
+     */
+    public function searchStream(string $filtersKey = 'filters'): \Generator
+    {
+        /** @var array<string, true> $seen */
+        $seen = [];
         $areas = $this->areas();
         $filters = $this->config[$filtersKey] ?? [];
         $segmento = $filtersKey === 'filters_negocios' ? 'negocio' : 'agencia';
         $pauseMs = $this->requestPauseMs();
         $primera = true;
+        $consultas = 0;
+        $fallos = 0;
+        $acumulado = 0;
 
         foreach ($areas as $area) {
             $areaName = $area['name'];
@@ -61,8 +84,23 @@ class OverpassClient
                     usleep($pauseMs * 1000);
                 }
                 $primera = false;
+                $consultas++;
 
-                $elements = $this->fetchElements($areaName, $adminLevel, $tag, $value);
+                try {
+                    $elements = $this->fetchElements($areaName, $adminLevel, $tag, $value);
+                } catch (\Throwable $e) {
+                    $fallos++;
+                    Log::warning('Overpass filtro omitido tras fallos de espejo', [
+                        'area' => $areaName,
+                        'admin_level' => $adminLevel,
+                        'filtro' => "{$tag}={$value}",
+                        'error' => $e->getMessage(),
+                    ]);
+                    HarvestHeartbeat::touch("overpass:fail:{$areaName}:{$tag}={$value}");
+
+                    continue;
+                }
+
                 $nuevosEnEsteCorte = 0;
 
                 foreach ($elements as $element) {
@@ -74,11 +112,15 @@ class OverpassClient
 
                     $placeId = $element['type'].'/'.$element['id'];
 
-                    if (isset($leads[$placeId])) {
+                    if (isset($seen[$placeId])) {
                         continue;
                     }
 
-                    $leads[$placeId] = [
+                    $seen[$placeId] = true;
+                    $nuevosEnEsteCorte++;
+                    $acumulado++;
+
+                    yield [
                         'place_id' => $placeId,
                         'name' => $tags['name'],
                         'website' => $tags['website'] ?? $tags['contact:website'] ?? null,
@@ -87,7 +129,6 @@ class OverpassClient
                         'address' => $this->buildAddress($tags),
                         'segmento' => $segmento,
                     ];
-                    $nuevosEnEsteCorte++;
                 }
 
                 Log::info('Overpass resultados', [
@@ -98,12 +139,18 @@ class OverpassClient
                     'filtro' => "{$tag}={$value}",
                     'elementos' => count($elements),
                     'nuevos' => $nuevosEnEsteCorte,
-                    'acumulado' => count($leads),
+                    'acumulado' => $acumulado,
                 ]);
+
+                HarvestHeartbeat::touch("overpass:{$areaName}:{$tag}={$value}");
             }
         }
 
-        return array_values($leads);
+        if ($consultas > 0 && $fallos === $consultas) {
+            throw new \RuntimeException(
+                "Overpass falló en los {$consultas} filtros de [{$filtersKey}]; no se pudo cosechar el área."
+            );
+        }
     }
 
     /**
@@ -112,6 +159,12 @@ class OverpassClient
     public function requestPauseMs(): int
     {
         $fromOverpass = (int) ($this->config['request_pause_ms'] ?? 750);
+
+        // En tests se fuerza 0 en el config del cliente: respetarlo.
+        if ($fromOverpass === 0 && array_key_exists('request_pause_ms', $this->config)) {
+            return 0;
+        }
+
         $fromHarvest = (int) config('outreach.harvest.overpass_delay', $fromOverpass);
 
         return max($fromOverpass, $fromHarvest, 0);
@@ -189,12 +242,14 @@ class OverpassClient
         }
 
         if ($lastError !== null) {
-            report(new \RuntimeException(
+            throw new \RuntimeException(
                 "Overpass no disponible para {$areaName} [{$tag}={$value}]: {$lastError}"
-            ));
+            );
         }
 
-        return [];
+        throw new \RuntimeException(
+            "Overpass no disponible para {$areaName} [{$tag}={$value}]: sin respuesta de espejos"
+        );
     }
 
     /**

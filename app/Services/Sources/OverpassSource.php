@@ -6,6 +6,7 @@ use App\Services\OverpassClient;
 
 /**
  * Adaptador: expone OverpassClient como LeadSource sin romper su API.
+ * Emite candidatos en streaming (filtro a filtro) para ir mostrando leads al vuelo.
  */
 class OverpassSource implements LeadSource
 {
@@ -25,13 +26,15 @@ class OverpassSource implements LeadSource
      */
     public function fetch(): iterable
     {
-        yield from $this->mapRows($this->client->search('filters'));
+        foreach ($this->client->searchStream('filters') as $row) {
+            yield $this->toCandidate($row);
+        }
 
         if (! $this->includeNegocios) {
             return;
         }
 
-        foreach ($this->client->search('filters_negocios') as $row) {
+        foreach ($this->client->searchStream('filters_negocios') as $row) {
             // Negocios sin web propia: no son leads útiles para webs/tiendas online.
             $website = $row['website'] ?? null;
 
@@ -39,17 +42,6 @@ class OverpassSource implements LeadSource
                 continue;
             }
 
-            yield $this->toCandidate($row);
-        }
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $rows
-     * @return iterable<int, LeadCandidate>
-     */
-    private function mapRows(array $rows): iterable
-    {
-        foreach ($rows as $row) {
             yield $this->toCandidate($row);
         }
     }

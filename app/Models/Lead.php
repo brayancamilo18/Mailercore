@@ -61,6 +61,17 @@ class Lead extends Model
     }
 
     /**
+     * Leads con email persistido (excluye ruido sin correo).
+     *
+     * @param  Builder<Lead>  $query
+     * @return Builder<Lead>
+     */
+    public function scopeWithEmail(Builder $query): Builder
+    {
+        return $query->whereNotNull('email')->where('email', '!=', '');
+    }
+
+    /**
      * Leads listos para el primer envío de correo.
      *
      * @param  Builder<Lead>  $query

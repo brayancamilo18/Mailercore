@@ -71,7 +71,8 @@ class HarvestRunCommand extends Command
             try {
                 $stats = $harvest->harvest(
                     $area,
-                    includeNegocios: (bool) $this->option('negocios'),
+                    includeNegocios: (bool) $this->option('negocios')
+                        || (bool) config('outreach.harvest.include_negocios', true),
                 );
 
                 HarvestHeartbeat::touch('harvest:run:done');
@@ -99,11 +100,9 @@ class HarvestRunCommand extends Command
     }
 
     /**
-     * ¿Hay algún área "en_proceso" con scrape realmente en curso?
+     * ¿Hay algún área "en_proceso" con Overpass o scrape realmente en curso?
      *
-     * Recupera las áreas atascadas (reinicio a mitad): finaliza las cuyo lote ya
-     * terminó pero no llegó a marcarse, y reintenta las que quedaron sin lote y
-     * llevan demasiado tiempo. Devuelve true solo si queda scrape activo real.
+     * Recupera las áreas atascadas tras reinicios. Devuelve true si no debe solaparse.
      */
     private function hayAreaEnProcesoActiva(): bool
     {
@@ -116,12 +115,29 @@ class HarvestRunCommand extends Command
         }
 
         $staleSeconds = max(300, (int) config('outreach.harvest.stale_area_seconds', 1800));
+        $harvest = app(AreaHarvestService::class);
         $activa = false;
 
         foreach ($enProceso as $area) {
-            $batch = $this->batchDeArea($area->id);
+            // Scrapes en curso (contadores de sesión).
+            if ($harvest->tieneScrapesPendientes($area->id)) {
+                $activa = true;
 
-            // Lote de scrape vivo: la cola en DB lo reanuda tras un reinicio.
+                continue;
+            }
+
+            // Overpass acabó y no quedan scrapes: cierra por recuperación.
+            if ($harvest->overpassHaTerminado($area->id)) {
+                $harvest->tryFinalizeArea($area->id, []);
+                Log::warning('harvest:run: área cerrada por recuperación (overpass+scrapes)', [
+                    'area' => $area->name,
+                ]);
+
+                continue;
+            }
+
+            // Lote legacy (versiones anteriores con Bus::batch).
+            $batch = $this->batchDeArea($area->id);
             if ($batch !== null
                 && $batch->finished_at === null
                 && $batch->cancelled_at === null
@@ -132,9 +148,8 @@ class HarvestRunCommand extends Command
                 continue;
             }
 
-            // El lote acabó pero el callback "finally" no llegó a cerrar el área.
             if ($batch !== null && ($batch->finished_at !== null || $batch->cancelled_at !== null)) {
-                app(AreaHarvestService::class)->finalizeArea($area->id, []);
+                $harvest->finalizeArea($area->id, []);
                 Log::warning('harvest:run: área cerrada por recuperación (lote terminado)', [
                     'area' => $area->name,
                 ]);
@@ -142,20 +157,19 @@ class HarvestRunCommand extends Command
                 continue;
             }
 
-            // Sin lote (caída en fase Overpass o lote perdido/podado).
+            // Overpass en curso (u otra caída): si es muy vieja sin avance, reintenta.
             $stale = $area->started_at === null
                 || $area->started_at->copy()->addSeconds($staleSeconds)->isPast();
 
             if ($stale) {
                 $area->resetToPending();
-                Log::warning('harvest:run: área reiniciada por atasco (sin lote y stale)', [
+                Log::warning('harvest:run: área reiniciada por atasco (sin avance y stale)', [
                     'area' => $area->name,
                 ]);
 
                 continue;
             }
 
-            // Arranque reciente sin lote todavía: dale margen.
             $activa = true;
         }
 

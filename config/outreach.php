@@ -84,26 +84,52 @@ return [
             ['office', 'web_design'],
             ['office', 'design'],
             ['office', 'it'],
+            ['office', 'software'],
+            ['office', 'telecommunication'],
+            ['office', 'company'],
+            ['office', 'consulting'],
             ['shop', 'advertising_agency'],
             ['craft', 'photographer'],
+            ['craft', 'designer'],
         ],
         /*
          * Negocios locales con potencial de web/tienda online → segmento "negocio".
-         * Desactivados por defecto: actívalos con `php artisan agencies:search --negocios`.
-         * Solo se capturan si OSM trae website (clientes finales con presencia online).
+         * La cosecha (harvest) los incluye por defecto (outreach.harvest.include_negocios).
+         * Solo se capturan si OSM trae website o email (lead = email usable).
          */
         'filters_negocios' => [
             ['shop', 'jewelry'],
             ['shop', 'furniture'],
             ['shop', 'clothes'],
+            ['shop', 'fashion_accessories'],
+            ['shop', 'shoes'],
+            ['shop', 'beauty'],
+            ['shop', 'hairdresser'],
+            ['shop', 'cosmetics'],
+            ['shop', 'electronics'],
+            ['shop', 'computer'],
+            ['shop', 'interior_decoration'],
+            ['shop', 'kitchen'],
+            ['shop', 'florist'],
+            ['shop', 'optician'],
             ['craft', 'carpenter'],
+            ['craft', 'electrician'],
+            ['craft', 'plumber'],
             ['office', 'lawyer'],
             ['office', 'estate_agent'],
-            ['shop', 'interior_decoration'],
+            ['office', 'accountant'],
+            ['office', 'architect'],
+            ['office', 'financial'],
+            ['office', 'insurance'],
+            ['office', 'notary'],
+            ['amenity', 'restaurant'],
+            ['amenity', 'clinic'],
+            ['amenity', 'dentists'],
+            ['tourism', 'hotel'],
         ],
-        // Filtros amplios pero ruidosos (no se consultan por defecto).
+        // Filtros amplios pero ruidosos (se mezclan vía harvest.max_coverage).
         'noisy_filters' => [
-            ['office', 'consulting'],
+            ['office', 'yes'],
         ],
     ],
 
@@ -205,19 +231,21 @@ return [
     'harvest' => [
         // Valor por defecto; harvest:pause / harvest:resume lo sobreescriben en Cache.
         'enabled' => (bool) env('OUTREACH_HARVEST_ENABLED', true),
+        // Incluir filters_negocios en harvest:run (máxima cobertura por área).
+        'include_negocios' => (bool) env('OUTREACH_HARVEST_INCLUDE_NEGOCIOS', true),
         // Minutos entre ejecuciones del schedule (cron */N).
         'interval' => (int) env('OUTREACH_HARVEST_INTERVAL', 5),
         // Segundos mínimos tras finalizar un área antes de coger la siguiente.
         'pause_between_areas_seconds' => (int) env('OUTREACH_HARVEST_PAUSE_SECONDS', 30),
-        // TTL del Cache::lock de harvest:run (Overpass puede tardar).
-        'lock_seconds' => (int) env('OUTREACH_HARVEST_LOCK_SECONDS', 900),
+        // TTL del Cache::lock de harvest:run (Overpass puede tardar; más filtros = más tiempo).
+        'lock_seconds' => (int) env('OUTREACH_HARVEST_LOCK_SECONDS', 3600),
         // Un área en_proceso sin lote de scrape activo y más vieja que esto (segundos)
         // se considera atascada (p. ej. reinicio en fase Overpass) y se reintenta.
-        'stale_area_seconds' => (int) env('OUTREACH_HARVEST_STALE_AREA_SECONDS', 1800),
+        'stale_area_seconds' => (int) env('OUTREACH_HARVEST_STALE_AREA_SECONDS', 3600),
         // Latido fresco (verde en panel) si age < esto (segundos).
-        'heartbeat_ok_seconds' => (int) env('OUTREACH_HARVEST_HEARTBEAT_OK', 120),
+        'heartbeat_ok_seconds' => (int) env('OUTREACH_HARVEST_HEARTBEAT_OK', 180),
         // Healthcheck: harvest:status sale ≠0 si age ≥ esto (segundos).
-        'heartbeat_stale_seconds' => (int) env('OUTREACH_HARVEST_HEARTBEAT_STALE', 600),
+        'heartbeat_stale_seconds' => (int) env('OUTREACH_HARVEST_HEARTBEAT_STALE', 900),
 
         // Concurrencia de scrape: nº de workers Docker recomendado (2–3).
         'scraping_concurrency' => (int) env('OUTREACH_SCRAPING_CONCURRENCY', 2),
@@ -226,11 +254,37 @@ return [
         // Throttle scrape: peticiones/minuto por host.
         'requests_per_domain_per_minute' => (int) env('OUTREACH_SCRAPE_RPM_HOST', 6),
         // Pausa mínima entre peticiones Overpass (ms). Se combina con overpass.request_pause_ms (max).
-        'overpass_delay' => (int) env('OUTREACH_OVERPASS_DELAY_MS', 1000),
+        'overpass_delay' => (int) env('OUTREACH_OVERPASS_DELAY_MS', 1500),
         // Reinicio periódico de queue:work (anti-fugas PHP).
         'worker_max_jobs' => (int) env('OUTREACH_WORKER_MAX_JOBS', 50),
         'worker_max_time' => (int) env('OUTREACH_WORKER_MAX_TIME', 1800),
         'worker_memory' => (int) env('OUTREACH_WORKER_MEMORY_MB', 160),
+        /*
+         * Amplía cobertura geográfica para núcleos grandes (además del HarvestArea).
+         * place_id dedup evita duplicados entre provincia / capital / comunidad.
+         */
+        'area_expansions' => [
+            'Madrid' => [
+                ['name' => 'Comunidad de Madrid', 'admin_level' => 4],
+                ['name' => 'Madrid', 'admin_level' => 6],
+                ['name' => 'Madrid', 'admin_level' => 8],
+            ],
+            'Barcelona' => [
+                ['name' => 'Barcelona', 'admin_level' => 6],
+                ['name' => 'Barcelona', 'admin_level' => 8],
+            ],
+            'Valencia' => [
+                ['name' => 'Valencia', 'admin_level' => 6],
+                ['name' => 'Valencia', 'admin_level' => 8],
+            ],
+            'Sevilla' => [
+                ['name' => 'Sevilla', 'admin_level' => 6],
+                ['name' => 'Sevilla', 'admin_level' => 8],
+            ],
+            'Málaga' => [
+                ['name' => 'Málaga', 'admin_level' => 6],
+                ['name' => 'Málaga', 'admin_level' => 8],
+            ],
+        ],
     ],
-
 ];

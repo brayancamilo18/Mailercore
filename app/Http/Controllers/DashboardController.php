@@ -23,7 +23,7 @@ class DashboardController extends Controller
      */
     public function index(Request $request, HarvestStatusService $harvestStatus): View
     {
-        $query = Lead::query()->latest();
+        $query = Lead::query()->withEmail()->latest();
 
         if ($request->filled('status') && array_key_exists($request->string('status')->toString(), Lead::ESTADOS)) {
             $query->where('status', $request->string('status'));
@@ -36,13 +36,13 @@ class DashboardController extends Controller
         $leads = $query->paginate(50)->withQueryString();
 
         $stats = [
-            'total' => Lead::count(),
-            'con_email' => Lead::whereNotNull('email')->count(),
-            'nuevo' => Lead::where('status', 'nuevo')->count(),
-            'contactado' => Lead::where('status', 'contactado')->count(),
-            'contactado_hoy' => Lead::whereDate('contacted_at', today())->count(),
-            'respondido' => Lead::where('status', 'respondido')->count(),
-            'cliente' => Lead::where('status', 'cliente')->count(),
+            'total' => Lead::withEmail()->count(),
+            'con_email' => Lead::withEmail()->count(),
+            'nuevo' => Lead::withEmail()->where('status', 'nuevo')->count(),
+            'contactado' => Lead::withEmail()->where('status', 'contactado')->count(),
+            'contactado_hoy' => Lead::withEmail()->whereDate('contacted_at', today())->count(),
+            'respondido' => Lead::withEmail()->where('status', 'respondido')->count(),
+            'cliente' => Lead::withEmail()->where('status', 'cliente')->count(),
         ];
 
         $jobStatus = [
@@ -63,8 +63,8 @@ class DashboardController extends Controller
         return response()->json([
             'search_running' => (bool) Cache::get('outreach:search_running'),
             'send_running' => (bool) Cache::get('outreach:send_running'),
-            'leads_total' => Lead::count(),
-            'leads_con_email' => Lead::whereNotNull('email')->count(),
+            'leads_total' => Lead::withEmail()->count(),
+            'leads_con_email' => Lead::withEmail()->count(),
             'harvest' => $harvestStatus->snapshot(),
         ]);
     }
@@ -84,16 +84,18 @@ class DashboardController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
             'website' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ]);
 
-        $email = ! empty($validated['email'])
-            ? Suppression::normalizeEmail($validated['email'])
-            : null;
+        $email = Suppression::normalizeEmail($validated['email']);
         $email = $email === '' ? null : $email;
+
+        if ($email === null) {
+            return redirect()->route('dashboard')->with('error', 'El email es obligatorio.');
+        }
 
         $capture = new LeadCaptureService(
             new EmailScraper(config('outreach.scraper')),
@@ -110,7 +112,7 @@ class DashboardController extends Controller
         Lead::create([
             ...$validated,
             'email' => $email,
-            'status' => $email !== null ? 'nuevo' : 'sin_email',
+            'status' => 'nuevo',
             'segmento' => 'agencia',
             'captured_at' => now(),
         ]);

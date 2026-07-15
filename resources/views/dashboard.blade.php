@@ -79,15 +79,13 @@
                 </p>
             </div>
             <div class="rounded-lg bg-slate-50 p-3">
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Leads · Emails</p>
-                <p class="mt-1 text-sm font-semibold text-slate-900">
-                    <span id="harvest-leads-total">{{ $harvest['leads_total'] }}</span>
-                    ·
-                    <span id="harvest-emails-total">{{ $harvest['emails_total'] }}</span>
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Leads</p>
+                <p id="harvest-leads-total" class="mt-1 text-sm font-semibold text-slate-900">
+                    {{ $harvest['leads_total'] }}
                 </p>
             </div>
             <div class="rounded-lg bg-slate-50 p-3">
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Emails hoy</p>
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Leads hoy</p>
                 <p id="harvest-emails-hoy" class="mt-1 text-sm font-semibold text-slate-900">
                     {{ $harvest['emails_hoy'] }}
                 </p>
@@ -96,7 +94,7 @@
 
         <div class="mt-4">
             <div class="mb-1 flex justify-between text-xs text-slate-600">
-                <span>Avance España</span>
+                <span>Avance España (áreas hechas)</span>
                 <span id="harvest-progress-label">{{ $harvest['progress_percent'] }}%</span>
             </div>
             <div class="h-2.5 overflow-hidden rounded-full bg-slate-100">
@@ -114,8 +112,7 @@
                     <tr class="text-left text-slate-500">
                         <th class="py-2 pr-3 font-medium">Últimas áreas</th>
                         <th class="py-2 pr-3 font-medium">Estado</th>
-                        <th class="py-2 pr-3 font-medium">Leads</th>
-                        <th class="py-2 font-medium">Emails</th>
+                        <th class="py-2 font-medium">Leads</th>
                     </tr>
                 </thead>
                 <tbody id="harvest-ultimas-body" class="divide-y divide-slate-50">
@@ -123,12 +120,11 @@
                         <tr>
                             <td class="py-2 pr-3 font-medium text-slate-800">{{ $areaRow['name'] }}</td>
                             <td class="py-2 pr-3 text-slate-600">{{ \App\Models\HarvestArea::STATUSES[$areaRow['status']] ?? $areaRow['status'] }}</td>
-                            <td class="py-2 pr-3">{{ $areaRow['leads_found'] }}</td>
-                            <td class="py-2">{{ $areaRow['emails_found'] }}</td>
+                            <td class="py-2">{{ $areaRow['leads_found'] }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="py-3 text-slate-400">Todavía no hay áreas procesadas.</td>
+                            <td colspan="3" class="py-3 text-slate-400">Todavía no hay áreas procesadas.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -217,7 +213,8 @@
                 <input
                     type="email"
                     name="email"
-                    placeholder="Email"
+                    required
+                    placeholder="Email *"
                     value="{{ old('email') }}"
                     class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >

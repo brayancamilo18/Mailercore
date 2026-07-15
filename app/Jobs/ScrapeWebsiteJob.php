@@ -2,35 +2,37 @@
 
 namespace App\Jobs;
 
-use App\Models\Lead;
-use App\Models\Suppression;
+use App\Models\HarvestArea;
+use App\Services\AreaHarvestService;
 use App\Services\EmailScraper;
-use App\Services\EmailVerifier;
 use App\Services\HarvestHeartbeat;
 use App\Services\LeadCaptureService;
-use Illuminate\Bus\Batchable;
+use App\Services\Sources\LeadCandidate;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Scrapea la web de un lead (cola dedicada "scraping") y actualiza email/status.
+ * Scrapea la web de un candidato y solo persiste el lead si encuentra email válido.
+ * Se encola en paralelo a Overpass para que el panel vaya sumando leads.
  */
 class ScrapeWebsiteJob implements ShouldQueue
 {
-    use Batchable;
     use InteractsWithQueue;
     use Queueable;
 
-    /** Un solo reintento breve; no reencola en bucle. */
     public int $tries = 2;
 
-    /** Segundos máximos del job (scraper timeout × rutas). */
     public int $timeout = 90;
 
-    public function __construct(public int $leadId)
-    {
+    /**
+     * @param  array<string, mixed>  $candidatePayload
+     */
+    public function __construct(
+        public array $candidatePayload,
+        public ?int $harvestAreaId = null,
+    ) {
         $this->onQueue('scraping');
     }
 
@@ -42,100 +44,62 @@ class ScrapeWebsiteJob implements ShouldQueue
         return [15, 60];
     }
 
-    public function handle(EmailScraper $scraper, EmailVerifier $verifier, LeadCaptureService $capture): void
+    public function handle(EmailScraper $scraper, LeadCaptureService $capture): void
     {
-        HarvestHeartbeat::touch('scrape:lead:'.$this->leadId);
-
-        $lead = Lead::query()->find($this->leadId);
-
-        if ($lead === null) {
-            return;
-        }
-
-        if ($lead->website === null || trim($lead->website) === '') {
-            return;
-        }
-
-        // Ya tiene email usable: no insiste.
-        if ($lead->email !== null && $lead->email !== '' && $lead->status === 'nuevo') {
-            return;
-        }
+        $candidate = LeadCandidate::fromArray($this->candidatePayload);
+        HarvestHeartbeat::touch('scrape:candidate:'.($candidate->externalId ?? $candidate->name));
 
         try {
-            $email = $scraper->findEmail($lead->website);
-            $email = $email !== null ? Suppression::normalizeEmail($email) : null;
-            $email = $email === '' ? null : $email;
+            if ($candidate->website !== null && trim($candidate->website) !== '') {
+                $email = $scraper->findEmail($candidate->website);
 
-            if ($email === null) {
-                $lead->update([
-                    'status' => 'sin_email',
-                    'email_check' => null,
-                ]);
+                if ($email !== null && trim($email) !== '') {
+                    $result = $capture->createFromScrapedEmail($candidate, $email);
 
-                return;
+                    if ($result['outcome'] === 'created' && isset($result['lead_id']) && $this->harvestAreaId !== null) {
+                        $area = HarvestArea::query()->find($this->harvestAreaId);
+
+                        if ($area !== null) {
+                            $area->rememberSessionLeadId((int) $result['lead_id']);
+                        }
+                    } elseif (($result['outcome'] ?? null) === 'omitted') {
+                        Log::info('ScrapeWebsiteJob: candidato omitido tras scrape', [
+                            'name' => $candidate->name,
+                            'reason' => $result['reason'] ?? null,
+                        ]);
+                    }
+                }
             }
-
-            if ($capture->debeOmitirPorEmailODominio($email, $lead->website, $lead->id)) {
-                Log::info('ScrapeWebsiteJob: email omitido por dedup/suppression', [
-                    'lead_id' => $lead->id,
-                    'email' => $email,
-                ]);
-
-                $lead->update([
-                    'status' => 'sin_email',
-                    'notes' => $this->appendNote($lead->notes, "Email scrapeado omitido (dup/suppression): {$email}"),
-                ]);
-
-                return;
-            }
-
-            $emailCheck = $verifier->verify($email);
-            $status = $emailCheck === 'invalido' ? 'sin_email' : 'nuevo';
-
-            $lead->update([
-                'email' => $email,
-                'email_check' => $emailCheck,
-                'status' => $status,
-            ]);
         } catch (\Throwable $e) {
             report($e);
             Log::warning('ScrapeWebsiteJob falló', [
-                'lead_id' => $this->leadId,
+                'name' => $candidate->name,
                 'error' => $e->getMessage(),
             ]);
 
-            $lead->refresh();
-            $lead->update([
-                'status' => 'sin_email',
-                'notes' => $this->appendNote($lead->notes, '[scrape] '.$e->getMessage()),
-            ]);
+            throw $e;
         }
+
+        // Solo al completar con éxito (sin reintento pendiente).
+        $this->avisarScrapeTerminado();
     }
 
-    /**
-     * Tras agotar intentos: deja el lead marcado sin tumbar la cola.
-     */
     public function failed(?\Throwable $e): void
     {
-        $lead = Lead::query()->find($this->leadId);
+        Log::info('ScrapeWebsiteJob agotó reintentos sin crear lead', [
+            'name' => $this->candidatePayload['name'] ?? '?',
+            'error' => $e?->getMessage(),
+        ]);
 
-        if ($lead === null) {
+        $this->avisarScrapeTerminado();
+    }
+
+    private function avisarScrapeTerminado(): void
+    {
+        if ($this->harvestAreaId === null) {
             return;
         }
 
-        $lead->update([
-            'status' => 'sin_email',
-            'notes' => $this->appendNote(
-                $lead->notes,
-                '[scrape failed] '.($e?->getMessage() ?? 'desconocido')
-            ),
-        ]);
-    }
-
-    private function appendNote(?string $notes, string $line): string
-    {
-        $notes = trim((string) $notes);
-
-        return $notes === '' ? $line : $notes."\n".$line;
+        app(AreaHarvestService::class)->markScrapeFinished($this->harvestAreaId);
     }
 }

@@ -20,4 +20,38 @@ readonly class LeadCandidate
         public string $segmento = 'agencia',
     ) {
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'website' => $this->website,
+            'source' => $this->source,
+            'phone' => $this->phone,
+            'email' => $this->email,
+            'address' => $this->address,
+            'externalId' => $this->externalId,
+            'segmento' => $this->segmento,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            name: (string) ($data['name'] ?? ''),
+            website: isset($data['website']) ? (string) $data['website'] : null,
+            source: (string) ($data['source'] ?? 'overpass'),
+            phone: isset($data['phone']) ? (string) $data['phone'] : null,
+            email: isset($data['email']) ? (string) $data['email'] : null,
+            address: isset($data['address']) ? (string) $data['address'] : null,
+            externalId: isset($data['externalId']) ? (string) $data['externalId'] : null,
+            segmento: (string) ($data['segmento'] ?? 'agencia'),
+        );
+    }
 }

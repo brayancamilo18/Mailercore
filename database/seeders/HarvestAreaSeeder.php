@@ -24,6 +24,11 @@ class HarvestAreaSeeder extends Seeder
                 [
                     'priority' => $area['priority'],
                     'status' => HarvestArea::STATUS_PENDIENTE,
+                    'leads_found' => 0,
+                    'emails_found' => 0,
+                    'last_error' => null,
+                    'started_at' => null,
+                    'finished_at' => null,
                 ]
             );
         }

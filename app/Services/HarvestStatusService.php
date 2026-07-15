@@ -49,6 +49,7 @@ class HarvestStatusService
             ->orderByDesc('started_at')
             ->first();
 
+        // Solo áreas cerradas: el % debe coincidir exactamente con «X / Y áreas hechas».
         $progress = $total > 0 ? round(($hechas / $total) * 100, 1) : 0.0;
 
         $rawHb = \Illuminate\Support\Facades\Cache::get(HarvestHeartbeat::CACHE_KEY);
@@ -61,13 +62,17 @@ class HarvestStatusService
             ->orderByDesc('updated_at')
             ->limit(5)
             ->get()
-            ->map(fn (HarvestArea $a): array => [
-                'name' => $a->name,
-                'status' => $a->status,
-                'leads_found' => (int) $a->leads_found,
-                'emails_found' => (int) $a->emails_found,
-                'finished_at' => $a->finished_at?->toIso8601String(),
-            ])
+            ->map(function (HarvestArea $a): array {
+                $stats = $a->statsParaPanel();
+
+                return [
+                    'name' => $a->name,
+                    'status' => $a->status,
+                    'leads_found' => $stats['leads_found'],
+                    'emails_found' => $stats['emails_found'],
+                    'finished_at' => $a->finished_at?->toIso8601String(),
+                ];
+            })
             ->all();
 
         $age = HarvestHeartbeat::ageSeconds();
@@ -86,12 +91,10 @@ class HarvestStatusService
             'areas_error' => $errores,
             'areas_en_proceso' => $enProcesoCount,
             'progress_percent' => $progress,
-            'leads_total' => Lead::query()->count(),
-            'emails_total' => Lead::query()->whereNotNull('email')->where('email', '!=', '')->count(),
-            'emails_hoy' => Lead::query()
-                ->whereNotNull('email')
-                ->where('email', '!=', '')
-                ->whereDate('updated_at', today())
+            'leads_total' => Lead::withEmail()->count(),
+            'emails_total' => Lead::withEmail()->count(),
+            'emails_hoy' => Lead::withEmail()
+                ->whereDate('captured_at', today())
                 ->count(),
             'leads_found_sum' => (int) HarvestArea::query()->sum('leads_found'),
             'emails_found_sum' => (int) HarvestArea::query()->sum('emails_found'),
