@@ -1,6 +1,9 @@
 # Entorno de desarrollo / servidor del proyecto outreach.
 # Los servicios construyen la misma imagen y montan . → /app.
 #
+# Producción (VPS): en .env pon APP_PUBLISH_PORT=8088
+# Mailpit solo arranca con: docker compose --profile dev up -d
+#
 # Límites: mem_limit/cpus aplican en Compose; deploy.resources documenta Swarm.
 # Ajusta scraping_concurrency en config y el nº de servicios queue-scraping* (2–3).
 services:
@@ -9,7 +12,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
+      - "${APP_PUBLISH_PORT:-8000}:8000"
     mem_limit: 512m
     cpus: 1.0
     deploy:
@@ -97,8 +100,10 @@ services:
              --sleep=2 --tries=2 --timeout=90
              --max-jobs=50 --max-time=1800 --memory=160"
 
+  # Solo desarrollo: docker compose --profile dev up -d
   mailpit:
     image: axllent/mailpit
+    profiles: ["dev"]
     ports:
       - "8025:8025"
       - "1025:1025"
