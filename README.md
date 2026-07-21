@@ -202,19 +202,20 @@ Los tres servicios construyen la misma imagen (`Dockerfile` con PHP 8.3-cli) y m
 | **queue** | `queue:work --queue=default` con reinicio (`--max-jobs` / `--memory`). |
 | **queue-scraping** + **queue-scraping-2** | Dos workers de cola `scraping` (límites CPU/RAM). |
 | **mailpit** | SMTP local (puerto **1025**) + UI web en **[http://localhost:8025](http://localhost:8025)**. Captura correos en desarrollo sin usar Hostinger. |
-| **db-ui** | **sqlite-web** (UI para SQLite) en **[http://localhost:8089](http://localhost:8089)**. |
+| **db-ui** | **Adminer** (UI para SQLite) en **[http://localhost:8089](http://localhost:8089)**. |
 
 Para usar Mailpit, en `.env` apunta el mailer a `MAIL_HOST=mailpit` y `MAIL_PORT=1025` (ver bloque comentado en `.env.example`). En producción deja la config de Hostinger.
 
-### Ver tablas SQLite (db-ui)
+### Ver tablas SQLite (Adminer)
 
-phpMyAdmin **no** funciona con SQLite y Adminer bloquea contraseña vacía. Usamos **sqlite-web** (`db-ui`):
+phpMyAdmin **no** funciona con SQLite. Adminer sí, con contraseña de acceso:
 
 1. Abre [http://localhost:8089](http://localhost:8089) (servidor: `http://IP:8089`).
-2. **No pide login**: verás las tablas a la izquierda (`leads`, `harvest_areas`, etc.).
-3. Clic en una tabla → Browse para ver registros.
+2. Sistema: **SQLite 3**.
+3. Base de datos: `/db/database.sqlite`.
+4. Usuario: vacío. Contraseña: **`nexomailer`** (o el valor de `ADMINER_PASSWORD` en `.env`).
 
-Si el puerto 8089 no está abierto en el VPS: `ufw allow 8089/tcp`. Cierra el puerto o para el servicio cuando no lo uses (`docker compose stop db-ui`).
+Si el puerto 8089 no está abierto en el VPS: `ufw allow 8089/tcp`. Cambia `ADMINER_PASSWORD` en producción y cierra el puerto cuando no lo uses.
 
 ---
 
@@ -448,6 +449,6 @@ resources/views/        layout, dashboard, emails/
 routes/
   web.php               Panel
   console.php           Schedule
-docker-compose.yml      app, scheduler, queue, queue-scraping(+-2), mailpit, db-ui (sqlite-web)
+docker-compose.yml      app, scheduler, queue, queue-scraping(+-2), mailpit, db-ui (Adminer)
 Dockerfile
 ```

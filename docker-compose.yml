@@ -110,19 +110,20 @@ services:
           cpus: "0.25"
           memory: 128M
 
-  # UI web para SQLite (sin login). phpMyAdmin/Adminer exigen MySQL o password.
-  # http://localhost:8089  ·  servidor: http://IP:8089
-  # Preferible cerrar el puerto o usar túnel SSH cuando no lo uses.
+  # UI Adminer para SQLite. Contraseña de login (no de SQLite): ADMINER_PASSWORD.
+  # http://localhost:8089 → SQLite 3 · BD: /db/database.sqlite · pass: nexomailer
   db-ui:
-    image: coleifer/sqlite-web:latest
+    image: adminer:4
     depends_on:
       - app
     ports:
       - "8089:8080"
     volumes:
-      - ./database:/data
+      - ./database:/db
+      - ./docker/adminer-plugins:/var/www/html/plugins-enabled
     environment:
-      SQLITE_DATABASE: database.sqlite
+      ADMINER_DESIGN: pepa-linha
+      ADMINER_PASSWORD: ${ADMINER_PASSWORD:-nexomailer}
     mem_limit: 128m
     cpus: 0.25
     deploy:
