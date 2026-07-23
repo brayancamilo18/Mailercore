@@ -6,6 +6,7 @@ use App\Models\AreaCosecha;
 use App\Models\Mensaje;
 use App\Services\Soporte\Latido;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -70,8 +71,37 @@ class VigilanteCommand extends Command
             if ($recuperadas > 0) {
                 $this->acciones[] = "Cosecha: {$recuperadas} área(s) huérfana(s) recuperada(s)";
             }
+
+            // Si hay trabajo pendiente y el latido lleva mucho mudo, fuerza
+            // la liberación del lock por si una pasada murió sin soltarlo.
+            $hayPendientes = Schema::hasTable('areas_cosecha')
+                && DB::table('areas_cosecha')->where('estado', 'pendiente')->exists();
+            $edad = Latido::edad('cosecha');
+            $umbral = (int) config('outreach.cosecha.area_atascada_segundos', 600);
+
+            if ($hayPendientes && ($edad === null || $edad >= $umbral)) {
+                Cache::lock('cosecha:run')->forceRelease();
+                // Limpia mutex del scheduler por si withoutOverlapping quedó colgado.
+                $this->limpiarMutexSchedulerCosecha();
+                $this->acciones[] = 'Cosecha: lock/mutex liberados (latido mudo con pendientes)';
+            }
         } catch (\Throwable $e) {
             Log::channel('outreach')->error('Vigilante: fallo recuperando cosecha', ['error' => $e->getMessage()]);
+        }
+    }
+
+    private function limpiarMutexSchedulerCosecha(): void
+    {
+        try {
+            $redis = \Illuminate\Support\Facades\Redis::connection();
+            foreach ($redis->keys('*schedule*') as $clave) {
+                // Solo tocamos mutexes; no borramos otros datos de schedule.
+                if (str_contains((string) $clave, 'schedule-')) {
+                    $redis->del($clave);
+                }
+            }
+        } catch (\Throwable) {
+            // Redis no disponible: el TTL del withoutOverlapping bastará.
         }
     }
 

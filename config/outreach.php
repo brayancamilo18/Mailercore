@@ -132,8 +132,9 @@ return [
 
     'cosecha' => [
         'activa' => env('OUTREACH_COSECHA_ACTIVA', true),
-        'intervalo_minutos' => 5,
-        'pausa_entre_areas_segundos' => 30,
+        // Cada minuto: si ya hay una pasada en marcha, withoutOverlapping la omite.
+        'intervalo_minutos' => 1,
+        'pausa_entre_areas_segundos' => 15,
         // TTL del lock: generoso, para que una provincia grande (con Overpass
         // lento) no lo pierda a media cosecha. La detección real de procesos
         // muertos la hace el vigilante por latido, no por este TTL.

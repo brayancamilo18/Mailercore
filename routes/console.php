@@ -8,9 +8,12 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// Cosecha continua: procesa todas las áreas pendientes en bucle.
+// withoutOverlapping con TTL largo evita solapes; si el proceso muere, el
+// mutex caduca y el vigilante libera huérfanas.
 Schedule::command('cosecha:ejecutar')
-    ->cron('*/'.max(1, min(59, (int) config('outreach.cosecha.intervalo_minutos', 5))).' * * * *')
-    ->withoutOverlapping(15)
+    ->cron('*/'.max(1, min(59, (int) config('outreach.cosecha.intervalo_minutos', 1))).' * * * *')
+    ->withoutOverlapping((int) config('outreach.cosecha.lock_segundos', 7200) / 60)
     ->runInBackground();
 
 // Watchdog de resiliencia: detecta y repara procesos parados cada minuto.
