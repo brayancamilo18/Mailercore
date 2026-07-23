@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Cache;
 
 class CosechaRunCommand extends Command
 {
-    protected $signature = 'cosecha:ejecutar {--area=} {--dry-run} {--max-areas=0 : Máximo de áreas en esta pasada (0 = todas las pendientes)}';
+    protected $signature = 'cosecha:ejecutar {--area=} {--dry-run} {--max-areas=0 : Máximo de áreas en esta pasada (0 = sin límite)}';
 
-    protected $description = 'Cosecha Overpass continua: procesa áreas pendientes, omite duplicados y sigue';
+    protected $description = 'Cosecha Overpass en bucle hasta agotar negocios nuevos';
 
     public function handle(ServicioCosecha $servicio): int
     {
@@ -39,32 +39,67 @@ class CosechaRunCommand extends Command
         }
 
         $procesadas = 0;
+        $creadosTotales = 0;
         $maxAreas = max(0, (int) $this->option('max-areas'));
-        $pausa = max(0, (int) config('outreach.cosecha.pausa_entre_areas_segundos', 30));
+        $pausa = max(0, (int) config('outreach.cosecha.pausa_entre_areas_segundos', 15));
+        $pausaCiclo = max(60, (int) config('outreach.cosecha.pausa_entre_ciclos_segundos', 300));
         $soloUna = filled($this->option('area'));
+        $inicio = time();
+        // No monopolizar el worker más de ~lock-5min: el scheduler relanza.
+        $presupuesto = max(300, $lockSegundos - 300);
 
         try {
-            // Si tenemos el lock, no hay cosecha viva: cualquier «en_proceso» es huérfana.
             foreach (AreaCosecha::query()->where('estado', 'en_proceso')->get() as $enProceso) {
-                $this->warn("Área «{$enProceso->nombre}» quedó huérfana en_proceso; se recupera.");
+                $this->warn("Área «{$enProceso->nombre}» huérfana; se recupera.");
                 $enProceso->recuperarHuerfana();
             }
 
-            // Errores recuperables (duplicados, fallos puntuales) vuelven a cola.
             $this->reencolarErroresRecuperables();
 
-            do {
+            while (true) {
+                if (time() - $inicio >= $presupuesto) {
+                    $this->comment('Presupuesto de tiempo agotado; el scheduler continuará.');
+
+                    break;
+                }
+
                 $nombreArea = $this->option('area');
                 $area = $nombreArea
                     ? AreaCosecha::query()->where('nombre', $nombreArea)->first()
                     : AreaCosecha::siguientePendiente();
 
                 if ($area === null) {
-                    if ($procesadas === 0) {
-                        $this->info('No hay áreas pendientes.');
+                    if ($soloUna) {
+                        $this->info('No hay área que cosechar.');
+
+                        break;
                     }
 
-                    break;
+                    // Ciclo completo: si en esta ronda aún creamos leads, reiniciamos
+                    // todas las áreas y seguimos. Si no, esperamos y reintentamos
+                    // (OSM/webs cambian; no nos detenemos del todo).
+                    $reiniciadas = AreaCosecha::reiniciarCicloCompleto();
+                    if ($reiniciadas === 0) {
+                        $this->info('No hay áreas configuradas.');
+
+                        break;
+                    }
+
+                    if ($creadosTotales === 0 && $procesadas > 0) {
+                        $this->warn("Ciclo sin leads nuevos. Pausa {$pausaCiclo}s y se vuelve a barrer España…");
+                        Latido::marcar('cosecha', 'ciclo_sin_novedades');
+                        sleep($pausaCiclo);
+                        $creadosTotales = 0;
+                        $procesadas = 0;
+
+                        continue;
+                    }
+
+                    $this->info("Ciclo completo ({$creadosTotales} leads nuevos). Reiniciando {$reiniciadas} áreas para seguir buscando…");
+                    $creadosTotales = 0;
+                    $procesadas = 0;
+
+                    continue;
                 }
 
                 $this->info("Cosechando «{$area->nombre}» (admin_level={$area->admin_level})...");
@@ -72,19 +107,23 @@ class CosechaRunCommand extends Command
 
                 try {
                     $resultado = $servicio->cosechar($area, (bool) $this->option('dry-run'));
+                    $creadosTotales += (int) $resultado['creados'];
                     $this->table(
-                        ['Área', 'Creados', 'Omitidos (dup/sin web)', 'Encolados'],
-                        [[$area->nombre, $resultado['creados'], $resultado['omitidos'], $resultado['encolados']]]
+                        ['Área', 'Nuevos', 'Omitidos', 'Candidatos OSM', 'Encolados'],
+                        [[
+                            $area->nombre,
+                            $resultado['creados'],
+                            $resultado['omitidos'],
+                            $resultado['candidatos'] ?? 0,
+                            $resultado['encolados'],
+                        ]]
                     );
                 } catch (OverpassNoDisponible $e) {
-                    // Overpass caído: el área queda en error; salimos para no martillar la API.
                     $this->error('Overpass no disponible: '.$e->getMessage());
                     Latido::marcar('cosecha', 'overpass_caido');
 
                     return self::FAILURE;
                 } catch (\Throwable $e) {
-                    // Fallo puntual: marcar error, reencolar si es recuperable y seguir
-                    // con la siguiente área (duplicados ya no deben llegar aquí).
                     if ($area->fresh()?->estado === 'en_proceso') {
                         $area->forceFill([
                             'estado' => 'error',
@@ -97,7 +136,7 @@ class CosechaRunCommand extends Command
 
                     if ($this->esErrorRecuperable($e->getMessage())) {
                         $area->fresh()?->reiniciar();
-                        $this->warn("Área «{$area->nombre}» reencolada (error recuperable); se continúa.");
+                        $this->warn("Área «{$area->nombre}» reencolada; se continúa.");
                     }
                 }
 
@@ -109,25 +148,21 @@ class CosechaRunCommand extends Command
                 }
 
                 if (AreaCosecha::siguientePendiente() !== null && $pausa > 0) {
-                    $this->comment("Pausa {$pausa}s antes del siguiente área…");
                     sleep($pausa);
                 }
-            } while (true);
+            }
         } finally {
             $lock->release();
         }
 
-        $this->info("Pasada terminada: {$procesadas} área(s) procesada(s).");
+        $this->info("Pasada terminada: {$procesadas} área(s), {$creadosTotales} lead(s) nuevos en esta ejecución.");
 
         return self::SUCCESS;
     }
 
-    /** Devuelve a pendiente las áreas en error recuperable (p. ej. email duplicado). */
     private function reencolarErroresRecuperables(): void
     {
-        $errores = AreaCosecha::query()->where('estado', 'error')->get();
-
-        foreach ($errores as $area) {
+        foreach (AreaCosecha::query()->where('estado', 'error')->get() as $area) {
             $msg = (string) ($area->ultimo_error ?? '');
             if ($msg === '' || $this->esErrorRecuperable($msg)) {
                 $area->reiniciar();
@@ -138,14 +173,7 @@ class CosechaRunCommand extends Command
 
     private function esErrorRecuperable(string $mensaje): bool
     {
-        $patrones = [
-            'duplicate key',
-            'Unique violation',
-            'lead_emails_email_unique',
-            'SQLSTATE[23505]',
-        ];
-
-        foreach ($patrones as $patron) {
+        foreach (['duplicate key', 'Unique violation', 'lead_emails_email_unique', 'SQLSTATE[23505]'] as $patron) {
             if (str_contains($mensaje, $patron)) {
                 return true;
             }

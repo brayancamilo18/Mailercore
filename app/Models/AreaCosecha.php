@@ -25,6 +25,9 @@ class AreaCosecha extends Model
         'prioridad',
         'leads_encontrados',
         'emails_encontrados',
+        'candidatos_vistos',
+        'omitidos',
+        'ciclos_completados',
         'ultimo_error',
         'iniciada_at',
         'finalizada_at',
@@ -64,6 +67,23 @@ class AreaCosecha extends Model
             'finalizada_at' => null,
         ])->save();
         Cache::forget("cosecha:reintentos:{$this->id}");
+    }
+
+    /**
+     * Vuelve a poner en cola todas las áreas ya barridas para otro ciclo
+     * completo (buscar negocios nuevos en OSM). No borra leads.
+     */
+    public static function reiniciarCicloCompleto(): int
+    {
+        $ids = self::query()
+            ->whereIn('estado', ['hecho', 'error'])
+            ->pluck('id');
+
+        foreach ($ids as $id) {
+            self::query()->whereKey($id)->first()?->reiniciar();
+        }
+
+        return $ids->count();
     }
 
     /**

@@ -28,7 +28,7 @@ class ServicioCosecha
     /**
      * Cosecha un área: consulta Overpass, crea leads base y encola el rastreo.
      *
-     * @return array{creados: int, omitidos: int, encolados: int}
+     * @return array{creados: int, omitidos: int, candidatos: int, encolados: int}
      */
     public function cosechar(AreaCosecha $area, bool $dryRun = false): array
     {
@@ -55,11 +55,13 @@ class ServicioCosecha
 
         $creados = 0;
         $omitidos = 0;
+        $candidatos = 0;
         $encolados = 0;
         $emailsEncontrados = 0;
+        $provincia = $area->nombre;
 
-        // Punto de partida para que los contadores reflejen el progreso en vivo
-        // (el panel los lee mientras el área sigue «en_proceso»).
+        // Contadores acumulados entre ciclos (el panel muestra el total histórico
+        // del área + el avance del ciclo en curso).
         $baseLeads = (int) $area->leads_encontrados;
         $baseEmails = (int) $area->emails_encontrados;
 
@@ -70,12 +72,12 @@ class ServicioCosecha
             );
 
             foreach ($stream as $candidato) {
-                // Latido periódico por tiempo: cubre también áreas con muchos
-                // «omitidos» y pocos «creados», donde el latido por lotes de 10
-                // apenas se dispararía.
+                $candidatos++;
+
                 if (time() - $ultimoLatido >= 60) {
                     Latido::marcar('cosecha', $area->nombre);
                     $ultimoLatido = time();
+                    $this->persistirAvance($area, $baseLeads, $creados, $baseEmails, $emailsEncontrados, $candidatos, $omitidos);
                 }
 
                 $placeId = (string) ($candidato['place_id'] ?? '');
@@ -132,7 +134,7 @@ class ServicioCosecha
                     continue;
                 }
 
-                $lead = DB::transaction(function () use ($candidato, $dominio, $sector, $subsector, &$emailsEncontrados): Lead {
+                $lead = DB::transaction(function () use ($candidato, $dominio, $sector, $subsector, $provincia, &$emailsEncontrados): Lead {
                     $lead = Lead::query()->create([
                         'place_id' => $candidato['place_id'],
                         'nombre' => $candidato['nombre'],
@@ -148,6 +150,7 @@ class ServicioCosecha
                         'telefono' => $candidato['telefono'] ?? null,
                         'direccion' => $candidato['direccion'] ?? null,
                         'ciudad' => $candidato['ciudad'] ?? null,
+                        'provincia' => $provincia,
                         'codigo_postal' => $candidato['codigo_postal'] ?? null,
                         'latitud' => $candidato['latitud'] ?? null,
                         'longitud' => $candidato['longitud'] ?? null,
@@ -186,14 +189,8 @@ class ServicioCosecha
                 $creados++;
                 $encolados++;
 
-                // Persistimos el avance cada pocos leads para que el panel lo vea
-                // sin esperar a que termine toda el área, y refrescamos el latido
-                // para que el vigilante sepa que el proceso sigue vivo.
                 if ($creados % 10 === 0) {
-                    $area->forceFill([
-                        'leads_encontrados' => $baseLeads + $creados,
-                        'emails_encontrados' => $baseEmails + $emailsEncontrados,
-                    ])->save();
+                    $this->persistirAvance($area, $baseLeads, $creados, $baseEmails, $emailsEncontrados, $candidatos, $omitidos);
                     Latido::marcar('cosecha', $area->nombre);
                 }
             }
@@ -203,6 +200,9 @@ class ServicioCosecha
                 'finalizada_at' => now(),
                 'leads_encontrados' => $baseLeads + $creados,
                 'emails_encontrados' => $baseEmails + $emailsEncontrados,
+                'candidatos_vistos' => $candidatos,
+                'omitidos' => $omitidos,
+                'ciclos_completados' => (int) $area->ciclos_completados + 1,
                 'ultimo_error' => null,
             ])->save();
 
@@ -214,6 +214,8 @@ class ServicioCosecha
                 'finalizada_at' => now(),
                 'leads_encontrados' => $baseLeads + $creados,
                 'emails_encontrados' => $baseEmails + $emailsEncontrados,
+                'candidatos_vistos' => $candidatos,
+                'omitidos' => $omitidos,
             ])->save();
 
             throw $e;
@@ -222,7 +224,25 @@ class ServicioCosecha
         return [
             'creados' => $creados,
             'omitidos' => $omitidos,
+            'candidatos' => $candidatos,
             'encolados' => $encolados,
         ];
+    }
+
+    private function persistirAvance(
+        AreaCosecha $area,
+        int $baseLeads,
+        int $creados,
+        int $baseEmails,
+        int $emailsEncontrados,
+        int $candidatos,
+        int $omitidos,
+    ): void {
+        $area->forceFill([
+            'leads_encontrados' => $baseLeads + $creados,
+            'emails_encontrados' => $baseEmails + $emailsEncontrados,
+            'candidatos_vistos' => $candidatos,
+            'omitidos' => $omitidos,
+        ])->save();
     }
 }
