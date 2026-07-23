@@ -159,16 +159,23 @@ class ServicioCosecha
                     $emailOsm = $candidato['email'] ?? null;
                     if (is_string($emailOsm) && $emailOsm !== '') {
                         if ($this->clasificadorEmail->clasificar($emailOsm, $dominio) === ClasificadorEmail::ROL) {
-                            LeadEmail::query()->create([
-                                'lead_id' => $lead->id,
-                                'email' => Suppression::normalizarEmail($emailOsm),
-                                'tipo' => ClasificadorEmail::ROL,
-                                'prefijo' => $this->clasificadorEmail->prefijo($emailOsm),
-                                'origen' => 'osm',
-                                'es_principal' => true,
-                                'prioridad' => $this->clasificadorEmail->prioridad($emailOsm),
-                            ]);
-                            $emailsEncontrados++;
+                            $emailNorm = Suppression::normalizarEmail($emailOsm);
+                            // El email es único global: si ya lo tiene otro lead
+                            // (p. ej. datos migrados), no abortamos el área.
+                            if ($emailNorm !== null
+                                && $emailNorm !== ''
+                                && ! LeadEmail::query()->where('email', $emailNorm)->exists()) {
+                                LeadEmail::query()->create([
+                                    'lead_id' => $lead->id,
+                                    'email' => $emailNorm,
+                                    'tipo' => ClasificadorEmail::ROL,
+                                    'prefijo' => $this->clasificadorEmail->prefijo($emailOsm),
+                                    'origen' => 'osm',
+                                    'es_principal' => true,
+                                    'prioridad' => $this->clasificadorEmail->prioridad($emailOsm),
+                                ]);
+                                $emailsEncontrados++;
+                            }
                         }
                     }
 
