@@ -13,7 +13,9 @@ class ForzarHttps
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (config('app.env') === 'production' && ! $request->secure()) {
+        if (config('outreach.forzar_https', true)
+            && config('app.env') === 'production'
+            && ! $request->secure()) {
             return redirect()->secure($request->getRequestUri());
         }
 

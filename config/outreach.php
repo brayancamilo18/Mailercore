@@ -2,6 +2,10 @@
 
 return [
 
+    // Fuerza la redirección a HTTPS en producción. Desactívalo si sirves el
+    // panel por IP:puerto sin TLS (VPS sin dominio).
+    'forzar_https' => env('OUTREACH_FORZAR_HTTPS', true),
+
     'overpass' => [
         'endpoints' => [
             'https://overpass-api.de/api/interpreter',
