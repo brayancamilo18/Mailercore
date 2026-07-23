@@ -13,6 +13,7 @@ x-app: &app-base
     - .:/app
   env_file:
     - .env
+  entrypoint: ["/usr/local/bin/entrypoint.sh"]
   restart: unless-stopped
   depends_on:
     postgres:
