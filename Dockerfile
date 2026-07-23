@@ -1,21 +1,11 @@
-# Imagen de runtime para el proyecto outreach (Laravel 12, PHP 8.3).
-# El código NO se copia dentro de la imagen: se monta como volumen en docker-compose
-# para poder editar en vivo desde Cursor.
-FROM php:8.3-cli
+FROM php:8.3-fpm
 
-# Dependencias del sistema necesarias para compilar las extensiones PHP.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git \
-        unzip \
-        libzip-dev \
-        libsqlite3-dev \
-        libicu-dev \
+        git unzip libzip-dev libpq-dev libicu-dev libonig-dev \
+    && docker-php-ext-install pdo pdo_pgsql pgsql zip intl bcmath opcache \
+    && pecl install redis && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
 
-# Extensiones PHP requeridas: SQLite (pdo, pdo_sqlite), zip para Composer e intl.
-RUN docker-php-ext-install pdo pdo_sqlite zip intl
-
-# Composer 2 tomado directamente de su imagen oficial.
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app

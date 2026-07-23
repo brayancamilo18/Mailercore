@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>JSON-LD Restaurante</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "Ejemplo"
+        },
+        {
+          "@type": "Restaurant",
+          "name": "Restaurante Ejemplo",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Madrid"
+          }
+        }
+      ]
+    }
+    </script>
+</head>
+<body><h1>Restaurante</h1></body>
+</html>

@@ -1,138 +1,107 @@
-# Entorno de desarrollo / servidor del proyecto outreach.
-# Los servicios construyen la misma imagen y montan . → /app.
-#
-# Producción (VPS): en .env pon APP_PUBLISH_PORT=8088
-# Mailpit solo arranca con: docker compose --profile dev up -d
-#
-# Límites: mem_limit/cpus aplican en Compose; deploy.resources documenta Swarm.
-# Ajusta scraping_concurrency en config y el nº de servicios queue-scraping* (2–3).
+# Resiliencia 24/7:
+#  - restart: unless-stopped en todos los servicios de larga duración: si un
+#    contenedor muere (OOM, crash, error), Docker lo relanza automáticamente.
+#  - healthcheck en postgres y redis: los dependientes esperan a que estén sanos.
+#  - stop_grace_period en los workers: al parar/reiniciar, dan tiempo a que el
+#    job en curso termine antes de recibir SIGKILL (apagado elegante de queue:work).
+#  - Los workers se autoreciclan con --max-time / --max-jobs (evitan fugas de
+#    memoria) y Docker los vuelve a levantar limpios.
+
+x-app: &app-base
+  build: .
+  volumes:
+    - .:/app
+  env_file:
+    - .env
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
 services:
-  app:
-    build: .
+  web:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
     volumes:
       - .:/app
-    ports:
-      - "${APP_PUBLISH_PORT:-8000}:8000"
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    restart: unless-stopped
+    depends_on:
+      - app
+
+  app:
+    <<: *app-base
     mem_limit: 512m
     cpus: 1.0
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 512M
-    command: >
-      sh -c "composer install --no-interaction &&
-             (test -f database/database.sqlite || touch database/database.sqlite) &&
-             (grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) &&
-             php artisan migrate --force &&
-             php artisan serve --host=0.0.0.0 --port=8000"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: outreach
+      POSTGRES_USER: outreach
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U outreach"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   scheduler:
-    build: .
-    volumes:
-      - .:/app
-    depends_on:
-      - app
+    <<: *app-base
+    command: sh -c "sleep 20 && php artisan schedule:work"
     mem_limit: 256m
-    cpus: 0.25
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 256M
-    command: sh -c "sleep 15 && php artisan schedule:work"
 
-  # Jobs generales (RunSearchJob, RunSendJob, harvest Overpass). Sin cola scraping.
-  queue:
-    build: .
-    volumes:
-      - .:/app
-    depends_on:
-      - app
+  queue-default:
+    <<: *app-base
+    command: sh -c "sleep 20 && php artisan queue:work --queue=default --tries=3 --backoff=30 --timeout=300 --max-jobs=200 --max-time=3600 --rest=1 --memory=320"
     mem_limit: 384m
-    cpus: 0.5
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 384M
-    # max-jobs / max-time / memory: reinicio periódico (libera RAM de PHP).
-    # Valores alineados con outreach.harvest.worker_* (ajusta en ambos sitios).
-    command: >
-      sh -c "sleep 15 && php artisan queue:work --queue=default
-             --sleep=3 --tries=3 --timeout=3600
-             --max-jobs=30 --max-time=3600 --memory=320"
+    stop_grace_period: 330s
 
-  # Workers de scrape (POCOS: 2 por defecto). Ver README para añadir un 3º.
   queue-scraping:
-    build: .
-    volumes:
-      - .:/app
-    depends_on:
-      - app
-    mem_limit: 192m
-    cpus: 0.35
-    deploy:
-      resources:
-        limits:
-          cpus: "0.35"
-          memory: 192M
-    command: >
-      sh -c "sleep 15 && php artisan queue:work --queue=scraping
-             --sleep=2 --tries=2 --timeout=90
-             --max-jobs=50 --max-time=1800 --memory=160"
+    <<: *app-base
+    command: sh -c "sleep 20 && php artisan queue:work --queue=scraping --tries=3 --backoff=30 --timeout=180 --max-jobs=100 --max-time=1800 --rest=1 --memory=192"
+    mem_limit: 256m
+    stop_grace_period: 210s
 
   queue-scraping-2:
-    build: .
-    volumes:
-      - .:/app
-    depends_on:
-      - app
-    mem_limit: 192m
-    cpus: 0.35
-    deploy:
-      resources:
-        limits:
-          cpus: "0.35"
-          memory: 192M
-    command: >
-      sh -c "sleep 15 && php artisan queue:work --queue=scraping
-             --sleep=2 --tries=2 --timeout=90
-             --max-jobs=50 --max-time=1800 --memory=160"
+    <<: *app-base
+    command: sh -c "sleep 20 && php artisan queue:work --queue=scraping --tries=3 --backoff=30 --timeout=180 --max-jobs=100 --max-time=1800 --rest=1 --memory=192"
+    mem_limit: 256m
+    stop_grace_period: 210s
 
-  # Solo desarrollo: docker compose --profile dev up -d
+  queue-envio:
+    <<: *app-base
+    command: sh -c "sleep 20 && php artisan queue:work --queue=envio --tries=1 --timeout=120 --max-jobs=100 --max-time=3600 --rest=1 --memory=192"
+    mem_limit: 256m
+    stop_grace_period: 150s
+
   mailpit:
     image: axllent/mailpit
-    profiles: ["dev"]
     ports:
       - "8025:8025"
       - "1025:1025"
-    mem_limit: 128m
-    cpus: 0.25
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 128M
+    restart: unless-stopped
+    profiles:
+      - dev
 
-  # UI Adminer para SQLite. Contraseña de login (no de SQLite): ADMINER_PASSWORD.
-  # http://localhost:8089 → SQLite 3 · BD: /db/database.sqlite · pass: nexomailer
-  db-ui:
-    image: adminer:4
-    depends_on:
-      - app
-    ports:
-      - "8089:8080"
-    volumes:
-      - ./database:/db
-      - ./docker/adminer-plugins:/var/www/html/plugins-enabled
-    environment:
-      ADMINER_DESIGN: pepa-linha
-      ADMINER_PASSWORD: ${ADMINER_PASSWORD:-nexomailer}
-    mem_limit: 128m
-    cpus: 0.25
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 128M
+volumes:
+  pgdata:
+  redisdata:

@@ -1,0 +1,50 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API",
+  "elements": [
+    {
+      "type": "node",
+      "id": 1001,
+      "lat": 40.4168,
+      "lon": -3.7038,
+      "tags": {
+        "name": "Restaurante Sol",
+        "amenity": "restaurant",
+        "cuisine": "spanish",
+        "website": "https://restaurantesol.es",
+        "phone": "+34 911 000 111",
+        "addr:street": "Calle Mayor",
+        "addr:housenumber": "1",
+        "addr:city": "Madrid",
+        "addr:postcode": "28013"
+      }
+    },
+    {
+      "type": "way",
+      "id": 2002,
+      "center": {
+        "lat": 40.4200,
+        "lon": -3.7000
+      },
+      "tags": {
+        "name": "Bar Luna",
+        "amenity": "bar",
+        "addr:street": "Calle Luna",
+        "addr:housenumber": "5",
+        "addr:city": "Madrid",
+        "addr:postcode": "28004",
+        "contact:website": "https://barluna.es"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3003,
+      "lat": 40.4100,
+      "lon": -3.7100,
+      "tags": {
+        "amenity": "restaurant",
+        "cuisine": "italian"
+      }
+    }
+  ]
+}

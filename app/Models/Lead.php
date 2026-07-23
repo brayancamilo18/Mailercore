@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use Database\Factories\LeadFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Lead extends Model
 {
-    /** @use HasFactory<\Database\Factories\LeadFactory> */
+    /** @use HasFactory<LeadFactory> */
     use HasFactory;
 
-    /** Mapa de estados internos a etiquetas legibles. */
     public const ESTADOS = [
         'nuevo' => 'Nuevo',
-        'sin_email' => 'Sin email',
+        'rastreado' => 'Rastreado',
+        'auditado' => 'Auditado',
+        'en_cola' => 'En cola',
         'contactado' => 'Contactado',
+        'seguimiento' => 'Seguimiento enviado',
         'respondido' => 'Respondido',
         'cliente' => 'Cliente',
         'descartado' => 'Descartado',
@@ -23,30 +28,12 @@ class Lead extends Model
         'rebotado' => 'Rebotado',
     ];
 
-    /** Segmentos de captación (origen de filtros Overpass u otros). */
-    public const SEGMENTOS = [
-        'agencia' => 'Agencia',
-        'negocio' => 'Negocio',
-    ];
-
-    /**
-     * Atributos asignables en masa.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'place_id',
-        'name',
-        'website',
-        'email',
-        'email_check',
-        'phone',
-        'address',
-        'status',
-        'segmento',
-        'captured_at',
-        'contacted_at',
-        'notes',
+        'place_id', 'nombre', 'website', 'website_dominio', 'osm_tag', 'osm_valor',
+        'osm_tags_raw', 'sector', 'subsector', 'clasificacion_metodo',
+        'clasificacion_confianza', 'telefono', 'direccion', 'ciudad', 'provincia',
+        'codigo_postal', 'latitud', 'longitud', 'fuente', 'estado', 'capturado_at',
+        'contactado_at', 'rastreado_at', 'notas',
     ];
 
     /**
@@ -55,48 +42,106 @@ class Lead extends Model
     protected function casts(): array
     {
         return [
-            'captured_at' => 'datetime',
-            'contacted_at' => 'datetime',
+            'osm_tags_raw' => 'array',
+            'capturado_at' => 'datetime',
+            'contactado_at' => 'datetime',
+            'rastreado_at' => 'datetime',
+            'latitud' => 'decimal:7',
+            'longitud' => 'decimal:7',
         ];
     }
 
-    /**
-     * Leads con email persistido (excluye ruido sin correo).
-     *
-     * @param  Builder<Lead>  $query
-     * @return Builder<Lead>
-     */
-    public function scopeWithEmail(Builder $query): Builder
+    public function emails(): HasMany
     {
-        return $query->whereNotNull('email')->where('email', '!=', '');
+        return $this->hasMany(LeadEmail::class);
     }
 
-    /**
-     * Leads listos para el primer envío de correo.
-     *
-     * @param  Builder<Lead>  $query
-     * @return Builder<Lead>
-     */
-    public function scopeReadyToSend(Builder $query): Builder
+    public function emailPrincipal(): HasOne
     {
-        return $query->where('status', 'nuevo')->whereNotNull('email');
+        return $this->hasOne(LeadEmail::class)->where('es_principal', true);
     }
 
-    /**
-     * Clases Tailwind para mostrar el estado en la interfaz.
-     */
-    public function statusColor(): string
+    public function paginas(): HasMany
     {
-        return match ($this->status) {
-            'nuevo' => 'bg-blue-100 text-blue-800',
-            'sin_email' => 'bg-gray-100 text-gray-800',
-            'contactado' => 'bg-amber-100 text-amber-800',
-            'respondido' => 'bg-green-100 text-green-800',
-            'cliente' => 'bg-emerald-100 text-emerald-800',
-            'descartado' => 'bg-red-100 text-red-800',
-            'baja' => 'bg-rose-100 text-rose-800',
-            'rebotado' => 'bg-orange-100 text-orange-800',
-            default => 'bg-slate-100 text-slate-800',
-        };
+        return $this->hasMany(Pagina::class);
+    }
+
+    public function auditoria(): HasOne
+    {
+        return $this->hasOne(Auditoria::class);
+    }
+
+    public function mensajes(): HasMany
+    {
+        return $this->hasMany(Mensaje::class);
+    }
+
+    public function scopeConEmail(Builder $query): Builder
+    {
+        return $query->whereHas('emails');
+    }
+
+    public function scopePorSector(Builder $query, string $sector): Builder
+    {
+        return $query->where('sector', $sector);
+    }
+
+    public function scopeSinRastrear(Builder $query): Builder
+    {
+        return $query->whereNull('rastreado_at')->whereNotNull('website');
+    }
+
+    public function scopeSinClasificar(Builder $query): Builder
+    {
+        return $query->whereNull('sector');
+    }
+
+    public function scopeAuditables(Builder $query): Builder
+    {
+        return $query->whereNotNull('rastreado_at')->whereHas('paginas');
+    }
+
+    public function scopeCandidatosEnvio(Builder $query): Builder
+    {
+        return $query
+            ->where('estado', 'auditado')
+            ->whereNotNull('sector')
+            ->whereHas('auditoria', fn (Builder $q) => $q->whereNotNull('hallazgo_principal'))
+            ->whereHas('emails', fn (Builder $q) => $q
+                ->where('es_principal', true)
+                ->where('estado_verificacion', 'valido'));
+    }
+
+    public function etiquetaEstado(): string
+    {
+        return self::ESTADOS[$this->estado] ?? $this->estado;
+    }
+
+    public function etiquetaSector(): ?string
+    {
+        if ($this->sector === null) {
+            return null;
+        }
+
+        return config("sectores.{$this->sector}.etiqueta");
+    }
+
+    public function plantilla(): ?string
+    {
+        if ($this->sector === null) {
+            return null;
+        }
+
+        return config("sectores.{$this->sector}.plantilla");
+    }
+
+    public function homeCapturada(): ?Pagina
+    {
+        return $this->paginas()
+            ->where(function (Builder $query): void {
+                $query->where('ruta', '/')->orWhere('ruta', '');
+            })
+            ->orderByDesc('capturada_at')
+            ->first();
     }
 }

@@ -17,55 +17,41 @@ class LeadFactory extends Factory
      */
     public function definition(): array
     {
+        $dominio = fake()->domainName();
+        $sectores = array_keys(config('sectores'));
+
         return [
-            'place_id' => 'node/'.fake()->unique()->numberBetween(1_000_000, 9_999_999),
-            'name' => fake()->company(),
-            'website' => 'https://'.fake()->unique()->domainName(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_check' => 'valido',
-            'phone' => fake()->optional()->phoneNumber(),
-            'address' => fake()->optional()->address(),
-            'status' => 'nuevo',
-            'segmento' => 'agencia',
-            'captured_at' => now(),
-            'contacted_at' => null,
-            'notes' => null,
+            'nombre' => fake()->company(),
+            'website' => 'https://'.$dominio,
+            'website_dominio' => $dominio,
+            'place_id' => 'node/'.fake()->unique()->numberBetween(1, 999999),
+            'fuente' => 'overpass',
+            'estado' => 'nuevo',
+            'sector' => fake()->randomElement($sectores),
+            'capturado_at' => now(),
         ];
     }
 
-    /**
-     * Lead listo para el primer envío (status nuevo + email).
-     */
-    public function readyToSend(): static
+    public function auditado(): static
     {
-        return $this->state(fn (): array => [
-            'status' => 'nuevo',
-            'email' => fake()->unique()->safeEmail(),
-            'email_check' => 'valido',
-            'contacted_at' => null,
+        return $this->state(fn (array $attributes) => [
+            'estado' => 'auditado',
+            'rastreado_at' => now(),
         ]);
     }
 
-    /**
-     * Lead ya contactado (cuenta para cupo / warm-up).
-     */
-    public function contactado(?\DateTimeInterface $cuando = null): static
+    public function conSector(string $sector): static
     {
-        return $this->state(fn (): array => [
-            'status' => 'contactado',
-            'contacted_at' => $cuando ?? now(),
+        return $this->state(fn (array $attributes) => [
+            'sector' => $sector,
         ]);
     }
 
-    /**
-     * Sin email: no entra en agencies:send.
-     */
-    public function sinEmail(): static
+    public function sinWeb(): static
     {
-        return $this->state(fn (): array => [
-            'status' => 'sin_email',
-            'email' => null,
-            'email_check' => null,
+        return $this->state(fn (array $attributes) => [
+            'website' => null,
+            'website_dominio' => null,
         ]);
     }
 }

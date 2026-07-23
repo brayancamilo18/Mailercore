@@ -1,0 +1,595 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:psiCaducado\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/AuditarPageSpeedCommand.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 1
+			path: app/Console/Commands/AuditarWebCommand.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\AuditarWebCommand\:\:consultaBase\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Console/Commands/AuditarWebCommand.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Lead\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/BackfillSectoresCommand.php
+
+		-
+			message: '#^Cannot call method diffInSeconds\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Console/Commands/CosechaRunCommand.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Console/Commands/EstadoEnvioCommand.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\DiaEnvio\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Console/Commands/EstadoEnvioCommand.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\DiaEnvio\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Console/Commands/EstadoEnvioCommand.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<int, mixed\>\>\:\:all\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Console/Commands/EstadoEnvioCommand.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>cuota_planificada" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/EstadoEnvioCommand.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>enviados" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/EstadoEnvioCommand.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>escalon" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/EstadoEnvioCommand.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>salud" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/EstadoEnvioCommand.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>timestamp" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/PodarCommand.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>salud" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/SaludSistemaCommand.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Lead\:\:\$auditados\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SectoresStatusCommand.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Lead\:\:\$con_email_rol\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SectoresStatusCommand.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Lead\:\:\$contactados\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SectoresStatusCommand.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Lead\:\:\$rastreados\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SectoresStatusCommand.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Lead\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SectoresStatusCommand.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Mensaje\:\:\$lead\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ColaController.php
+
+		-
+			message: '#^Relation ''lead'' is not found in App\\Models\\Mensaje model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ColaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Mensaje\:\:\$lead\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Jobs/EnviarMensajeJob.php
+
+		-
+			message: '#^Parameter \#1 \$fecha of static method App\\Models\\DiaEnvio\:\:paraFecha\(\) expects Carbon\\Carbon, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Jobs/EnviarMensajeJob.php
+
+		-
+			message: '#^Unknown parameter \$textString in call to Illuminate\\Mail\\Mailables\\Content constructor\.$#'
+			identifier: argument.unknown
+			count: 1
+			path: app/Mail/CorreoOutreach.php
+
+		-
+			message: '#^Method App\\Models\\AreaCosecha\:\:scopeOrdenadas\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/AreaCosecha.php
+
+		-
+			message: '#^Method App\\Models\\AreaCosecha\:\:scopeOrdenadas\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/AreaCosecha.php
+
+		-
+			message: '#^Method App\\Models\\Auditoria\:\:lead\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Auditoria.php
+
+		-
+			message: '#^Method App\\Models\\Auditoria\:\:scopeConPsi\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Auditoria.php
+
+		-
+			message: '#^Method App\\Models\\Auditoria\:\:scopeConPsi\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Auditoria.php
+
+		-
+			message: '#^Method App\\Models\\Auditoria\:\:scopePsiCaducado\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Auditoria.php
+
+		-
+			message: '#^Method App\\Models\\Auditoria\:\:scopePsiCaducado\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Auditoria.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Models/Auditoria.php
+
+		-
+			message: '#^Parameter \#1 \$array of function usort expects TArray of array\<array\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Models/Auditoria.php
+
+		-
+			message: '#^Method App\\Models\\EventoInbox\:\:mensaje\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/EventoInbox.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:auditoria\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasOne does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:emailPrincipal\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasOne does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:emails\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:homeCapturada\(\) should return App\\Models\\Pagina\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:mensajes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:paginas\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeAuditables\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeAuditables\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeCandidatosEnvio\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeCandidatosEnvio\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeConEmail\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeConEmail\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopePorSector\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopePorSector\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeSinClasificar\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeSinClasificar\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeSinRastrear\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Method App\\Models\\Lead\:\:scopeSinRastrear\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Lead.php
+
+		-
+			message: '#^Cannot call method lt\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/LeadEmail.php
+
+		-
+			message: '#^Method App\\Models\\LeadEmail\:\:lead\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LeadEmail.php
+
+		-
+			message: '#^Method App\\Models\\LeadEmail\:\:scopeValidos\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LeadEmail.php
+
+		-
+			message: '#^Method App\\Models\\LeadEmail\:\:scopeValidos\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LeadEmail.php
+
+		-
+			message: '#^Method App\\Models\\LeadEmail\:\:scopeVerificacionVigente\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LeadEmail.php
+
+		-
+			message: '#^Method App\\Models\\LeadEmail\:\:scopeVerificacionVigente\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LeadEmail.php
+
+		-
+			message: '#^Class App\\Models\\Mensaje uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Mensaje.php
+
+		-
+			message: '#^Method App\\Models\\Mensaje\:\:lead\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Mensaje.php
+
+		-
+			message: '#^Method App\\Models\\Mensaje\:\:leadEmail\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Mensaje.php
+
+		-
+			message: '#^Method App\\Models\\Mensaje\:\:scopeColgados\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Mensaje.php
+
+		-
+			message: '#^Method App\\Models\\Mensaje\:\:scopePendientesVencidos\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Mensaje.php
+
+		-
+			message: '#^Method App\\Models\\Mensaje\:\:scopeUltimosEnviados\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Mensaje.php
+
+		-
+			message: '#^Method App\\Models\\Pagina\:\:lead\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Pagina.php
+
+		-
+			message: '#^Method App\\Models\\Pagina\:\:scopeExitosas\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Pagina.php
+
+		-
+			message: '#^Method App\\Models\\Pagina\:\:scopeExitosas\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Pagina.php
+
+		-
+			message: '#^Method App\\Models\\Pagina\:\:scopeHome\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Pagina.php
+
+		-
+			message: '#^Method App\\Models\\Pagina\:\:scopeHome\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Pagina.php
+
+		-
+			message: '#^Cannot call method greaterThanOrEqualTo\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Auditoria/Comprobaciones/CertificadoCaduca.php
+
+		-
+			message: '#^Parameter \#2 \$paginas of method App\\Services\\Auditoria\\ContratoComprobacion\:\:evaluar\(\) expects Illuminate\\Support\\Collection\<int, App\\Models\\Pagina\>, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Auditoria/MotorAuditoria.php
+
+		-
+			message: '#^Parameter \#3 \$auditoria of method App\\Services\\Auditoria\\ContratoComprobacion\:\:evaluar\(\) expects App\\Models\\Auditoria\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Auditoria/MotorAuditoria.php
+
+		-
+			message: '#^Method App\\Services\\Clasificacion\\CatalogoSectores\:\:familias\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 2
+			path: app/Services/Clasificacion/CatalogoSectores.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$h1_texto\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Clasificacion/ClasificadorSector.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$meta_description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Clasificacion/ClasificadorSector.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ruta\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Clasificacion/ClasificadorSector.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Clasificacion/ClasificadorSector.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Mensaje\:\:\$lead\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Envio/PlanificadorDiario.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Envio/PlanificadorDiario.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$hallazgo_codigo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Envio/PlanificadorDiario.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$hallazgo_secundario_codigo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Envio/PlanificadorDiario.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<int\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/Envio/PlanificadorDiario.php
+
+		-
+			message: '#^Relation ''lead'' is not found in App\\Models\\Mensaje model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Services/Envio/PlanificadorDiario.php
+
+		-
+			message: '#^Parameter \#2 \$auditoria of method App\\Services\\Auditoria\\RedactorHallazgo\:\:redactar\(\) expects App\\Models\\Auditoria, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Envio/Renderizador.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Services/Inbox/LectorBandejaImap.php
+
+		-
+			message: '#^Parameter \#1 \$config of method Webklex\\PHPIMAP\\Client\:\:setConfig\(\) expects Webklex\\PHPIMAP\\Config, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Inbox/LectorBandejaImap.php
+
+		-
+			message: '#^Ternary operator condition is always false\.$#'
+			identifier: ternary.alwaysFalse
+			count: 1
+			path: app/Services/Inbox/LectorBandejaImap.php
+
+		-
+			message: '#^Method App\\Services\\Inbox\\ProcesadorBandeja\:\:leadPorEmail\(\) should return App\\Models\\Lead\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Inbox/ProcesadorBandeja.php
+
+		-
+			message: '#^Parameter \#1 \$fecha of static method App\\Models\\DiaEnvio\:\:paraFecha\(\) expects Carbon\\Carbon, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Inbox/ProcesadorBandeja.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>programado_para" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Inbox/ProcesadorBandeja.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$lead\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Panel/DatosPanel.php
+
+		-
+			message: '#^Method App\\Services\\Panel\\DatosPanel\:\:cosecha\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Panel/DatosPanel.php
+
+		-
+			message: '#^Method App\\Services\\Panel\\DatosPanel\:\:embudo\(\) should return list\<array\{clave\: string, etiqueta\: string, total\: int, porcentaje\: float\|null\}\> but returns array\{array\{clave\: ''totales'', etiqueta\: ''Leads totales'', total\: int\<0, max\>\}, array\{clave\: ''email_rol'', etiqueta\: ''Con email de rol'', total\: int\<0, max\>\}, array\{clave\: ''clasificados'', etiqueta\: ''Clasificados'', total\: int\<0, max\>\}, array\{clave\: ''rastreados'', etiqueta\: ''Rastreados'', total\: int\<0, max\>\}, array\{clave\: ''auditados'', etiqueta\: ''Auditados'', total\: int\<0, max\>\}, array\{clave\: ''en_cola'', etiqueta\: ''En cola'', total\: int\<0, max\>\}, array\{clave\: ''contactados'', etiqueta\: ''Contactados'', total\: int\<0, max\>\}, array\{clave\: ''respondidos'', etiqueta\: ''Respondidos'', total\: int\<0, max\>\}, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Panel/DatosPanel.php
+
+		-
+			message: '#^Method App\\Services\\Panel\\DatosPanel\:\:ultimasRespuestas\(\) should return Illuminate\\Support\\Collection\<int, array\{evento\: App\\Models\\EventoInbox, lead\: App\\Models\\Lead\|null, dominio\: string\|null\}\> but returns Illuminate\\Support\\Collection\<int, array\{evento\: App\\Models\\EventoInbox, lead\: mixed, dominio\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Panel/DatosPanel.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\EventoInbox\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Panel/DatosPanel.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\EventoInbox\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Services/Panel/DatosPanel.php
+
+		-
+			message: '#^Call to an undefined method DOMNode\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 11
+			path: app/Services/Web/ExtractorMetadatos.php
+
+		-
+			message: '#^Call to an undefined method DOMNode\:\:hasAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Web/ExtractorMetadatos.php

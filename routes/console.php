@@ -1,6 +1,5 @@
 <?php
 
-use App\Services\HarvestControl;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -9,27 +8,51 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Envío automático: SOLO si outreach.sending.enabled = true (pausado por defecto).
-// Independiente de la cosecha: ahora solo se recogen emails.
-Schedule::command('agencies:send')
+Schedule::command('cosecha:ejecutar')
+    ->cron('*/'.max(1, min(59, (int) config('outreach.cosecha.intervalo_minutos', 5))).' * * * *')
+    ->withoutOverlapping(15)
+    ->runInBackground();
+
+// Watchdog de resiliencia: detecta y repara procesos parados cada minuto.
+Schedule::command('sistema:vigilante')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Registro periódico de salud en el log (para auditoría/alertas externas).
+Schedule::command('sistema:salud --json')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/salud.log'));
+
+Schedule::command('envio:planificar')
     ->weekdays()
-    ->at('09:30')
+    ->at('07:00')
     ->timezone('Europe/Madrid')
     ->withoutOverlapping()
-    ->when(fn (): bool => (bool) config('outreach.sending.enabled'));
+    ->when(fn (): bool => (bool) config('outreach.envio.activo'));
 
-Schedule::command('outreach:process-inbox')
-    ->everyFifteenMinutes()
+Schedule::command('envio:despachar')
+    ->everyMinute()
+    ->withoutOverlapping(5);
+
+Schedule::command('envio:recuperar')
+    ->everyTenMinutes()
     ->withoutOverlapping();
 
-$harvestInterval = max(1, min(59, (int) config('outreach.harvest.interval', 5)));
+Schedule::command('outreach:bandeja')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->when(fn (): bool => \App\Console\Commands\ProcesarBandejaCommand::imapConfigurado());
 
-Schedule::command('harvest:run')
-    ->cron(sprintf('*/%d * * * *', $harvestInterval))
-    ->withoutOverlapping(max(10, (int) config('outreach.harvest.lock_seconds', 900) / 60))
-    ->when(fn (): bool => HarvestControl::isEnabled());
+Schedule::command('emails:verificar --solo-cola')
+    ->weekdays()
+    ->at('20:00')
+    ->timezone('Europe/Madrid')
+    ->withoutOverlapping();
 
-Schedule::command('harvest:prune-logs')
+Schedule::command('sistema:podar')
     ->weeklyOn(0, '03:15')
     ->timezone('Europe/Madrid')
     ->withoutOverlapping();

@@ -9,14 +9,16 @@
         "php": "^8.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "predis/predis": "^3.5",
         "symfony/css-selector": "^7.4",
         "symfony/dom-crawler": "^7.4",
         "webklex/laravel-imap": "^6.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.10",
         "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
+        "laravel/pint": "^1.29",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
@@ -82,9 +84,6 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
-        },
-        "platform": {
-            "php": "8.3.12"
         }
     },
     "minimum-stability": "stable",

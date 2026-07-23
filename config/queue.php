@@ -68,7 +68,10 @@ return [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
+            // IMPORTANTE: retry_after DEBE ser mayor que el timeout más alto de los
+            // jobs (scraping 180s, pagespeed 150s). Si no, Redis reencola un job
+            // que aún se está ejecutando y se procesa por duplicado.
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 240),
             'block_for' => null,
             'after_commit' => false,
         ],

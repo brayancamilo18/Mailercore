@@ -1,0 +1,65 @@
+{
+    "id": "https://example.com/",
+    "lighthouseResult": {
+        "requestedUrl": "https://example.com/",
+        "finalUrl": "https://example.com/",
+        "lighthouseVersion": "11.0.0",
+        "fetchTime": "2026-07-23T18:00:00.000Z",
+        "categories": {
+            "performance": {
+                "id": "performance",
+                "title": "Performance",
+                "score": 0.42
+            },
+            "accessibility": {
+                "id": "accessibility",
+                "title": "Accessibility",
+                "score": 0.65
+            },
+            "best-practices": {
+                "id": "best-practices",
+                "title": "Best Practices",
+                "score": 0.77
+            },
+            "seo": {
+                "id": "seo",
+                "title": "SEO",
+                "score": 0.85
+            }
+        },
+        "audits": {
+            "largest-contentful-paint": {
+                "id": "largest-contentful-paint",
+                "title": "Largest Contentful Paint",
+                "score": 0.2,
+                "numericValue": 5200.4,
+                "numericUnit": "millisecond",
+                "displayValue": "5.2 s"
+            },
+            "cumulative-layout-shift": {
+                "id": "cumulative-layout-shift",
+                "title": "Cumulative Layout Shift",
+                "score": 0.9,
+                "numericValue": 0.1234,
+                "numericUnit": "unitless",
+                "displayValue": "0.123"
+            },
+            "total-blocking-time": {
+                "id": "total-blocking-time",
+                "title": "Total Blocking Time",
+                "score": 0.5,
+                "numericValue": 450.6,
+                "numericUnit": "millisecond",
+                "displayValue": "450 ms"
+            },
+            "total-byte-weight": {
+                "id": "total-byte-weight",
+                "title": "Avoid enormous network payloads",
+                "score": 0.5,
+                "numericValue": 2048000,
+                "numericUnit": "byte",
+                "displayValue": "Total size was 2,000 KiB"
+            }
+        }
+    }
+}
