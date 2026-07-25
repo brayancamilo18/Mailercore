@@ -126,7 +126,9 @@ class PlanificadorDiario
                 continue;
             }
 
-            $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'localhost';
+            $host = \App\Models\Suppression::dominioDeEmail((string) config('mail.from.address'))
+                ?: parse_url((string) config('app.url'), PHP_URL_HOST)
+                ?: 'localhost';
 
             Mensaje::query()->create([
                 'lead_id' => $lead->id,
