@@ -65,9 +65,10 @@ class Renderizador
             throw new PlantillaInvalida('Asunto de '.mb_strlen($asunto).' caracteres');
         }
 
-        // Cuerpo sin pie legal (---) ni firma (--): solo el mensaje comercial se valida.
-        $cuerpo = explode("\n---", $texto)[0];
-        $cuerpoSinFirma = explode("\n--\n", $cuerpo)[0];
+        // Cuerpo sin firma (--): solo el mensaje comercial se valida.
+        $cuerpoSinFirma = explode("\n--\n", $texto)[0];
+        // Compatibilidad con plantillas antiguas que separaban el pie con ---.
+        $cuerpoSinFirma = explode("\n---", $cuerpoSinFirma)[0];
         $palabras = str_word_count(strip_tags($cuerpoSinFirma), 0, 'áéíóúñüÁÉÍÓÚÑÜ');
         $maximo = $paso === 1 ? $cfg['max_palabras_cuerpo'] : $cfg['max_palabras_seguimiento'];
 

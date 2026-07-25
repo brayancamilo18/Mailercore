@@ -181,7 +181,7 @@ class RenderizadorTest extends TestCase
                 $this->assertNotNull($resultado);
 
                 $this->assertStringContainsString(
-                    "Camilo Silva\nDesarrollador Web | Soluciones Tecnológicas |\n625 01 50 90",
+                    "Camilo Silva\nDesarrollador Web | Soluciones Tecnológicas\n625 01 50 90",
                     $resultado['texto'],
                     "{$sector}-{$paso} no tiene la firma completa"
                 );
@@ -209,7 +209,35 @@ class RenderizadorTest extends TestCase
                 $resultado['texto'],
                 "{$sector}-1 sin presentación"
             );
+            // La presentación va al inicio (tras el saludo), no oculta al final.
+            $posPresentacion = strpos($resultado['texto'], 'Mi nombre es Camilo Silva');
+            $posAperturaHint = strpos($resultado['texto'], 'Un saludo');
+            $this->assertNotFalse($posPresentacion);
+            $this->assertNotFalse($posAperturaHint);
+            $this->assertLessThan(
+                $posAperturaHint,
+                $posPresentacion,
+                "{$sector}-1: la presentación debe ir antes del cierre"
+            );
         }
+    }
+
+    public function test_firma_y_pie_van_unificados(): void
+    {
+        $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria('hosteleria'), 1);
+        $this->assertNotNull($resultado);
+
+        $this->assertStringNotContainsString(
+            "\n---\n",
+            $resultado['texto'],
+            'El pie legal no debe ir en un bloque --- separado'
+        );
+        $this->assertMatchesRegularExpression(
+            "/--\nCamilo Silva\nDesarrollador Web \| Soluciones Tecnológicas\n625 01 50 90\n.+\nSi no quieres recibir más correos míos, responde BAJA/s",
+            $resultado['texto']
+        );
+        $this->assertStringContainsString('responde BAJA', $resultado['html']);
+        $this->assertStringNotContainsString('<hr>', $resultado['html']);
     }
 
     public function test_ninguna_plantilla_suena_comercial(): void
@@ -270,7 +298,7 @@ class RenderizadorTest extends TestCase
         $original = file_get_contents($ruta);
         $this->assertNotFalse($original);
 
-        file_put_contents($ruta, str_replace('Camilo', "Camilo\nsilgodev", $original));
+        file_put_contents($ruta, str_replace('más cómoda', "más cómoda\nsilgodev", $original));
 
         try {
             $this->expectException(PlantillaInvalida::class);
