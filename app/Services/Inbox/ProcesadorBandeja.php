@@ -183,6 +183,15 @@ class ProcesadorBandeja
         $email = Suppression::normalizarEmail($resultado->emailAfectado ?? $entrante->desdeEmail);
         $lead = $this->leadPorEmail($email);
 
+        // Solo cuenta como respuesta si correlaciona con un envío nuestro
+        // o viene de un lead que ya contactamos. Si no, es correo ajeno de la bandeja.
+        $esRespuestaReal = $resultado->mensajeId !== null
+            || ($lead !== null && in_array($lead->estado, ['contactado', 'seguimiento', 'en_cola', 'respondido'], true));
+
+        if (! $esRespuestaReal) {
+            return 'ignorado';
+        }
+
         if ($lead !== null && in_array($lead->estado, ['contactado', 'seguimiento'], true)) {
             $lead->update(['estado' => 'respondido']);
             Mensaje::query()

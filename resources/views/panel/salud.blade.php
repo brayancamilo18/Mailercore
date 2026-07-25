@@ -25,10 +25,11 @@
                 @forelse ($dias as $dia)
                     @php
                         $alto = (int) round(((int) $dia->enviados / $maxEnviados) * 100);
-                        $altoBarra = max($alto, $dia->enviados > 0 ? 4 : 0);
+                        $altoBarra = max($alto, $dia->enviados > 0 ? 8 : 0);
                     @endphp
-                    <div class="flex-1 flex flex-col justify-end items-center gap-1 min-w-0" title="{{ $dia->fecha->format('Y-m-d') }}: {{ $dia->enviados }}">
-                        <div class="w-full bg-slate-800" @style(['height' => $altoBarra.'%'])></div>
+                    <div class="flex-1 h-full flex flex-col justify-end items-center min-w-0" title="{{ $dia->fecha->format('Y-m-d') }}: {{ $dia->enviados }} enviados">
+                        <div class="w-full max-w-[14px] mx-auto rounded-sm bg-slate-800" style="height: {{ $altoBarra }}%"></div>
+                        <span class="mt-1 text-[10px] text-slate-400 truncate w-full text-center">{{ $dia->fecha->format('d') }}</span>
                     </div>
                 @empty
                     <p class="text-sm text-slate-500">Sin datos de envío.</p>
