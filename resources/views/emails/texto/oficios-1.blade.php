@@ -2,9 +2,9 @@ Hola,
 
 {{ $apertura }}
 
-Son cosas que se arreglan en un rato; no es nada grave y le dejan a la web mejor pinta al entrar desde el móvil.
+Con un par de retoques quedaría más a punto y más fácil de usar desde el móvil.
 
-Si te apetece ver alguna cosa que he montado, respóndeme y te enseño; y si no, sin problema.
+Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos, y si no, sin lío.
 
 Un saludo,
 Camilo

@@ -2,9 +2,9 @@ Hola,
 
 {{ $apertura }}
 
-No es nada grave; son un par de detalles que se dejan decentes en un rato y la web se nota más clara.
+Con unos ajustes se vería más sólida y cuidada, que al final es lo que transmite seriedad.
 
-Si quieres le damos una vuelta juntos y te enseño algo que he hecho parecido, sin líos de nada.
+Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos, y si no, sin lío.
 
 Un saludo,
 Camilo

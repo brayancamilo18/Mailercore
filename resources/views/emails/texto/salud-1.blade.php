@@ -2,9 +2,9 @@ Hola,
 
 {{ $apertura }}
 
-No es nada del otro mundo; son cosillas que se dejan finas en un rato y la web se siente más cuidada al entrar.
+Con algún retoque transmitiría aún más confianza y sería más fácil de usar para quien te busca.
 
-Si te apetece ver alguna cosa que he montado para clínicas o consultas, respóndeme y te enseño; y si no, sin problema.
+Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos, y si no, sin lío.
 
 Un saludo,
 Camilo

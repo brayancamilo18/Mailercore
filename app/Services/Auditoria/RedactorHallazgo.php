@@ -7,69 +7,62 @@ use App\Models\Lead;
 
 class RedactorHallazgo
 {
-    /** @var array<string, array<string, array{asunto: string, apertura: string}>>|null */
-    private static ?array $frasesCache = null;
-
     /**
-     * @return array{asunto: string, apertura: string}|null
+     * Elige la apertura del correo: HTTPS solo si está confirmado y es el primer
+     * contacto; en cualquier otro caso, apertura genérica del sector.
+     *
+     * @return array{asunto: string, apertura: string}
      */
-    public function redactar(Lead $lead, Auditoria $auditoria, bool $secundario = false): ?array
+    public function redactar(Lead $lead, ?Auditoria $auditoria = null, bool $secundario = false): array
     {
-        $codigo = $secundario ? $auditoria->hallazgo_secundario_codigo : $auditoria->hallazgo_codigo;
+        // 1. ¿El sistema confirmó que NO usa HTTPS? Es lo único verificable que
+        //    podemos mencionar. Solo en el primer contacto, no en el seguimiento.
+        if (! $secundario && $this->faltaHttps($lead)) {
+            $variantes = require resource_path('data/aperturas_https.php');
 
-        if ($codigo === null) {
-            return null;
+            return $this->elegirYRellenar($variantes, $lead, secundario: false);
         }
 
-        $frases = $this->frases();
-        $bloque = $frases[$codigo][$lead->sector] ?? $frases[$codigo]['generico'] ?? null;
+        // 2. En cualquier otro caso, apertura genérica del sector del lead.
+        $todas = require resource_path('data/aperturas_sector.php');
+        $sector = $lead->sector ?? 'generico';
+        $variantes = $todas[$sector] ?? $todas['generico'];
 
-        if ($bloque === null) {
-            return null;   // sin frase, el lead no se envía
-        }
-
-        $hallazgo = collect($auditoria->hallazgos ?? [])->firstWhere('codigo', $codigo);
-        /** @var array<string, mixed> $datos */
-        $datos = is_array($hallazgo) ? ($hallazgo['datos'] ?? []) : [];
-
-        $sustituciones = array_merge($datos, [
-            'nombre' => $lead->nombre,
-            'dominio' => $lead->website_dominio ?? '',
-        ]);
-
-        $reemplazar = function (string $texto) use ($sustituciones): string {
-            foreach ($sustituciones as $clave => $valor) {
-                $texto = str_replace('{'.$clave.'}', $this->formatear($valor), $texto);
-            }
-
-            // Si queda algún marcador sin sustituir, la frase no sirve.
-            return $texto;
-        };
-
-        $asunto = $reemplazar($bloque['asunto']);
-        $apertura = $reemplazar($bloque['apertura']);
-
-        if (str_contains($asunto, '{') || str_contains($apertura, '{')) {
-            return null;
-        }
-
-        return ['asunto' => $asunto, 'apertura' => $apertura];
+        return $this->elegirYRellenar($variantes, $lead, $secundario);
     }
 
-    private function formatear(mixed $valor): string
+    /** ¿La auditoría confirmó ausencia de HTTPS en la home? */
+    private function faltaHttps(Lead $lead): bool
     {
-        if (is_float($valor)) {
-            return number_format($valor, 1, ',', '');
-        }
+        $home = $lead->paginas->firstWhere('ruta', '/') ?? $lead->paginas->first();
 
-        return (string) $valor;
+        return $home !== null && $home->es_https === false;
     }
 
     /**
-     * @return array<string, array<string, array{asunto: string, apertura: string}>>
+     * Elige una variante de forma estable por lead (para que si se reenvía salga
+     * la misma) y rellena {dominio} y {nombre}.
+     * En seguimiento ($secundario) usa la otra variante para no repetir el correo 1.
+     *
+     * @param  list<array{asunto: string, apertura: string}>  $variantes
+     * @return array{asunto: string, apertura: string}
      */
-    private function frases(): array
+    private function elegirYRellenar(array $variantes, Lead $lead, bool $secundario = false): array
     {
-        return self::$frasesCache ??= require resource_path('data/frases_hallazgo.php');
+        $indice = $secundario
+            ? ($lead->id + 1) % count($variantes)
+            : $lead->id % count($variantes);
+
+        $bloque = $variantes[$indice];
+
+        $sustituciones = [
+            '{dominio}' => $lead->website_dominio ?? 'tu web',
+            '{nombre}' => $lead->nombre ?? 'tu negocio',
+        ];
+
+        return [
+            'asunto' => strtr($bloque['asunto'], $sustituciones),
+            'apertura' => strtr($bloque['apertura'], $sustituciones),
+        ];
     }
 }

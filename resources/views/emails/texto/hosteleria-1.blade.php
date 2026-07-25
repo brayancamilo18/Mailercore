@@ -2,9 +2,9 @@ Hola,
 
 {{ $apertura }}
 
-No es nada grave, la verdad; son un par de detalles que se arreglan en un rato y le darían un buen lavado de cara.
+Con unos retoques quedaría más apetecible y más cómoda desde el móvil, que es donde la mira casi todo el mundo.
 
-Estuve montando hace poco un par de webs parecidas y quedaron chulas. Si te apetece verlas respóndeme y te las enseño, y si no, sin problema.
+Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos, y si no, sin lío.
 
 Un saludo,
 Camilo

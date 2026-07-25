@@ -120,16 +120,32 @@ class DiagnosticoEnvioCommand extends Command
 
     private function comprobarDkim(string $dominio): void
     {
-        $selectores = ['default', 'hostinger', 'hs1', 's1', 'mail', 'google'];
+        $habituales = [
+            'hostingermail1', 'hostingermail2',
+            'default', 'hostinger', 'hs1', 's1', 'mail', 'google',
+        ];
+
+        $configurado = config('outreach.envio.dkim_selector');
+        $selectores = [];
+
+        if (is_string($configurado) && trim($configurado) !== '') {
+            $selectores[] = trim($configurado);
+        }
+
+        foreach ($habituales as $selector) {
+            if (! in_array($selector, $selectores, true)) {
+                $selectores[] = $selector;
+            }
+        }
+
         $encontrados = [];
 
         foreach ($selectores as $selector) {
             $host = "{$selector}._domainkey.{$dominio}";
-            foreach ($this->registrosTxt($host) as $txt) {
-                if (str_contains(strtolower($txt), 'v=dkim1') || str_contains($txt, 'p=')) {
-                    $encontrados[] = $selector;
-                    break;
-                }
+            $txt = strtolower($this->textoTxtConcatenado($host));
+
+            if (str_contains($txt, 'v=dkim1')) {
+                $encontrados[] = $selector;
             }
         }
 
@@ -232,8 +248,9 @@ class DiagnosticoEnvioCommand extends Command
     private function comprobarUrlBaja(): void
     {
         $url = config('outreach.envio.remitente.url_baja');
-        if (empty($url)) {
-            $this->anadir('URL de baja', 'AVISO', 'OUTREACH_URL_BAJA no configurada (solo mailto)');
+
+        if ($url === null || trim((string) $url) === '') {
+            $this->anadir('URL de baja', 'OK', 'No configurada (baja por respuesta BAJA)');
 
             return;
         }
@@ -359,19 +376,28 @@ class DiagnosticoEnvioCommand extends Command
     }
 
     /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     private function registrosTxt(string $host): array
     {
         $registros = @dns_get_record($host, DNS_TXT) ?: [];
         $textos = [];
 
         foreach ($registros as $registro) {
-            if (isset($registro['txt']) && is_string($registro['txt'])) {
+            if (isset($registro['entries']) && is_array($registro['entries'])) {
+                $textos[] = implode('', array_map('strval', $registro['entries']));
+            } elseif (isset($registro['txt']) && is_string($registro['txt'])) {
                 $textos[] = $registro['txt'];
-            } elseif (isset($registro['entries']) && is_array($registro['entries'])) {
-                $textos[] = implode('', $registro['entries']);
             }
         }
 
         return $textos;
+    }
+
+    /** Concatena todos los TXT del host (DKIM suele partirse en varias cadenas). */
+    private function textoTxtConcatenado(string $host): string
+    {
+        return implode('', $this->registrosTxt($host));
     }
 }

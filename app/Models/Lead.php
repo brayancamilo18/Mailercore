@@ -106,7 +106,7 @@ class Lead extends Model
         return $query
             ->where('estado', 'auditado')
             ->whereNotNull('sector')
-            ->whereHas('auditoria', fn (Builder $q) => $q->whereNotNull('hallazgo_principal'))
+            ->whereHas('auditoria')
             ->whereHas('emails', fn (Builder $q) => $q
                 ->where('es_principal', true)
                 ->where('estado_verificacion', 'valido'));

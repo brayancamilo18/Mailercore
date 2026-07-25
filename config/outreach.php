@@ -98,9 +98,10 @@ return [
         'ventana_seguimiento_dias' => [5, 9],
         'porcentaje_seguimientos' => 25,
         'max_palabras_cuerpo' => 110,
-        'max_palabras_seguimiento' => 40,
+        'max_palabras_seguimiento' => 60,
         'max_enlaces' => 0,
         'max_caracteres_asunto' => 60,
+        'dkim_selector' => env('OUTREACH_DKIM_SELECTOR'),
         'palabras_prohibidas' => [
             'gratis', 'oferta', 'promoción', 'promocion', 'urgente', 'exclusivo',
             'garantizado', '100%', 'descuento', 'última oportunidad', 'ultima oportunidad',

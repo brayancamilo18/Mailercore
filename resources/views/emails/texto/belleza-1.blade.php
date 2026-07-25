@@ -2,9 +2,9 @@ Hola,
 
 {{ $apertura }}
 
-No es nada grave; con un lavado de cara de un rato la web se siente más cómoda, sobre todo desde el móvil.
+Con unos ajustes le daríamos un aire más cuidado y con más estilo.
 
-Estuve montando hace poco un par de webs parecidas y quedaron bien. Si te apetece verlas respóndeme y te las enseño, y si no, sin problema.
+Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos, y si no, sin lío.
 
 Un saludo,
 Camilo

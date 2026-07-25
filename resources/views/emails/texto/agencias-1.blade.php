@@ -2,9 +2,9 @@ Hola,
 
 {{ $apertura }}
 
-No es nada grave; son detalles que se dejan finos en un rato cuando hay un hueco para cacharrear.
+Si en algún momento vais cargados de curro, os puedo echar una mano con la parte de desarrollo.
 
-Cuando vais hasta arriba a veces viene bien que alguien eche una mano con la parte técnica. Si te pica la curiosidad te enseño un par de cosas que he montado; respóndeme y hablamos, y si no, sin problema.
+Si te encaja, respóndeme y te enseño algún trabajo; y si ahora no es el momento, sin lío.
 
 Un saludo,
 Camilo

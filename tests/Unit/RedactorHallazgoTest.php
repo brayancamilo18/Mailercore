@@ -2,13 +2,16 @@
 
 namespace Tests\Unit;
 
-use App\Models\Auditoria;
 use App\Models\Lead;
+use App\Models\Pagina;
 use App\Services\Auditoria\RedactorHallazgo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class RedactorHallazgoTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @var list<string> */
     private const CODIGOS = [
         'sin_viewport', 'title_malo', 'sin_meta_description', 'h1_incorrecto',
@@ -19,27 +22,9 @@ class RedactorHallazgoTest extends TestCase
         'psi_accesibilidad',
     ];
 
-    /** @var array<string, mixed> */
-    private const DATOS_EJEMPLO = [
-        'nombre' => 'Casa Pérez',
-        'dominio' => 'ejemplo.es',
-        'segundos' => 5.2,
-        'porcentaje' => 45,
-        'anio' => 2019,
-        'kb' => 1800,
-        'mb' => 4.5,
-        'ms' => 3200,
-        'total' => 3,
-        'longitud' => 80,
-        'status' => 404,
-        'dias' => 12,
-        'generador' => 'Wix',
-        'puntuacion' => 42,
-    ];
-
     public function test_todos_los_codigos_tienen_variante_generica(): void
     {
-        $frases = $this->frases();
+        $frases = $this->frasesHallazgo();
 
         foreach (self::CODIGOS as $codigo) {
             $this->assertArrayHasKey($codigo, $frases, "Falta el código {$codigo}");
@@ -51,173 +36,141 @@ class RedactorHallazgoTest extends TestCase
         }
     }
 
-    public function test_ningun_asunto_supera_45_caracteres(): void
+    public function test_aperturas_sector_no_superan_40_caracteres_en_asunto(): void
     {
-        $frases = $this->frases();
-        $redactor = new RedactorHallazgo;
+        $aperturas = require resource_path('data/aperturas_sector.php');
 
-        foreach ($frases as $codigo => $variantes) {
-            foreach ($variantes as $sector => $bloque) {
-                $asunto = $this->sustituir($bloque['asunto'], self::DATOS_EJEMPLO, $redactor);
+        foreach ($aperturas as $sector => $variantes) {
+            foreach ($variantes as $i => $bloque) {
                 $this->assertLessThanOrEqual(
-                    45,
-                    mb_strlen($asunto),
-                    "Asunto de {$codigo}/{$sector} supera 45: [{$asunto}] (".mb_strlen($asunto).')'
+                    40,
+                    mb_strlen($bloque['asunto']),
+                    "Asunto de {$sector}/{$i} supera 40: [{$bloque['asunto']}]"
                 );
             }
         }
     }
 
-    public function test_ninguna_frase_contiene_palabras_prohibidas(): void
+    public function test_aperturas_sector_sin_afirmaciones_peligrosas(): void
     {
-        $prohibidas = [
-            'increíble', 'potente', 'profesional', 'revolucionario', 'líder', 'innovador',
-            'gratis', 'oferta', 'promoción',
-        ];
+        $aperturas = require resource_path('data/aperturas_sector.php');
+        $patron = '/no tienes|te falta|tardas|no se ve|abandonada|problema|error/i';
 
-        $frases = $this->frases();
-
-        foreach ($frases as $codigo => $variantes) {
-            foreach ($variantes as $sector => $bloque) {
-                $texto = mb_strtolower($bloque['asunto'].' '.$bloque['apertura']);
-                foreach ($prohibidas as $palabra) {
-                    $this->assertStringNotContainsString(
-                        mb_strtolower($palabra),
-                        $texto,
-                        "Palabra prohibida «{$palabra}» en {$codigo}/{$sector}"
-                    );
-                }
+        foreach ($aperturas as $sector => $variantes) {
+            foreach ($variantes as $i => $bloque) {
+                $texto = $bloque['asunto'].' '.$bloque['apertura'];
+                $this->assertDoesNotMatchRegularExpression(
+                    $patron,
+                    $texto,
+                    "Afirmación peligrosa en {$sector}/{$i}"
+                );
             }
         }
     }
 
-    public function test_usa_variante_de_sector_si_existe(): void
+    public function test_usa_apertura_generica_del_sector(): void
     {
-        $lead = Lead::factory()->make([
+        $lead = Lead::factory()->create([
             'sector' => 'hosteleria',
-            'nombre' => 'Bar Sol',
-            'website_dominio' => 'barsol.es',
+            'nombre' => 'Bar Paco',
+            'website_dominio' => 'ejemplo.es',
         ]);
 
-        $auditoria = Auditoria::factory()->make([
-            'lead_id' => 1,
-            'hallazgo_codigo' => 'sin_viewport',
-            'hallazgos' => [
-                ['codigo' => 'sin_viewport', 'peso' => 25, 'titulo' => 't', 'detalle' => 'd', 'datos' => []],
-            ],
-        ]);
-
-        $resultado = (new RedactorHallazgo)->redactar($lead, $auditoria);
+        $resultado = (new RedactorHallazgo)->redactar($lead);
 
         $this->assertNotNull($resultado);
-        $this->assertSame('la carta en el móvil', $resultado['asunto']);
-        $this->assertStringContainsString('trompicones', $resultado['apertura']);
+        $hosteleria = require resource_path('data/aperturas_sector.php');
+        $esperada = $hosteleria['hosteleria'][$lead->id % 2];
+
+        $this->assertSame($esperada['asunto'], $resultado['asunto']);
+        $this->assertStringContainsString(
+            str_contains($esperada['apertura'], '{dominio}') ? 'ejemplo.es' : 'Bar Paco',
+            $resultado['apertura']
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/no tienes|te falta|tardas|no se ve|abandonada|problema|error/i',
+            $resultado['apertura']
+        );
     }
 
-    public function test_cae_a_generico_si_no_hay_variante_de_sector(): void
+    public function test_cae_a_generico_si_sector_desconocido(): void
     {
-        $lead = Lead::factory()->make([
-            'sector' => 'agencias',
-            'nombre' => 'Agencia X',
-            'website_dominio' => 'agenciax.es',
+        $lead = Lead::factory()->create([
+            'sector' => 'sector_inventado',
+            'nombre' => 'Negocio X',
+            'website_dominio' => 'negociox.es',
         ]);
 
-        $auditoria = Auditoria::factory()->make([
-            'lead_id' => 1,
-            'hallazgo_codigo' => 'sin_formulario',
-            'hallazgos' => [
-                ['codigo' => 'sin_formulario', 'peso' => 10, 'titulo' => 't', 'detalle' => 'd', 'datos' => []],
-            ],
-        ]);
-
-        $resultado = (new RedactorHallazgo)->redactar($lead, $auditoria);
+        $resultado = (new RedactorHallazgo)->redactar($lead);
+        $generico = require resource_path('data/aperturas_sector.php');
+        $esperada = $generico['generico'][$lead->id % 2];
 
         $this->assertNotNull($resultado);
-        $this->assertSame('cómo contactarte', $resultado['asunto']);
-        $this->assertStringContainsString('agenciax.es', $resultado['apertura']);
+        $this->assertSame($esperada['asunto'], $resultado['asunto']);
+        $this->assertStringContainsString('negociox.es', $resultado['apertura']);
     }
 
-    public function test_devuelve_null_si_falta_el_codigo(): void
+    public function test_usa_apertura_https_si_falta_candado(): void
     {
-        $lead = Lead::factory()->make(['sector' => 'retail']);
-        $auditoria = Auditoria::factory()->make([
-            'lead_id' => 1,
-            'hallazgo_codigo' => null,
-            'hallazgos' => [],
+        $lead = Lead::factory()->create([
+            'sector' => 'hosteleria',
+            'nombre' => 'Bar Paco',
+            'website_dominio' => 'ejemplo.es',
         ]);
 
-        $this->assertNull((new RedactorHallazgo)->redactar($lead, $auditoria));
-    }
-
-    public function test_devuelve_null_si_queda_un_marcador_sin_sustituir(): void
-    {
-        $lead = Lead::factory()->make([
-            'sector' => 'retail',
-            'nombre' => 'Tienda',
-            'website_dominio' => 'tienda.es',
+        Pagina::factory()->create([
+            'lead_id' => $lead->id,
+            'ruta' => '/',
+            'es_https' => false,
         ]);
 
-        // psi_lcp necesita {segundos}; sin datos del hallazgo queda el marcador.
-        $auditoria = Auditoria::factory()->make([
-            'lead_id' => 1,
-            'hallazgo_codigo' => 'psi_lcp',
-            'hallazgos' => [
-                ['codigo' => 'psi_lcp', 'peso' => 30, 'titulo' => 't', 'detalle' => 'd', 'datos' => []],
-            ],
-        ]);
+        $lead->refresh()->load('paginas');
 
-        $this->assertNull((new RedactorHallazgo)->redactar($lead, $auditoria));
-    }
-
-    public function test_formatea_decimales_con_coma(): void
-    {
-        $lead = Lead::factory()->make([
-            'sector' => 'retail',
-            'nombre' => 'Tienda',
-            'website_dominio' => 'tienda.es',
-        ]);
-
-        $auditoria = Auditoria::factory()->make([
-            'lead_id' => 1,
-            'hallazgo_codigo' => 'psi_lcp',
-            'hallazgos' => [
-                [
-                    'codigo' => 'psi_lcp',
-                    'peso' => 30,
-                    'titulo' => 'LCP',
-                    'detalle' => '5200 ms',
-                    'datos' => ['ms' => 5200, 'segundos' => 5.2],
-                ],
-            ],
-        ]);
-
-        $resultado = (new RedactorHallazgo)->redactar($lead, $auditoria);
+        $resultado = (new RedactorHallazgo)->redactar($lead);
+        $https = require resource_path('data/aperturas_https.php');
+        $esperada = $https[$lead->id % 2];
 
         $this->assertNotNull($resultado);
-        $this->assertStringContainsString('5,2', $resultado['asunto']);
-        $this->assertStringContainsString('5,2 segundos', $resultado['apertura']);
+        $this->assertSame($esperada['asunto'], $resultado['asunto']);
+        $this->assertStringContainsString('ejemplo.es', $resultado['apertura']);
+        $this->assertMatchesRegularExpression('/HTTPS|candado/i', $resultado['apertura']);
+    }
+
+    public function test_seguimiento_nunca_usa_https_y_elige_otra_variante(): void
+    {
+        $lead = Lead::factory()->create([
+            'sector' => 'hosteleria',
+            'nombre' => 'Bar Paco',
+            'website_dominio' => 'ejemplo.es',
+        ]);
+
+        Pagina::factory()->create([
+            'lead_id' => $lead->id,
+            'ruta' => '/',
+            'es_https' => false,
+        ]);
+
+        $lead->refresh()->load('paginas');
+
+        $primero = (new RedactorHallazgo)->redactar($lead, secundario: false);
+        $segundo = (new RedactorHallazgo)->redactar($lead, secundario: true);
+
+        $hosteleria = (require resource_path('data/aperturas_sector.php'))['hosteleria'];
+        $esperadaSeguimiento = $hosteleria[($lead->id + 1) % 2];
+
+        $this->assertNotNull($primero);
+        $this->assertNotNull($segundo);
+        $this->assertMatchesRegularExpression('/HTTPS|candado/i', $primero['apertura']);
+        $this->assertDoesNotMatchRegularExpression('/HTTPS|candado/i', $segundo['apertura']);
+        $this->assertSame($esperadaSeguimiento['asunto'], $segundo['asunto']);
+        $this->assertNotSame($primero['asunto'], $segundo['asunto']);
     }
 
     /**
      * @return array<string, array<string, array{asunto: string, apertura: string}>>
      */
-    private function frases(): array
+    private function frasesHallazgo(): array
     {
         return require resource_path('data/frases_hallazgo.php');
-    }
-
-    /**
-     * @param  array<string, mixed>  $datos
-     */
-    private function sustituir(string $texto, array $datos, RedactorHallazgo $redactor): string
-    {
-        $ref = new \ReflectionMethod($redactor, 'formatear');
-        $ref->setAccessible(true);
-
-        foreach ($datos as $clave => $valor) {
-            $texto = str_replace('{'.$clave.'}', $ref->invoke($redactor, $valor), $texto);
-        }
-
-        return $texto;
     }
 }

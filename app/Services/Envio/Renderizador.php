@@ -26,10 +26,6 @@ class Renderizador
 
         $frases = $this->redactor->redactar($lead, $auditoria, secundario: $paso === 2);
 
-        if ($frases === null) {
-            return null;
-        }
-
         $datos = [
             'nombre' => $lead->nombre,
             'dominio' => $lead->website_dominio ?? '',

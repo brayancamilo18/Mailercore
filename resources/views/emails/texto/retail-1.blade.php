@@ -2,9 +2,9 @@ Hola,
 
 {{ $apertura }}
 
-Le daría un buen lavado de cara sin demasiado lío; no es nada grave, de verdad.
+Con un par de ajustes entraría más por los ojos y daría más ganas de curiosear el catálogo.
 
-Si te pica la curiosidad tengo un par de tiendas que he ido montando y te las puedo enseñar; me dices y hablamos, sin agobios.
+Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos, y si no, sin lío.
 
 Un saludo,
 Camilo

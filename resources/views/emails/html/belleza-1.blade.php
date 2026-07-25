@@ -1,7 +1,7 @@
 <p>Hola,</p>
 <p>{{ $apertura }}</p>
-<p>No es nada grave; con un lavado de cara de un rato la web se siente más cómoda, sobre todo desde el móvil.</p>
-<p>Estuve montando hace poco un par de webs parecidas y quedaron bien. Si te apetece verlas respóndeme y te las enseño, y si no, sin problema.</p>
+<p>Con unos ajustes le daríamos un aire más cuidado y con más estilo.</p>
+<p>Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos, y si no, sin lío.</p>
 <p>Un saludo,<br>Camilo</p>
 <hr>
 <p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.</small></p>

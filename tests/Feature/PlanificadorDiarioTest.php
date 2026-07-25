@@ -182,13 +182,13 @@ class PlanificadorDiarioTest extends TestCase
         $this->assertSame(2, Mensaje::query()->where('paso', 2)->count());
     }
 
-    public function test_omite_lead_sin_hallazgo_y_continua(): void
+    public function test_incluye_lead_sin_hallazgo_concreto(): void
     {
         $sinHallazgo = $this->candidato([
             'puntuacion' => 99,
             'dominio' => 'sin.es',
             'hallazgo_codigo' => null,
-            'hallazgo_principal' => 'detalle genérico',
+            'hallazgo_principal' => null,
             'hallazgos' => [],
         ]);
         $conHallazgo = $this->candidato([
@@ -198,8 +198,8 @@ class PlanificadorDiarioTest extends TestCase
 
         $resultado = app(PlanificadorDiario::class)->planificar(Carbon::parse('2026-03-10'));
 
-        $this->assertGreaterThanOrEqual(1, $resultado['omitidos']);
-        $this->assertSame(0, Mensaje::query()->where('lead_id', $sinHallazgo->id)->count());
+        $this->assertSame(0, $resultado['omitidos']);
+        $this->assertSame(1, Mensaje::query()->where('lead_id', $sinHallazgo->id)->count());
         $this->assertSame(1, Mensaje::query()->where('lead_id', $conHallazgo->id)->count());
     }
 
