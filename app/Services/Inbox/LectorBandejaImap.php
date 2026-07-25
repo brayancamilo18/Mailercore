@@ -20,15 +20,38 @@ class LectorBandejaImap implements LectorBandeja
         $cliente->connect();
 
         $carpeta = $cliente->getFolder((string) ($cuenta['carpeta'] ?? 'INBOX'));
-        $mensajes = $carpeta->query()->unseen()->leaveUnread()->limit($limite)->get();
+
+        // 1) No leídos (caso normal).
+        // 2) También los recientes ya leídos: si abres el rebote en Hostinger/Outlook
+        //    queda "Seen" y antes la bandeja lo ignoraba para siempre.
+        $colecciones = [
+            $carpeta->query()->unseen()->leaveUnread()->limit($limite)->get(),
+            $carpeta->query()
+                ->since(now()->subDays(7)->startOfDay())
+                ->leaveUnread()
+                ->setFetchOrder('desc')
+                ->limit($limite)
+                ->get(),
+        ];
 
         $items = [];
         $this->mensajesPorId = [];
+        $vistos = [];
 
-        foreach ($mensajes as $mensaje) {
-            $id = (string) $mensaje->getUid();
-            $this->mensajesPorId[$id] = $mensaje;
-            $items[] = new ItemBandeja($id, $this->aEntrante($mensaje));
+        foreach ($colecciones as $mensajes) {
+            foreach ($mensajes as $mensaje) {
+                $id = (string) $mensaje->getUid();
+                if (isset($vistos[$id])) {
+                    continue;
+                }
+                $vistos[$id] = true;
+                $this->mensajesPorId[$id] = $mensaje;
+                $items[] = new ItemBandeja($id, $this->aEntrante($mensaje));
+
+                if (count($items) >= $limite) {
+                    return $items;
+                }
+            }
         }
 
         return $items;

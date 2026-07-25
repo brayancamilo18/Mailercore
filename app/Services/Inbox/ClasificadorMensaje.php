@@ -76,12 +76,16 @@ class ClasificadorMensaje
         foreach ([
             'delivery status notification',
             'undelivered mail',
+            'undeliverable',
             'mail delivery failed',
             'returned mail',
             'delivery failure',
             'failure notice',
             'no se ha entregado',
             'mensaje no entregado',
+            'no se pudo entregar',
+            'couldn\'t be delivered',
+            'could not be delivered',
         ] as $token) {
             if (str_contains($asunto, $token)) {
                 return true;
@@ -104,6 +108,10 @@ class ClasificadorMensaje
         $tipo = 'rebote_blando';
         if ($codigo !== null && str_starts_with($codigo, '5')) {
             $tipo = 'rebote_duro';
+        } elseif ($this->pareceReboteDuroSinCodigo($m)) {
+            // Office 365 a veces no manda Status: 5.x.x y sí "wasn't found".
+            $tipo = 'rebote_duro';
+            $codigo = $codigo ?? '5.1.1';
         }
 
         return $this->resultado($tipo, $m, $email, $codigo, $m->cuerpo);
@@ -129,6 +137,15 @@ class ClasificadorMensaje
 
         if (preg_match(
             '/(?:The following address|Recipient address rejected|failed permanently to|could not be delivered to)[^\n<]*[<\s]([a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,})/i',
+            $m->cuerpo,
+            $coincidencias
+        )) {
+            return Suppression::normalizarEmail($coincidencias[1]);
+        }
+
+        // Office 365: "Your message to user@dominio.com couldn't be delivered"
+        if (preg_match(
+            '/(?:your message to|mensaje para)\s+([a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,})/i',
             $m->cuerpo,
             $coincidencias
         )) {
@@ -162,6 +179,32 @@ class ClasificadorMensaje
         }
 
         return null;
+    }
+
+    /** Señales de buzón inexistente cuando el DSN no trae código SMTP. */
+    private function pareceReboteDuroSinCodigo(MensajeEntrante $m): bool
+    {
+        $texto = mb_strtolower($m->asunto.' '.$m->cuerpo);
+
+        foreach ([
+            'wasn\'t found',
+            'was not found',
+            'unknown to address',
+            'user unknown',
+            'mailbox unavailable',
+            'does not exist',
+            'no such user',
+            'recipient address rejected',
+            'invalid recipient',
+            'dirección no existe',
+            'destinatario desconocido',
+        ] as $token) {
+            if (str_contains($texto, $token)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function esAutorespuesta(MensajeEntrante $m): bool
