@@ -38,7 +38,12 @@ class Renderizador
 
         $vista = "{$plantilla}-{$paso}";
 
-        $texto = trim(view("emails.texto.{$vista}", $datos)->render());
+        // Texto plano: Blade escapa comillas a &quot; y el cliente las muestra literales.
+        $texto = html_entity_decode(
+            trim(view("emails.texto.{$vista}", $datos)->render()),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        );
         $html = trim(view("emails.html.{$vista}", $datos)->render());
 
         $asunto = $paso === 1
