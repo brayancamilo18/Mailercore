@@ -32,7 +32,7 @@
                     <tr class="border-t border-slate-100">
                         <td class="px-3 py-2 whitespace-nowrap">
                             <a href="{{ route('mensajes.ver', $m) }}" class="underline">
-                                {{ optional($m->programado_para)?->format('Y-m-d H:i') }}
+                                {{ optional($m->programado_para)?->timezone('Europe/Madrid')->format('Y-m-d H:i') }}
                             </a>
                         </td>
                         <td class="px-3 py-2">{{ $fila['sector'] }}</td>

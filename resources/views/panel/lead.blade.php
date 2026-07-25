@@ -153,7 +153,7 @@
                         <a href="{{ route('mensajes.ver', $mensaje) }}" class="underline">
                             Paso {{ $mensaje->paso }} · {{ $mensaje->estado }} · {{ $mensaje->asunto }}
                         </a>
-                        <span class="text-slate-500">{{ optional($mensaje->programado_para)?->format('Y-m-d H:i') }}</span>
+                        <span class="text-slate-500">{{ optional($mensaje->programado_para)?->timezone('Europe/Madrid')->format('Y-m-d H:i') }}</span>
                     </li>
                 @empty
                     <li class="text-slate-500">Sin mensajes.</li>
@@ -165,7 +165,7 @@
                 @forelse ($eventos as $evento)
                     <li class="border-b border-slate-100 pb-2">
                         <span class="font-medium">{{ $evento->tipo }}</span>
-                        <span class="text-slate-500">{{ optional($evento->recibido_at)?->format('Y-m-d H:i') }}</span>
+                        <span class="text-slate-500">{{ optional($evento->recibido_at)?->timezone('Europe/Madrid')->format('Y-m-d H:i') }}</span>
                         <p class="text-slate-600">{{ $evento->extracto }}</p>
                     </li>
                 @empty

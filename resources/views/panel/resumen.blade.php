@@ -138,7 +138,7 @@
                     @forelse ($respuestas as $fila)
                         <tr class="border-t border-slate-100">
                             <td class="px-3 py-2 whitespace-nowrap">
-                                {{ optional($fila['evento']->recibido_at)?->format('Y-m-d H:i') ?? '—' }}
+                                {{ optional($fila['evento']->recibido_at)?->timezone('Europe/Madrid')->format('Y-m-d H:i') ?? '—' }}
                             </td>
                             <td class="px-3 py-2">{{ $fila['dominio'] ?? '—' }}</td>
                             <td class="px-3 py-2 text-slate-600 max-w-md truncate">{{ $fila['evento']->extracto }}</td>

@@ -51,8 +51,8 @@
                         <td class="px-3 py-2 text-right tabular-nums">{{ $area->candidatos_vistos }}</td>
                         <td class="px-3 py-2 text-right tabular-nums">{{ $area->omitidos }}</td>
                         <td class="px-3 py-2 text-right tabular-nums">{{ $area->ciclos_completados }}</td>
-                        <td class="px-3 py-2 whitespace-nowrap">{{ optional($area->iniciada_at)?->format('Y-m-d H:i') ?? '—' }}</td>
-                        <td class="px-3 py-2 whitespace-nowrap">{{ optional($area->finalizada_at)?->format('Y-m-d H:i') ?? '—' }}</td>
+                        <td class="px-3 py-2 whitespace-nowrap">{{ optional($area->iniciada_at)?->timezone('Europe/Madrid')->format('Y-m-d H:i') ?? '—' }}</td>
+                        <td class="px-3 py-2 whitespace-nowrap">{{ optional($area->finalizada_at)?->timezone('Europe/Madrid')->format('Y-m-d H:i') ?? '—' }}</td>
                     </tr>
                 @empty
                     <tr>
