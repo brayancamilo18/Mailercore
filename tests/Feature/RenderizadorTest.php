@@ -181,7 +181,7 @@ class RenderizadorTest extends TestCase
                 $this->assertNotNull($resultado);
 
                 $this->assertStringContainsString(
-                    "Camilo Silva\nDesarrollador Web | Soluciones Tecnológicas\n625 01 50 90",
+                    "Camilo Silva\n625 01 50 90",
                     $resultado['texto'],
                     "{$sector}-{$paso} no tiene la firma completa"
                 );
@@ -195,6 +195,11 @@ class RenderizadorTest extends TestCase
                     $resultado['html'],
                     "{$sector}-{$paso} HTML sin teléfono"
                 );
+                $this->assertStringNotContainsString(
+                    'Desarrollador Web | Soluciones Tecnológicas',
+                    $resultado['texto'],
+                    "{$sector}-{$paso}: el cargo no debe repetirse en la firma"
+                );
             }
         }
     }
@@ -205,7 +210,7 @@ class RenderizadorTest extends TestCase
             $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), 1);
             $this->assertNotNull($resultado);
             $this->assertStringContainsString(
-                'Mi nombre es Camilo Silva, soy desarrollador web y tengo más de 6 años de experiencia.',
+                'Mi nombre es Camilo Silva, soy desarrollador web con más de 6 años de experiencia y me dedico a mejorar la presencia digital de las empresas en internet.',
                 $resultado['texto'],
                 "{$sector}-1 sin presentación"
             );
@@ -233,7 +238,7 @@ class RenderizadorTest extends TestCase
             'El pie legal no debe ir en un bloque --- separado'
         );
         $this->assertMatchesRegularExpression(
-            "/--\nCamilo Silva\nDesarrollador Web \| Soluciones Tecnológicas\n625 01 50 90\n.+\nSi no quieres recibir más correos míos, responde BAJA/s",
+            "/--\nCamilo Silva\n625 01 50 90\n.+\nSi no quieres recibir más correos míos, responde BAJA/s",
             $resultado['texto']
         );
         $this->assertStringContainsString('responde BAJA', $resultado['html']);

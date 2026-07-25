@@ -1,7 +1,6 @@
-{{-- Firma + pie legal unificados (un solo bloque tras --). --}}
+{{-- Solo contacto + pie legal. La presentación va en el cuerpo (paso 1), no se repite aquí. --}}
 --
 Camilo Silva
-Desarrollador Web | Soluciones Tecnológicas
 625 01 50 90
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
 Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.
