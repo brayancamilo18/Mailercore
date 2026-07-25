@@ -238,9 +238,10 @@ class RenderizadorTest extends TestCase
             'El pie legal no debe ir en un bloque --- separado'
         );
         $this->assertMatchesRegularExpression(
-            "/--\nCamilo Silva\n625 01 50 90\n.+\nSi no quieres recibir más correos míos, responde BAJA/s",
+            "/--\nCamilo Silva\n625 01 50 90\nSi no quieres recibir más correos míos, responde BAJA/s",
             $resultado['texto']
         );
+        $this->assertStringNotContainsString('Camilo, España', $resultado['texto']);
         $this->assertStringContainsString('responde BAJA', $resultado['html']);
         $this->assertStringNotContainsString('<hr>', $resultado['html']);
     }
