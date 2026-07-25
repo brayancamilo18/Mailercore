@@ -3,134 +3,213 @@
 @section('title', 'Salud')
 
 @section('content')
-    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <h1 class="text-2xl font-semibold tracking-tight">Salud</h1>
-        @if ($pausado)
-            <form method="POST" action="{{ route('envio.reanudar') }}">
-                @csrf
-                <button class="px-4 py-2 text-sm font-semibold bg-emerald-600 text-white">REANUDAR</button>
-            </form>
-        @else
-            <form method="POST" action="{{ route('envio.pausar') }}">
-                @csrf
-                <button class="px-4 py-2 text-sm font-semibold bg-red-600 text-white">PAUSAR</button>
-            </form>
-        @endif
-    </div>
+    @php
+        $maxBarra = max(1, (int) $maxEnviados);
 
-    <section class="mb-8">
-        <h2 class="text-lg font-semibold mb-3">Enviados por día (30 días)</h2>
-        <div class="bg-white border border-slate-200 p-4">
-            <div class="flex items-end gap-1 h-40">
-                @forelse ($dias as $dia)
-                    @php
-                        $alto = (int) round(((int) $dia->enviados / $maxEnviados) * 100);
-                        $altoBarra = max($alto, $dia->enviados > 0 ? 8 : 0);
-                    @endphp
-                    <div class="flex-1 h-full flex flex-col justify-end items-center min-w-0" title="{{ $dia->fecha->format('Y-m-d') }}: {{ $dia->enviados }} enviados">
-                        <div class="w-full max-w-[14px] mx-auto rounded-sm bg-slate-800" style="height: {{ $altoBarra }}%"></div>
-                        <span class="mt-1 text-[10px] text-slate-400 truncate w-full text-center">{{ $dia->fecha->format('d') }}</span>
-                    </div>
-                @empty
-                    <p class="text-sm text-slate-500">Sin datos de envío.</p>
-                @endforelse
+        $coloresSalud = [
+            'verde' => '#2C7A3F',
+            'ambar' => '#96660F',
+            'rojo' => '#B0432F',
+            'parado' => '#5F6B66',
+            'detenido' => '#5F6B66',
+        ];
+
+        $eventosUi = [
+            'respuesta' => ['Respuestas', '↩', '#2C7A3F', '#E4F3E7'],
+            'rebote_duro' => ['Rebotes duros', '✕', '#B0432F', '#F9E9E6'],
+            'rebote_blando' => ['Rebotes blandos', '~', '#96660F', '#FAF0DC'],
+            'baja' => ['Bajas', '↓', '#9A5A50', '#F5EAE8'],
+            'queja' => ['Quejas', '!', '#8B2E22', '#F4D9D4'],
+            'ignorado' => ['Ignorados', '·', '#5F6B66', '#EEF1EF'],
+        ];
+
+        $nombresProceso = [
+            'cosecha' => 'Cosecha',
+            'scrape' => 'Scrape',
+            'planificador' => 'Planificador',
+            'despachador' => 'Despachador',
+            'bandeja' => 'Bandeja',
+            'vigilante' => 'Vigilante',
+        ];
+
+        $descripcionesProceso = [
+            'cosecha' => 'Descubre negocios por provincia',
+            'scrape' => 'Rastrea webs y emails',
+            'planificador' => 'Prepara la cola diaria',
+            'despachador' => 'Envía los correos',
+            'bandeja' => 'Lee respuestas y rebotes',
+            'vigilante' => 'Vigila que todo siga vivo',
+        ];
+
+        $formatearEdad = function (?int $edad): string {
+            if ($edad === null) {
+                return 'sin señal';
+            }
+            if ($edad < 60) {
+                return 'hace '.$edad.' s';
+            }
+            if ($edad < 3600) {
+                return 'hace '.max(1, (int) round($edad / 60)).' min';
+            }
+            if ($edad < 86400) {
+                $h = max(1, (int) round($edad / 3600));
+
+                return 'hace '.$h.' h';
+            }
+
+            return 'hace '.max(1, (int) round($edad / 86400)).' d';
+        };
+
+        $diasOrdenados = $dias->sortBy('fecha')->values();
+        $diasTabla = $dias->sortByDesc('fecha')->values();
+        $primerDia = $diasOrdenados->first();
+    @endphp
+
+    <div class="max-w-[1240px] flex flex-col gap-4">
+
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            @if ($pausado)
+                <form method="POST" action="{{ route('envio.reanudar') }}">
+                    @csrf
+                    <button type="submit" class="btn-savia">Reanudar envíos</button>
+                </form>
+            @else
+                <form method="POST" action="{{ route('envio.pausar') }}">
+                    @csrf
+                    <button type="submit" class="btn-pausar">Pausar envíos</button>
+                </form>
+            @endif
+        </div>
+
+        {{-- A) Historial 30 días --}}
+        <x-marca.tarjeta titulo="Correos enviados · últimos 30 días">
+            @if ($diasOrdenados->isEmpty())
+                <p class="text-sm text-marca-mut m-0 mb-4">Sin datos de envío.</p>
+            @else
+                <div class="flex items-end gap-[3px] h-[130px] mb-1.5">
+                    @foreach ($diasOrdenados as $dia)
+                        @php
+                            $enviados = (int) $dia->enviados;
+                            $pct = (int) round(($enviados / $maxBarra) * 100);
+                            $alto = $enviados > 0 ? max(8, $pct) : 2;
+                            $color = $coloresSalud[$dia->salud] ?? '#D0D6D2';
+                        @endphp
+                        <div
+                            class="flex-1 h-full flex flex-col justify-end min-w-0"
+                            title="{{ $dia->fecha->format('Y-m-d') }}: {{ $enviados }} enviados · salud {{ $dia->salud }}"
+                        >
+                            <div
+                                class="w-full rounded-t-[2px] mx-auto"
+                                @style(["height:{$alto}%", "background:{$color}", 'max-width:18px'])
+                            ></div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="flex justify-between text-[10.5px] text-marca-mut mb-4">
+                    <span>{{ $primerDia?->fecha->translatedFormat('d M') ?? '' }}</span>
+                    <span>hoy</span>
+                </div>
+            @endif
+
+            <div class="max-h-[280px] overflow-auto border-t border-marca-bd -mx-[22px] px-[22px]">
+                <table class="w-full min-w-[640px] border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="sticky top-0 bg-white text-left text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2 border-b border-marca-bd">Fecha</th>
+                            <th class="sticky top-0 bg-white text-right text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2 border-b border-marca-bd">Escalón</th>
+                            <th class="sticky top-0 bg-white text-right text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2 border-b border-marca-bd">Cuota</th>
+                            <th class="sticky top-0 bg-white text-right text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2 border-b border-marca-bd">Enviados</th>
+                            <th class="sticky top-0 bg-white text-right text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2 border-b border-marca-bd">Rebotes duros</th>
+                            <th class="sticky top-0 bg-white text-right text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2 border-b border-marca-bd">Tasa rebote</th>
+                            <th class="sticky top-0 bg-white text-left text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2 border-b border-marca-bd">Salud</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($diasTabla as $dia)
+                            <tr class="hover:bg-[#F7FAF8]">
+                                <td class="px-2.5 py-1.5 border-b border-[#EFF2EF] text-xs font-semibold text-marca-txt tabular-nums">
+                                    {{ $dia->fecha->timezone('Europe/Madrid')->format('Y-m-d') }}
+                                </td>
+                                <td class="px-2.5 py-1.5 border-b border-[#EFF2EF] text-right text-xs tabular-nums">{{ $dia->escalon }}</td>
+                                <td class="px-2.5 py-1.5 border-b border-[#EFF2EF] text-right text-xs tabular-nums">{{ $dia->cuota_planificada }}</td>
+                                <td class="px-2.5 py-1.5 border-b border-[#EFF2EF] text-right text-xs font-bold tabular-nums">{{ $dia->enviados }}</td>
+                                <td class="px-2.5 py-1.5 border-b border-[#EFF2EF] text-right text-xs tabular-nums">{{ $dia->rebotes_duros }}</td>
+                                <td class="px-2.5 py-1.5 border-b border-[#EFF2EF] text-right text-xs tabular-nums">
+                                    {{ number_format((float) $dia->tasa_rebote, 2) }}%
+                                </td>
+                                <td class="px-2.5 py-1.5 border-b border-[#EFF2EF]">
+                                    <x-marca.semaforo :salud="$dia->salud" />
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-2.5 py-6 text-center text-sm text-marca-mut">Sin días registrados.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </section>
+        </x-marca.tarjeta>
 
-    <section class="mb-8">
-        <h2 class="text-lg font-semibold mb-3">Últimos 30 días — dias_envio</h2>
-        <div class="bg-white border border-slate-200 overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-left text-slate-600">
-                    <tr>
-                        <th class="px-3 py-2 font-medium">Fecha</th>
-                        <th class="px-3 py-2 font-medium text-right">Escalón</th>
-                        <th class="px-3 py-2 font-medium text-right">Cuota</th>
-                        <th class="px-3 py-2 font-medium text-right">Enviados</th>
-                        <th class="px-3 py-2 font-medium text-right">Fallidos</th>
-                        <th class="px-3 py-2 font-medium text-right">Rebotes</th>
-                        <th class="px-3 py-2 font-medium text-right">Respuestas</th>
-                        <th class="px-3 py-2 font-medium">Salud</th>
-                        <th class="px-3 py-2 font-medium text-right">Tasa</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($dias->sortByDesc('fecha') as $dia)
-                        <tr class="border-t border-slate-100">
-                            <td class="px-3 py-2">{{ $dia->fecha->format('Y-m-d') }}</td>
-                            <td class="px-3 py-2 text-right">{{ $dia->escalon }}</td>
-                            <td class="px-3 py-2 text-right">{{ $dia->cuota_planificada }}</td>
-                            <td class="px-3 py-2 text-right">{{ $dia->enviados }}</td>
-                            <td class="px-3 py-2 text-right">{{ $dia->fallidos }}</td>
-                            <td class="px-3 py-2 text-right">{{ $dia->rebotes_duros }}</td>
-                            <td class="px-3 py-2 text-right">{{ $dia->respuestas }}</td>
-                            <td class="px-3 py-2">{{ $dia->salud }}</td>
-                            <td class="px-3 py-2 text-right">{{ number_format((float) $dia->tasa_rebote, 2) }}%</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="9" class="px-3 py-6 text-center text-slate-500">Sin días registrados.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </section>
+        {{-- B) Eventos de bandeja --}}
+        <x-marca.tarjeta titulo="Eventos de la bandeja · últimos 30 días">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                @foreach ($eventosUi as $tipo => [$etiqueta, $icono, $texto, $fondo])
+                    @php $total = (int) ($conteosEventos[$tipo] ?? 0); @endphp
+                    <div
+                        class="rounded-xl px-3.5 py-3.5 border"
+                        @style(["background:{$fondo}", "border-color:{$fondo}"])
+                    >
+                        <span
+                            class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-sm font-extrabold"
+                            @style(["color:{$texto}", 'background:rgba(255,255,255,0.55)'])
+                            aria-hidden="true"
+                        >{{ $icono }}</span>
+                        <div class="text-2xl font-extrabold text-bosque tabular-nums mt-2 mb-0.5">{{ $total }}</div>
+                        <div class="text-[11.5px] font-semibold text-marca-sec">{{ $etiqueta }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </x-marca.tarjeta>
 
-    <section class="mb-8">
-        <h2 class="text-lg font-semibold mb-3">Eventos de bandeja (30 días)</h2>
-        <div class="bg-white border border-slate-200 overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-left text-slate-600">
-                    <tr>
-                        <th class="px-3 py-2 font-medium">Tipo</th>
-                        <th class="px-3 py-2 font-medium text-right">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($conteosEventos as $tipo => $total)
-                        <tr class="border-t border-slate-100">
-                            <td class="px-3 py-2">{{ $tipo }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums">{{ $total }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </section>
+        {{-- C) Procesos --}}
+        <x-marca.tarjeta titulo="Procesos internos">
+            <div class="flex flex-col">
+                @foreach ($latidos as $proceso => $info)
+                    @php
+                        $vivo = (bool) ($info['vivo'] ?? false);
+                        $edad = $info['edad'] ?? null;
+                        $colorDot = $vivo ? '#2C7A3F' : '#B0432F';
+                        $colorEstado = $vivo ? '#2C7A3F' : '#B0432F';
+                        $fondoEstado = $vivo ? '#E4F3E7' : '#F9E9E6';
+                    @endphp
+                    <div class="flex items-center gap-3 py-2.5 border-b border-[#F1F4F1]">
+                        <span
+                            class="w-2.5 h-2.5 rounded-full flex-none"
+                            @style(["background:{$colorDot}"])
+                            title="{{ $vivo ? 'Vivo' : 'Caído' }}"
+                        ></span>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[13px] font-bold text-marca-txt">
+                                {{ $nombresProceso[$proceso] ?? ucfirst($proceso) }}
+                            </div>
+                            <div class="text-[11.5px] text-marca-mut">
+                                {{ $descripcionesProceso[$proceso] ?? '' }}
+                            </div>
+                        </div>
+                        <span
+                            class="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                            @style(["color:{$colorEstado}", "background:{$fondoEstado}"])
+                        >
+                            {{ $vivo ? 'Vivo' : 'Caído' }}
+                        </span>
+                        <span class="text-xs text-marca-mut w-[110px] text-right tabular-nums flex-none">
+                            {{ $formatearEdad(is_int($edad) ? $edad : null) }}
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        </x-marca.tarjeta>
 
-    <section>
-        <h2 class="text-lg font-semibold mb-3">Latidos</h2>
-        <div class="bg-white border border-slate-200 overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-left text-slate-600">
-                    <tr>
-                        <th class="px-3 py-2 font-medium">Proceso</th>
-                        <th class="px-3 py-2 font-medium">Estado</th>
-                        <th class="px-3 py-2 font-medium text-right">Edad</th>
-                        <th class="px-3 py-2 font-medium text-right">TTL</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($latidos as $proceso => $info)
-                        <tr class="border-t border-slate-100">
-                            <td class="px-3 py-2 font-medium">{{ $proceso }}</td>
-                            <td class="px-3 py-2">
-                                @if ($info['edad'] === null)
-                                    <span class="text-slate-400">sin latido</span>
-                                @elseif ($info['vivo'])
-                                    <span class="text-emerald-700">vivo</span>
-                                @else
-                                    <span class="text-red-700">caducado</span>
-                                @endif
-                            </td>
-                            <td class="px-3 py-2 text-right tabular-nums">
-                                {{ $info['edad'] === null ? '—' : $info['edad'].' s' }}
-                            </td>
-                            <td class="px-3 py-2 text-right tabular-nums">{{ $info['ttl'] }} s</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </section>
+    </div>
 @endsection

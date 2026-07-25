@@ -65,9 +65,10 @@ class Renderizador
             throw new PlantillaInvalida('Asunto de '.mb_strlen($asunto).' caracteres');
         }
 
-        // Número de palabras, sin el pie legal (todo lo que va tras la línea ---)
+        // Cuerpo sin pie legal (---) ni firma (--): solo el mensaje comercial se valida.
         $cuerpo = explode("\n---", $texto)[0];
-        $palabras = str_word_count(strip_tags($cuerpo), 0, 'áéíóúñüÁÉÍÓÚÑÜ');
+        $cuerpoSinFirma = explode("\n--\n", $cuerpo)[0];
+        $palabras = str_word_count(strip_tags($cuerpoSinFirma), 0, 'áéíóúñüÁÉÍÓÚÑÜ');
         $maximo = $paso === 1 ? $cfg['max_palabras_cuerpo'] : $cfg['max_palabras_seguimiento'];
 
         if ($palabras > $maximo) {
@@ -84,8 +85,8 @@ class Renderizador
             throw new PlantillaInvalida('El correo no puede llevar imágenes');
         }
 
-        // Palabras prohibidas
-        $minusculas = mb_strtolower($asunto.' '.$cuerpo);
+        // Palabras prohibidas (la firma puede llevar «Soluciones Tecnológicas»)
+        $minusculas = mb_strtolower($asunto.' '.$cuerpoSinFirma);
         foreach ($cfg['palabras_prohibidas'] as $prohibida) {
             if (str_contains($minusculas, mb_strtolower($prohibida))) {
                 throw new PlantillaInvalida("Palabra prohibida: {$prohibida}");

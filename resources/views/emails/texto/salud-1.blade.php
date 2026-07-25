@@ -4,10 +4,13 @@ Hola,
 
 Con algún retoque transmitiría aún más confianza y sería más fácil de usar para quien te busca.
 
-Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos, y si no, sin lío.
+Tengo algunas cosas hechas que te puedo enseñar; si te apetece verlas respóndeme y hablamos.
+
+Mi nombre es Camilo Silva, soy desarrollador web y tengo más de 6 años de experiencia.
 
 Un saludo,
-Camilo
+
+@include('emails.partials.firma_texto')
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.

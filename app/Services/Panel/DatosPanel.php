@@ -51,12 +51,12 @@ class DatosPanel
             ['clave' => 'clientes', 'etiqueta' => 'Clientes', 'total' => $clientes],
         ];
 
-        $anterior = null;
-        foreach ($etapas as &$etapa) {
-            $etapa['porcentaje'] = ($anterior !== null && $anterior > 0)
-                ? round(($etapa['total'] / $anterior) * 100, 1)
-                : null;
-            $anterior = $etapa['total'];
+        // % respecto al total (las etapas no son subconjuntos estrictos entre sí).
+        $base = max(1, $totales);
+        foreach ($etapas as $i => &$etapa) {
+            $etapa['porcentaje'] = $i === 0
+                ? null
+                : round(($etapa['total'] / $base) * 100, 1);
         }
         unset($etapa);
 
@@ -210,7 +210,13 @@ class DatosPanel
     }
 
     /**
-     * @return array{areas: Collection, avance: float, total: int, hechas: int}
+     * @return array{
+     *   areas: Collection,
+     *   avance: float,
+     *   total: int,
+     *   hechas: int,
+     *   mapa_estados: array<string, string>
+     * }
      */
     public function cosecha(): array
     {
@@ -223,6 +229,7 @@ class DatosPanel
             'total' => $total,
             'hechas' => $hechas,
             'avance' => $total > 0 ? round(($hechas / $total) * 100, 1) : 0.0,
+            'mapa_estados' => \App\Support\ProvinciasIne::statusesDesdeAreas($areas),
         ];
     }
 

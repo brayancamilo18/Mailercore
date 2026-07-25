@@ -76,7 +76,7 @@ class RenderizadorTest extends TestCase
                 $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
                 $this->assertNotNull($resultado);
 
-                $cuerpo = explode("\n---", $resultado['texto'])[0];
+                $cuerpo = explode("\n--\n", explode("\n---", $resultado['texto'])[0])[0];
                 $palabras = str_word_count(strip_tags($cuerpo), 0, 'áéíóúñüÁÉÍÓÚÑÜ');
                 $maximo = $paso === 1 ? $cfg['max_palabras_cuerpo'] : $cfg['max_palabras_seguimiento'];
 
@@ -96,7 +96,7 @@ class RenderizadorTest extends TestCase
                 $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
                 $this->assertNotNull($resultado);
 
-                $cuerpo = explode("\n---", $resultado['texto'])[0];
+                $cuerpo = explode("\n--\n", explode("\n---", $resultado['texto'])[0])[0];
                 $palabras = str_word_count(strip_tags($cuerpo), 0, 'áéíóúñüÁÉÍÓÚÑÜ');
                 $maximo = $paso === 1 ? 110 : 60;
 
@@ -173,7 +173,7 @@ class RenderizadorTest extends TestCase
         }
     }
 
-    public function test_todas_firman_solo_camilo(): void
+    public function test_todas_firman_camilo_silva(): void
     {
         foreach (array_keys(config('sectores')) as $sector) {
             foreach ([1, 2] as $paso) {
@@ -181,21 +181,34 @@ class RenderizadorTest extends TestCase
                 $this->assertNotNull($resultado);
 
                 $this->assertStringContainsString(
-                    'Camilo',
+                    "Camilo Silva\nDesarrollador Web | Soluciones Tecnológicas |\n625 01 50 90",
                     $resultado['texto'],
-                    "{$sector}-{$paso} no firma Camilo"
+                    "{$sector}-{$paso} no tiene la firma completa"
                 );
-                $this->assertStringNotContainsString(
-                    'Camilo Silva',
-                    $resultado['texto'],
-                    "{$sector}-{$paso} firma Camilo Silva"
-                );
-                $this->assertStringNotContainsString(
+                $this->assertStringContainsString(
                     'Camilo Silva',
                     $resultado['html'],
-                    "{$sector}-{$paso} HTML firma Camilo Silva"
+                    "{$sector}-{$paso} HTML sin Camilo Silva"
+                );
+                $this->assertStringContainsString(
+                    '625 01 50 90',
+                    $resultado['html'],
+                    "{$sector}-{$paso} HTML sin teléfono"
                 );
             }
+        }
+    }
+
+    public function test_primer_contacto_incluye_presentacion(): void
+    {
+        foreach (array_keys(config('sectores')) as $sector) {
+            $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), 1);
+            $this->assertNotNull($resultado);
+            $this->assertStringContainsString(
+                'Mi nombre es Camilo Silva, soy desarrollador web y tengo más de 6 años de experiencia.',
+                $resultado['texto'],
+                "{$sector}-1 sin presentación"
+            );
         }
     }
 

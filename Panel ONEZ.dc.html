@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+<style>
+body{margin:0;background:#FAFAF7;font-family:'Nunito Sans',system-ui,sans-serif;color:#22312B;-webkit-font-smoothing:antialiased}
+a{color:#0F6E56;text-decoration:none}a:hover{color:#0B1F1A;text-decoration:underline}
+*{box-sizing:border-box}
+button,select,input{font-family:inherit}
+::selection{background:#5DCAA5;color:#0B1F1A}
+</style>
+</helmet>
+<div style="{{ rootStyle }}">
+  <aside style="{{ asideStyle }}">
+    <div style="{{ logoBoxStyle }}">
+      <div style="display:flex;align-items:baseline;gap:2px"><span style="font-size:21px;font-weight:800;letter-spacing:.14em;color:#FAFAF7">ONEZ</span><span style="width:7px;height:7px;border-radius:50%;background:#5DCAA5;display:inline-block"></span></div>
+      <div style="{{ logoSubStyle }}">Panel de captación</div>
+    </div>
+    <nav style="{{ navListStyle }}">
+      <sc-for list="{{ navMain }}" as="item" hint-placeholder-count="5">
+        <button onClick="{{ item.go }}" style="{{ item.style }}" style-hover="{{ item.hover }}">{{ item.label }}</button>
+      </sc-for>
+    </nav>
+    <div style="{{ spacerStyle }}"></div>
+    <div style="{{ navBottomStyle }}">
+      <button onClick="{{ goSistema }}" style="{{ sistemaBtnStyle }}" style-hover="{{ navHover }}">Sistema de diseño</button>
+      <button style="{{ logoutBtnStyle }}" style-hover="{{ navHover }}">Cerrar sesión</button>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="{{ headerStyle }}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:17px;font-weight:800;color:#0B1F1A;line-height:1.2">{{ screenTitle }}</div>
+      </div>
+      <div style="{{ estadoPillStyle }}"><span style="{{ estadoDotStyle }}"></span>{{ estadoLabel }}</div>
+      <button onClick="{{ togglePausa }}" style="{{ pausarBtnStyle }}">{{ pausarLabel }}</button>
+    </header>
+    <main style="{{ mainStyle }}">
+
+      <sc-if value="{{ isResumen }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Resumen" style="{{ resumenGridStyle }}">
+        <section style="grid-column:1/-1;background:#fff;border:1px solid #E4E8E4;border-radius:12px;box-shadow:0 1px 2px rgba(11,31,26,.04);padding:22px 26px;display:flex;gap:32px;align-items:stretch;flex-wrap:wrap">
+          <div style="flex:1.4;min-width:300px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F">Rampa de envío</span>
+              <span style="font-size:11px;font-weight:700;color:#0F6E56;background:#EAF4F0;border-radius:999px;padding:2px 9px">Escalón {{ escalon }} de 5 · {{ cuota }} correos/día</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:44px;font-weight:800;color:#0B1F1A;line-height:1;font-variant-numeric:tabular-nums">{{ enviadosHoy }}</span>
+              <span style="font-size:17px;font-weight:600;color:#8B968F">de {{ cuota }} enviados hoy</span>
+            </div>
+            <div style="height:9px;border-radius:999px;background:#E8ECE8;margin:14px 0 10px;overflow:hidden"><div style="{{ cuotaBarStyle }}"></div></div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <div style="display:flex;gap:5px;align-items:center">
+                <sc-for list="{{ escalones }}" as="e" hint-placeholder-count="5"><span style="{{ e.style }}" title="{{ e.title }}"></span></sc-for>
+                <span style="font-size:11px;color:#8B968F;margin-left:4px">escalones</span>
+              </div>
+              <span style="font-size:12.5px;font-weight:700;color:#22312B">{{ racha }} días seguidos enviando</span>
+            </div>
+          </div>
+          <div style="{{ rampaDividerStyle }}"></div>
+          <div style="flex:1;min-width:260px;display:flex;align-items:center;gap:18px">
+            <div style="{{ saludCircleStyle }}">{{ saludIcon }}</div>
+            <div style="flex:1">
+              <div style="font-size:18px;font-weight:800;color:#0B1F1A">{{ saludTitulo }}</div>
+              <div style="font-size:12.5px;color:#5F6B66;margin:3px 0 12px">{{ saludDetalle }}</div>
+              <button onClick="{{ togglePausa }}" style="{{ rampaBtnStyle }}">{{ pausarLabel }}</button>
+            </div>
+          </div>
+        </section>
+
+        <section style="{{ embudoCardStyle }}">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 16px">Embudo de conversión</h2>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ embudo }}" as="f" hint-placeholder-count="9">
+              <div style="display:grid;grid-template-columns:118px 1fr 54px 44px;gap:10px;align-items:center">
+                <span style="font-size:12px;font-weight:600;color:#4C5A54;text-align:right">{{ f.label }}</span>
+                <div style="height:16px;border-radius:4px;background:#F1F4F1;overflow:hidden"><div style="{{ f.barStyle }}"></div></div>
+                <span style="font-size:12.5px;font-weight:800;color:#0B1F1A;text-align:right;font-variant-numeric:tabular-nums">{{ f.n }}</span>
+                <span style="font-size:10.5px;font-weight:600;color:#8B968F;text-align:right;font-variant-numeric:tabular-nums">{{ f.drop }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:10.5px;color:#8B968F;margin-top:12px">El porcentaje es respecto a la etapa anterior.</div>
+        </section>
+
+        <section style="{{ sectoresCardStyle }}">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 10px">Rendimiento por sector</h2>
+          <table style="width:100%;min-width:640px;border-collapse:collapse">
+            <thead><tr>
+              <th style="text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:6px 8px;border-bottom:1px solid #E4E8E4">Sector</th>
+              <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:6px 8px;border-bottom:1px solid #E4E8E4">Leads</th>
+              <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:6px 8px;border-bottom:1px solid #E4E8E4">Auditados</th>
+              <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:6px 8px;border-bottom:1px solid #E4E8E4">Punt. media</th>
+              <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:6px 8px;border-bottom:1px solid #E4E8E4">Contactados</th>
+              <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:6px 8px;border-bottom:1px solid #E4E8E4">Respondidos</th>
+              <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:6px 8px;border-bottom:1px solid #E4E8E4">Tasa resp.</th>
+            </tr></thead>
+            <tbody>
+            <sc-for list="{{ sectoresTabla }}" as="s" hint-placeholder-count="7">
+              <tr style="{{ s.rowStyle }}">
+                <td style="padding:7px 8px;border-bottom:1px solid #EFF2EF"><span style="display:inline-flex;align-items:center;gap:7px"><span style="{{ s.chipStyle }}">{{ s.ab }}</span><span style="font-size:12.5px;font-weight:600;color:#22312B">{{ s.nombre }}</span><span style="{{ s.topTagStyle }}">mejor tasa</span></span></td>
+                <td style="padding:7px 8px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">{{ s.leads }}</td>
+                <td style="padding:7px 8px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">{{ s.auditados }}</td>
+                <td style="padding:7px 8px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">{{ s.punt }}</td>
+                <td style="padding:7px 8px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">{{ s.contactados }}</td>
+                <td style="padding:7px 8px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums">{{ s.respondidos }}</td>
+                <td style="padding:7px 8px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12.5px;font-weight:800;color:#0B1F1A;font-variant-numeric:tabular-nums">{{ s.tasa }} %</td>
+              </tr>
+            </sc-for>
+            </tbody>
+          </table>
+        </section>
+
+        <section style="grid-column:1/-1;background:#fff;border:1px solid #E4E8E4;border-radius:12px;box-shadow:0 1px 2px rgba(11,31,26,.04);padding:18px 22px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 14px">Últimas respuestas recibidas</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:4px 32px">
+            <sc-for list="{{ respuestas }}" as="r" hint-placeholder-count="10">
+              <div style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid #F1F4F1">
+                <a href="#" onClick="{{ r.open }}" style="font-size:12.5px;font-weight:700;flex:none">{{ r.dominio }}</a>
+                <span style="font-size:12px;color:#5F6B66;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">“{{ r.extracto }}”</span>
+                <span style="font-size:11px;color:#8B968F;flex:none;font-variant-numeric:tabular-nums">{{ r.fecha }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isLeads }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Leads" style="max-width:1240px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:12px 16px;margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:#8B968F">Estado</label>
+          <select value="{{ fEstado }}" onChange="{{ setFEstado }}" style="font-size:12px;font-weight:600;color:#22312B;border:1px solid #D6DDD8;border-radius:7px;padding:6px 8px;background:#FAFAF7">
+            <sc-for list="{{ estadoOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+          </select>
+          <label style="font-size:11px;font-weight:700;color:#8B968F;margin-left:6px">Sector</label>
+          <select value="{{ fSector }}" onChange="{{ setFSector }}" style="font-size:12px;font-weight:600;color:#22312B;border:1px solid #D6DDD8;border-radius:7px;padding:6px 8px;background:#FAFAF7">
+            <sc-for list="{{ sectorOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+          </select>
+          <label style="font-size:11px;font-weight:700;color:#8B968F;margin-left:6px">Puntuación mínima</label>
+          <select value="{{ fScore }}" onChange="{{ setFScore }}" style="font-size:12px;font-weight:600;color:#22312B;border:1px solid #D6DDD8;border-radius:7px;padding:6px 8px;background:#FAFAF7">
+            <option value="0">Cualquiera</option><option value="60">60 o más</option><option value="70">70 o más</option><option value="80">80 o más</option>
+          </select>
+          <button onClick="{{ toggleVerif }}" style="{{ verifBtnStyle }}"><span style="{{ verifDotStyle }}"></span>Solo con email verificado</button>
+          <div style="flex:1"></div>
+          <button onClick="{{ limpiarFiltros }}" style="border:none;background:transparent;color:#0F6E56;font-size:12px;font-weight:700;cursor:pointer;padding:6px 8px" style-hover="{{ linkHover }}">Limpiar filtros</button>
+          <span style="font-size:12px;color:#8B968F;font-variant-numeric:tabular-nums">{{ leadsCount }} empresas</span>
+        </div>
+        <div style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;overflow:hidden">
+          <div style="max-height:calc(100vh - 300px);overflow:auto">
+            <table style="width:100%;min-width:900px;border-collapse:separate;border-spacing:0">
+              <thead><tr>
+                <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 14px;border-bottom:1px solid #E4E8E4">Empresa</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Dominio</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Sector</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Puntuación</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Hallazgo principal</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Estado</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 14px;border-bottom:1px solid #E4E8E4">Contacto</th>
+              </tr></thead>
+              <tbody>
+              <sc-for list="{{ leadsRows }}" as="l" hint-placeholder-count="8">
+                <tr onClick="{{ l.open }}" style="cursor:pointer" style-hover="{{ rowHover }}">
+                  <td style="padding:7px 14px;border-bottom:1px solid #EFF2EF;font-size:12.5px;font-weight:700;color:#0B1F1A;white-space:nowrap">{{ l.nombre }}</td>
+                  <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;font-size:12px;color:#0F6E56;white-space:nowrap">{{ l.dominio }}</td>
+                  <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ l.chipStyle }}">{{ l.ab }}</span><span style="font-size:12px;color:#4C5A54">{{ l.sectorNombre }}</span></span></td>
+                  <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;text-align:right;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:7px;justify-content:flex-end"><span style="width:44px;height:5px;border-radius:999px;background:#EDF0ED;overflow:hidden;display:inline-block"><span style="{{ l.scoreBarStyle }}"></span></span><span style="{{ l.scoreNumStyle }}">{{ l.score }}</span></span></td>
+                  <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;font-size:12px;color:#5F6B66;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.hallazgo }}</td>
+                  <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;white-space:nowrap"><span style="{{ l.estadoStyle }}">{{ l.estado }}</span></td>
+                  <td style="padding:7px 14px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;color:#8B968F;font-variant-numeric:tabular-nums">{{ l.contacto }}</td>
+                </tr>
+              </sc-for>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid #E4E8E4">
+            <span style="font-size:12px;color:#8B968F">Mostrando {{ leadsCount }} de 2 748 · Página 1 de 153</span>
+            <div style="flex:1"></div>
+            <button style="border:1px solid #D6DDD8;background:#fff;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;color:#B8C1BB;cursor:default">← Anterior</button>
+            <button style="border:1px solid #D6DDD8;background:#fff;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;color:#0F6E56;cursor:pointer" style-hover="{{ btnHover }}">Siguiente →</button>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isFicha }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Ficha del lead" style="max-width:1240px">
+        <button onClick="{{ backLeads }}" style="border:none;background:transparent;color:#0F6E56;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px" style-hover="{{ linkHover }}">← Volver a leads</button>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:20px 24px;margin-bottom:16px;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+          <div style="flex:1.5;min-width:280px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <h1 style="font-size:22px;font-weight:800;color:#0B1F1A;margin:0">{{ ficha.nombre }}</h1>
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ ficha.chipStyle }}">{{ ficha.ab }}</span><span style="font-size:12.5px;font-weight:600;color:#4C5A54">{{ ficha.sectorNombre }}</span></span>
+            </div>
+            <div style="font-size:12px;color:#8B968F;margin:4px 0 14px">Clasificado por {{ ficha.metodo }} · {{ ficha.confianza }} % de confianza</div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:5px 16px;font-size:12.5px">
+              <span style="color:#8B968F;font-weight:600">Web</span><a href="#">{{ ficha.dominio }}</a>
+              <span style="color:#8B968F;font-weight:600">Teléfono</span><span style="font-variant-numeric:tabular-nums">{{ ficha.tel }}</span>
+              <span style="color:#8B968F;font-weight:600">Dirección</span><span>{{ ficha.direccion }}</span>
+              <span style="color:#8B968F;font-weight:600">Localidad</span><span>{{ ficha.ciudad }} ({{ ficha.prov }})</span>
+            </div>
+          </div>
+          <div style="flex:none;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <label style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F">Estado del lead</label>
+            <select value="{{ ficha.estado }}" onChange="{{ setFichaEstado }}" style="font-size:12.5px;font-weight:700;color:#22312B;border:1px solid #D6DDD8;border-radius:7px;padding:7px 10px;background:#FAFAF7">
+              <sc-for list="{{ estadosLead }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+            </select>
+            <span style="{{ ficha.estadoStyle }}">{{ ficha.estado }}</span>
+          </div>
+        </section>
+        <div style="{{ fichaGridStyle }}">
+          <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:18px 22px">
+            <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 16px">Auditoría de la web</h2>
+            <div style="display:flex;gap:24px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
+              <div style="{{ ficha.scoreCircleStyle }}"><span style="font-size:26px;font-weight:800;line-height:1">{{ ficha.score }}</span><span style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">de 100</span></div>
+              <div style="flex:1;min-width:220px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px">
+                <sc-for list="{{ ficha.psi }}" as="m" hint-placeholder-count="4">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#5F6B66;margin-bottom:3px"><span>{{ m.label }}</span><span style="{{ m.numStyle }}">{{ m.v }}</span></div>
+                    <div style="height:5px;border-radius:999px;background:#EDF0ED;overflow:hidden"><div style="{{ m.barStyle }}"></div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex:none;text-align:center"><div style="font-size:20px;font-weight:800;color:#0B1F1A;font-variant-numeric:tabular-nums">{{ ficha.carga }} s</div><div style="font-size:10.5px;color:#8B968F;font-weight:600">tiempo de carga</div></div>
+            </div>
+            <div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;margin-bottom:8px">Hallazgos ({{ ficha.numHallazgos }})</div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ ficha.hallazgos }}" as="h" hint-placeholder-count="4">
+                <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #F1F4F1;align-items:baseline">
+                  <span style="{{ h.sevStyle }}">{{ h.sev }}</span>
+                  <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#22312B">{{ h.titulo }}</div><div style="font-size:12px;color:#5F6B66;margin-top:1px">{{ h.detalle }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+          <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+            <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:18px 22px">
+              <details>
+                <summary style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center">Páginas capturadas ({{ ficha.numPaginas }})<span style="color:#0F6E56;font-size:11px;font-weight:700">mostrar ▾</span></summary>
+                <table style="width:100%;border-collapse:collapse;margin-top:12px">
+                  <thead><tr>
+                    <th style="text-align:left;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#8B968F;padding:5px 6px;border-bottom:1px solid #E4E8E4">Ruta</th>
+                    <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#8B968F;padding:5px 6px;border-bottom:1px solid #E4E8E4">HTTP</th>
+                    <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#8B968F;padding:5px 6px;border-bottom:1px solid #E4E8E4">ms</th>
+                    <th style="text-align:center;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#8B968F;padding:5px 6px;border-bottom:1px solid #E4E8E4">Móvil</th>
+                    <th style="text-align:center;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#8B968F;padding:5px 6px;border-bottom:1px solid #E4E8E4">Datos estr.</th>
+                  </tr></thead>
+                  <tbody>
+                  <sc-for list="{{ ficha.paginas }}" as="p" hint-placeholder-count="5">
+                    <tr>
+                      <td style="padding:6px;border-bottom:1px solid #F1F4F1;font-size:12px;color:#22312B;font-family:ui-monospace,monospace" title="{{ p.titulo }}">{{ p.ruta }}</td>
+                      <td style="padding:6px;border-bottom:1px solid #F1F4F1;text-align:right"><span style="{{ p.codeStyle }}">{{ p.code }}</span></td>
+                      <td style="padding:6px;border-bottom:1px solid #F1F4F1;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:#5F6B66">{{ p.ms }}</td>
+                      <td style="padding:6px;border-bottom:1px solid #F1F4F1;text-align:center;font-size:11.5px;font-weight:700;color:#5F6B66">{{ p.movil }}</td>
+                      <td style="padding:6px;border-bottom:1px solid #F1F4F1;text-align:center;font-size:11.5px;font-weight:700;color:#5F6B66">{{ p.datos }}</td>
+                    </tr>
+                  </sc-for>
+                  </tbody>
+                </table>
+              </details>
+            </section>
+            <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:18px 22px">
+              <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 12px">Correos y mensajes</h2>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+                <sc-for list="{{ ficha.correos }}" as="c" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:10px"><span style="font-size:12.5px;font-family:ui-monospace,monospace;color:#22312B">{{ c.email }}</span><span style="{{ c.verifStyle }}">{{ c.verif }}</span></div>
+                </sc-for>
+              </div>
+              <div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;margin-bottom:10px">Historial</div>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ ficha.timeline }}" as="t" hint-placeholder-count="3">
+                  <div style="display:flex;gap:12px">
+                    <div style="display:flex;flex-direction:column;align-items:center"><span style="{{ t.dotStyle }}"></span><span style="{{ t.lineStyle }}"></span></div>
+                    <div style="padding-bottom:14px"><div style="font-size:12.5px;font-weight:700;color:#22312B">{{ t.titulo }} <span style="font-weight:400;color:#8B968F;font-size:11.5px">· {{ t.fecha }}</span></div><div style="font-size:12px;color:#5F6B66;margin-top:1px">{{ t.detalle }}</div></div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isCola }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Cola de hoy" style="max-width:1240px">
+        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:260px;background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:16px 20px">
+            <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin-bottom:8px">Enviados de la cuota de hoy</div>
+            <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:30px;font-weight:800;color:#0B1F1A;font-variant-numeric:tabular-nums">{{ enviadosHoy }}</span><span style="font-size:14px;color:#8B968F;font-weight:600">de {{ cuota }}</span></div>
+            <div style="height:7px;border-radius:999px;background:#E8ECE8;margin-top:10px;overflow:hidden"><div style="{{ cuotaBarStyle }}"></div></div>
+          </div>
+          <div style="flex:1;min-width:260px;background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:16px 20px">
+            <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin-bottom:8px">Mañana</div>
+            <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:30px;font-weight:800;color:#0B1F1A;font-variant-numeric:tabular-nums">{{ cuota }}</span><span style="font-size:14px;color:#8B968F;font-weight:600">correos programados</span></div>
+            <div style="font-size:12px;color:#5F6B66;margin-top:10px">La cola se reparte entre las 9:00 y las 18:30, en horario laboral del destinatario.</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;overflow:hidden">
+          <div style="overflow-x:auto">
+          <table style="width:100%;min-width:960px;border-collapse:collapse">
+            <thead><tr>
+              <th style="text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 14px;border-bottom:1px solid #E4E8E4">Hora</th>
+              <th style="text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Sector</th>
+              <th style="text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Destino</th>
+              <th style="text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Asunto</th>
+              <th style="text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Hallazgo que lo motiva</th>
+              <th style="text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Estado</th>
+              <th style="text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 14px;border-bottom:1px solid #E4E8E4"></th>
+            </tr></thead>
+            <tbody>
+            <sc-for list="{{ colaRows }}" as="c" hint-placeholder-count="8">
+              <tr style="{{ c.rowStyle }}" style-hover="{{ rowHover }}">
+                <td style="padding:7px 14px;border-bottom:1px solid #EFF2EF;font-size:12.5px;font-weight:700;color:#0B1F1A;font-variant-numeric:tabular-nums;white-space:nowrap">{{ c.hora }}</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ c.chipStyle }}">{{ c.ab }}</span></span></td>
+                <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;font-size:12.5px;font-weight:600;color:#0F6E56;white-space:nowrap">{{ c.dominio }}</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;font-size:12.5px;color:#22312B;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.asunto }}</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;font-size:12px;color:#8B968F;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.hallazgo }}</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #EFF2EF;white-space:nowrap"><span style="{{ c.estadoStyle }}">{{ c.estadoLabel }}</span></td>
+                <td style="padding:7px 14px;border-bottom:1px solid #EFF2EF;text-align:right;white-space:nowrap"><button onClick="{{ c.preview }}" style="border:none;background:transparent;color:#0F6E56;font-size:12px;font-weight:700;cursor:pointer;padding:2px 6px" style-hover="{{ linkHover }}">Previsualizar</button><button onClick="{{ c.cancelar }}" style="{{ c.cancelBtnStyle }}">Cancelar</button></td>
+              </tr>
+            </sc-for>
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isEmail }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Previsualización de correo" style="max-width:760px">
+        <button onClick="{{ backCola }}" style="border:none;background:transparent;color:#0F6E56;font-size:12.5px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px" style-hover="{{ linkHover }}">← Volver a la cola</button>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;box-shadow:0 2px 8px rgba(11,31,26,.06);overflow:hidden">
+          <div style="padding:20px 26px;border-bottom:1px solid #EFF2EF">
+            <div style="font-size:18px;font-weight:800;color:#0B1F1A;margin-bottom:12px">{{ email.asunto }}</div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <span style="width:36px;height:36px;border-radius:50%;background:#0F6E56;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">M</span>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:#22312B">Marta, de ONEZ <span style="font-weight:400;color:#8B968F">&lt;marta@onez.es&gt;</span></div>
+                <div style="font-size:12px;color:#8B968F">para <span style="color:#4C5A54;font-weight:600">{{ email.para }}</span></div>
+              </div>
+              <span style="font-size:11.5px;color:#8B968F;font-variant-numeric:tabular-nums">{{ email.fecha }}</span>
+            </div>
+          </div>
+          <div style="padding:24px 26px 28px">
+            <sc-for list="{{ email.parrafos }}" as="p" hint-placeholder-count="4">
+              <p style="font-size:14px;line-height:1.65;color:#22312B;margin:0 0 14px;max-width:60ch">{{ p }}</p>
+            </sc-for>
+            <p style="font-size:14px;line-height:1.6;color:#22312B;margin:18px 0 0">Un saludo,<br>Marta · ONEZ<br><a href="#">onez.es</a></p>
+          </div>
+        </section>
+        <details style="margin-top:14px;background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:14px 20px">
+          <summary style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;cursor:pointer">Detalles técnicos</summary>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin-top:12px;font-size:12px;font-family:ui-monospace,monospace;color:#4C5A54">
+            <span style="color:#8B968F">De</span><span>marta@onez.es (dominio verificado, SPF + DKIM)</span>
+            <span style="color:#8B968F">Para</span><span>{{ email.para }}</span>
+            <span style="color:#8B968F">Message-ID</span><span>{{ email.messageId }}</span>
+            <span style="color:#8B968F">List-Unsubscribe</span><span>&lt;mailto:baja@onez.es&gt; · baja en un clic</span>
+          </div>
+        </details>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isSalud }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Salud del sistema" style="max-width:1240px;display:flex;flex-direction:column;gap:16px">
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:18px 22px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 16px">Correos enviados · últimos 30 días</h2>
+          <div style="display:flex;align-items:flex-end;gap:3px;height:130px;margin-bottom:6px">
+            <sc-for list="{{ dias30 }}" as="d" hint-placeholder-count="30">
+              <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="{{ d.tooltip }}"><div style="{{ d.barStyle }}"></div></div>
+            </sc-for>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:#8B968F;margin-bottom:16px"><span>{{ dia30Inicio }}</span><span>hoy</span></div>
+          <div style="max-height:280px;overflow:auto;border-top:1px solid #E4E8E4">
+            <table style="width:100%;min-width:640px;border-collapse:separate;border-spacing:0">
+              <thead><tr>
+                <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:8px 10px;border-bottom:1px solid #E4E8E4">Fecha</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:8px 10px;border-bottom:1px solid #E4E8E4">Escalón</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:8px 10px;border-bottom:1px solid #E4E8E4">Cuota</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:8px 10px;border-bottom:1px solid #E4E8E4">Enviados</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:8px 10px;border-bottom:1px solid #E4E8E4">Rebotes</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:8px 10px;border-bottom:1px solid #E4E8E4">Tasa rebote</th>
+                <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:8px 10px;border-bottom:1px solid #E4E8E4">Salud</th>
+              </tr></thead>
+              <tbody>
+              <sc-for list="{{ dias30Desc }}" as="d" hint-placeholder-count="8">
+                <tr style-hover="{{ rowHover }}">
+                  <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF;font-size:12px;font-weight:600;color:#22312B;font-variant-numeric:tabular-nums">{{ d.fecha }}</td>
+                  <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;font-variant-numeric:tabular-nums">{{ d.escalon }}</td>
+                  <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;font-variant-numeric:tabular-nums">{{ d.cuota }}</td>
+                  <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums">{{ d.enviados }}</td>
+                  <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;font-variant-numeric:tabular-nums">{{ d.rebotes }}</td>
+                  <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;font-variant-numeric:tabular-nums">{{ d.tasa }}</td>
+                  <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF"><span style="{{ d.saludStyle }}">{{ d.saludLabel }}</span></td>
+                </tr>
+              </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:18px 22px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 14px">Eventos de la bandeja · últimos 30 días</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+            <sc-for list="{{ eventos }}" as="e" hint-placeholder-count="6">
+              <div style="{{ e.cardStyle }}">
+                <span style="{{ e.iconStyle }}">{{ e.icon }}</span>
+                <div style="font-size:24px;font-weight:800;color:#0B1F1A;font-variant-numeric:tabular-nums;margin:8px 0 2px">{{ e.n }}</div>
+                <div style="font-size:11.5px;font-weight:600;color:#5F6B66">{{ e.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:18px 22px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 6px">Procesos internos</h2>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ procesos }}" as="p" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F1F4F1">
+                <span style="{{ p.dotStyle }}"></span>
+                <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#22312B">{{ p.nombre }}</div><div style="font-size:11.5px;color:#8B968F">{{ p.desc }}</div></div>
+                <span style="{{ p.estadoStyle }}">{{ p.estadoLabel }}</span>
+                <span style="font-size:12px;color:#8B968F;width:110px;text-align:right;font-variant-numeric:tabular-nums">{{ p.ultima }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isCosecha }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Cosecha" style="max-width:1240px">
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:20px 24px;margin-bottom:16px;display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+          <div style="flex:none"><span style="font-size:42px;font-weight:800;color:#0B1F1A;font-variant-numeric:tabular-nums">{{ cosechaPct }} %</span><div style="font-size:12px;color:#8B968F;font-weight:600">avance global · {{ cosechaHechas }} de 52 provincias</div></div>
+          <div style="flex:1;min-width:240px"><div style="height:9px;border-radius:999px;background:#E8ECE8;overflow:hidden"><div style="{{ cosechaBarStyle }}"></div></div></div>
+          <div style="flex:none;display:flex;gap:14px;flex-wrap:wrap">
+            <sc-for list="{{ cosechaLeyenda }}" as="l" hint-placeholder-count="4">
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#4C5A54"><span style="{{ l.dotStyle }}"></span>{{ l.label }} <span style="color:#8B968F;font-variant-numeric:tabular-nums">{{ l.n }}</span></span>
+            </sc-for>
+          </div>
+        </section>
+        <div style="{{ cosechaGridStyle }}">
+          <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:18px 22px">
+            <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 12px">Mapa por provincia</h2>
+            <x-import component-from-global-scope="spain-map" from="./SpainMap.js" statuses="{{ mapStatuses }}" hint-size="100%,420px"></x-import>
+          </section>
+          <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;overflow:hidden">
+            <div style="max-height:560px;overflow:auto">
+              <table style="width:100%;min-width:520px;border-collapse:separate;border-spacing:0">
+                <thead><tr>
+                  <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 14px;border-bottom:1px solid #E4E8E4">Provincia</th>
+                  <th style="position:sticky;top:0;background:#fff;text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Estado</th>
+                  <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Leads</th>
+                  <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 10px;border-bottom:1px solid #E4E8E4">Correos</th>
+                  <th style="position:sticky;top:0;background:#fff;text-align:right;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8B968F;padding:9px 14px;border-bottom:1px solid #E4E8E4">Actualizado</th>
+                </tr></thead>
+                <tbody>
+                <sc-for list="{{ provinciasRows }}" as="p" hint-placeholder-count="10">
+                  <tr style-hover="{{ rowHover }}">
+                    <td style="padding:6px 14px;border-bottom:1px solid #EFF2EF;font-size:12.5px;font-weight:600;color:#22312B">{{ p.nombre }}</td>
+                    <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF"><span style="{{ p.estadoStyle }}">{{ p.estadoLabel }}</span></td>
+                    <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;font-variant-numeric:tabular-nums">{{ p.leads }}</td>
+                    <td style="padding:6px 10px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;font-variant-numeric:tabular-nums">{{ p.emails }}</td>
+                    <td style="padding:6px 14px;border-bottom:1px solid #EFF2EF;text-align:right;font-size:12px;color:#8B968F;font-variant-numeric:tabular-nums">{{ p.fecha }}</td>
+                  </tr>
+                </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isSistema }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Sistema de diseño" style="max-width:1080px;display:flex;flex-direction:column;gap:16px">
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:20px 24px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 4px">Paleta</h2>
+          <p style="font-size:12.5px;color:#5F6B66;margin:0 0 16px;max-width:70ch">Los verdes de marca (Savia y Brote) se reservan para acción, navegación y progreso. La salud se comunica con una familia semántica separada — verde hierba, ámbar, rojo y gris — siempre acompañada de icono y texto, nunca solo color. El Bosque es el fondo natural del futuro modo oscuro.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <sc-for list="{{ paleta }}" as="p" hint-placeholder-count="8">
+              <div style="width:118px">
+                <div style="{{ p.swatchStyle }}">{{ p.muestra }}</div>
+                <div style="font-size:12px;font-weight:700;color:#22312B;margin-top:6px">{{ p.nombre }}</div>
+                <div style="font-size:11px;color:#8B968F;font-family:ui-monospace,monospace">{{ p.hex }}</div>
+                <div style="font-size:10.5px;color:#8B968F">{{ p.uso }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:20px 24px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 16px">Tipografía · Nunito Sans</h2>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:22px;font-weight:800;color:#0B1F1A">Titular de pantalla — 22/800, color Bosque</div>
+            <div style="font-size:14px;font-weight:700;color:#22312B">Título de tarjeta o dato destacado — 14/700</div>
+            <div style="font-size:12.5px;color:#22312B">Cuerpo y celdas de tabla — 12,5/400, interlineado holgado</div>
+            <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F">Etiqueta de sección — 11/800, versalitas</div>
+            <div style="font-size:13px;font-variant-numeric:tabular-nums;color:#22312B">Números siempre tabulares y alineados a la derecha: 1 024 · 86 % · 6,4 s</div>
+          </div>
+        </section>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:20px 24px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 14px">Semáforo de salud</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <sc-for list="{{ semaforoMuestras }}" as="s" hint-placeholder-count="4"><span style="{{ s.style }}">{{ s.icon }} {{ s.label }}</span></sc-for>
+          </div>
+          <p style="font-size:12px;color:#8B968F;margin:12px 0 0">Cada estado combina tono + icono + texto. El verde de salud (#2C7A3F) es un verde hierba, distinto del Savia de marca (#0F6E56, más azulado).</p>
+        </section>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:20px 24px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 14px">Insignias de estado de lead (11)</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+            <sc-for list="{{ estadosLeadMuestras }}" as="e" hint-placeholder-count="11"><span style="{{ e.style }}">{{ e.label }}</span></sc-for>
+          </div>
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 14px">Estados de correo (5)</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+            <sc-for list="{{ estadosCorreoMuestras }}" as="e" hint-placeholder-count="5"><span style="{{ e.style }}">{{ e.label }}</span></sc-for>
+          </div>
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 14px">Etiquetas de sector (7)</h2>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <sc-for list="{{ sectoresMuestras }}" as="s" hint-placeholder-count="7"><span style="display:inline-flex;align-items:center;gap:7px"><span style="{{ s.chipStyle }}">{{ s.ab }}</span><span style="font-size:12.5px;font-weight:600;color:#4C5A54">{{ s.nombre }}</span></span></sc-for>
+          </div>
+        </section>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:20px 24px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 14px">Medidores 0–100</h2>
+          <div style="display:flex;gap:40px;flex-wrap:wrap">
+            <sc-for list="{{ medidoresMuestras }}" as="m" hint-placeholder-count="3">
+              <div style="width:180px">
+                <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#5F6B66;margin-bottom:3px"><span>{{ m.label }}</span><span style="{{ m.numStyle }}">{{ m.v }}</span></div>
+                <div style="height:5px;border-radius:999px;background:#EDF0ED;overflow:hidden"><div style="{{ m.barStyle }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="font-size:12px;color:#8B968F;margin:14px 0 0">Rojo por debajo de 45, ámbar hasta 70, verde de salud a partir de 70.</p>
+        </section>
+        <section style="background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:20px 24px">
+          <h2 style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin:0 0 14px">Tarjeta de métrica y barra de progreso</h2>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+            <div style="width:220px;background:#fff;border:1px solid #E4E8E4;border-radius:12px;padding:16px 20px">
+              <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8B968F;margin-bottom:8px">Respondidos</div>
+              <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:30px;font-weight:800;color:#0B1F1A;font-variant-numeric:tabular-nums">61</span><span style="font-size:13px;color:#8B968F;font-weight:600">de 438</span></div>
+              <div style="height:7px;border-radius:999px;background:#E8ECE8;margin-top:10px;overflow:hidden"><div style="width:14%;height:100%;background:#0F6E56;border-radius:999px"></div></div>
+            </div>
+            <div style="flex:1;min-width:260px;font-size:12px;color:#5F6B66;line-height:1.6">La barra de progreso usa siempre Savia sobre pista gris verdosa. En tablas densas: filas de 30–34 px, números tabulares a la derecha, hover en #F3F6F3 y cabecera fija. El modo oscuro invierte Hueso ⇄ Bosque manteniendo Savia y Brote como acentos y la misma familia semántica.</div>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;estadoCampana&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;activa&quot;,&quot;pausada&quot;,&quot;detenida&quot;],&quot;default&quot;:&quot;activa&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Campaña&quot;},&quot;escalon&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:1,&quot;max&quot;:5,&quot;step&quot;:1,&quot;default&quot;:3,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Campaña&quot;},&quot;tasaRebote&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;default&quot;:1.2,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Campaña&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: 'resumen', estadoOverride: null, leadSel: null, emailSel: null, canceladas: {}, leadEstados: {}, fEstado: 'Todos', fSector: 'Todos', fScore: '0', fVerif: false, w: (typeof window !== 'undefined' ? window.innerWidth : 1400) };
+    this.C = { bosque:'#0B1F1A', savia:'#0F6E56', brote:'#5DCAA5', hueso:'#FAFAF7', txt:'#22312B', sec:'#5F6B66', mut:'#8B968F', bd:'#E4E8E4',
+      okC:'#2C7A3F', okBg:'#E4F3E7', ambC:'#96660F', ambBg:'#FAF0DC', rojC:'#B0432F', rojBg:'#F9E9E6', azC:'#2F5E96', azBg:'#E1ECF8', grC:'#5F6B66', grBg:'#EEF1EF' };
+    this.CUOTAS = [10,15,22,30,40];
+    this.SECT = {
+      hos:{nombre:'Hostelería',ab:'Ho',c:'#8F4E24',bg:'#F6EBE2'}, sal:{nombre:'Salud',ab:'Sa',c:'#2F5E96',bg:'#E7EFF8'},
+      com:{nombre:'Comercio',ab:'Co',c:'#6B4FA0',bg:'#EFEAF7'}, ser:{nombre:'Serv. profesionales',ab:'Sp',c:'#44618150',bg:'#E9EEF3'},
+      ofi:{nombre:'Oficios',ab:'Of',c:'#7A5E2E',bg:'#F4EEE0'}, bel:{nombre:'Belleza y bienestar',ab:'Be',c:'#A04E77',bg:'#F7EAF1'},
+      age:{nombre:'Agencias',ab:'Ag',c:'#3A7A7A',bg:'#E6F1F1'} };
+    this.SECT.ser.c = '#446181';
+    this.ESTADOS = {
+      'Nuevo':['#5F6B66','#EEF1EF'], 'Rastreado':['#4C5A54','#E9EEEA'], 'Auditado':['#3E5248','#E1EAE3'],
+      'En cola':['#3E6FA8','#E9F1F9'], 'Contactado':['#2F5E96','#E1ECF8'], 'Seguimiento enviado':['#28517F','#D8E6F5'],
+      'Respondido':['#2C7A3F','#E4F3E7'], 'Cliente':['#FFFFFF','#2E8B47'],
+      'Descartado':['#79837D','#F0F2F0'], 'Baja':['#9A5A50','#F5EAE8'], 'Rebotado':['#A34A3B','#F7E8E5'] };
+    this.ESTADOS_CORREO = {
+      pendiente:['Pendiente','#5F6B66','#EEF1EF'], enviando:['Enviando…','#2F5E96','#E1ECF8'], enviado:['Enviado','#2C7A3F','#E4F3E7'],
+      fallido:['Fallido','#B0432F','#F9E9E6'], cancelado:['Cancelado','#8B968F','#F0F2F0'] };
+    this.SEMAFORO = {
+      verde:{label:'Verde',icon:'✓',c:'#2C7A3F',bg:'#E4F3E7'}, ambar:{label:'Ámbar',icon:'!',c:'#96660F',bg:'#FAF0DC'},
+      rojo:{label:'Rojo',icon:'✕',c:'#B0432F',bg:'#F9E9E6'}, detenido:{label:'Detenido',icon:'⏸',c:'#5F6B66',bg:'#EEF1EF'} };
+    this.LEADS = [
+      ['El Fogón de Marta','elfogondemarta.es','hos',84,'Sin versión móvil utilizable','Respondido','21 jul','Cáceres','Cáceres','927 214 380','Plaza Mayor 8'],
+      ['Clínica Dental Sonrisalud','sonrisalud.es','sal',82,'Carga de 6,4 s en portada','Respondido','21 jul','Málaga','Málaga','952 481 203','Calle Larios 14'],
+      ['Ferretería Hermanos Ruiz','ferreteriaruiz.es','com',77,'Catálogo sin buscador ni fichas','Contactado','20 jul','Valladolid','Valladolid','983 302 117','C/ Panaderos 22'],
+      ['Asesoría Lumbreras','asesorialumbreras.com','ser',71,'Sin certificado SSL','Seguimiento enviado','14 jul','Albacete','Albacete','967 118 442','Av. de España 41'],
+      ['Fontanería Ágil 24h','fontaneriaagil.es','ofi',88,'Web no adaptada a móvil, texto ilegible','En cola','—','Getafe','Madrid','916 954 208','C/ Toledo 103'],
+      ['Centro Estética Alba','esteticaalba.es','bel',69,'Reservas solo por teléfono','Contactado','19 jul','Zaragoza','Zaragoza','976 235 664','P.º Independencia 19'],
+      ['Taller MotorSur','tallermotorsur.es','ofi',74,'Horario desactualizado en portada','Auditado','—','Dos Hermanas','Sevilla','954 720 391','Pol. La Isla, nave 7'],
+      ['Restaurante A Lareira','alareira.gal','hos',81,'Carta en PDF escaneado','En cola','—','Lugo','Lugo','982 284 550','Rúa Nova 31'],
+      ['Fisioterapia Vidal','fisiovidal.es','sal',66,'Sin datos estructurados ni SEO local','Contactado','18 jul','Alicante','Alicante','965 208 773','Av. Maisonnave 5'],
+      ['Librería El Faro','libreriaelfaro.es','com',58,'Imágenes sin optimizar (9 MB en portada)','Auditado','—','Gijón','Asturias','985 341 926','C/ Corrida 46'],
+      ['Abogados Peña & Prat','penaprat.com','ser',63,'Formulario de contacto roto','Rastreado','—','Barcelona','Barcelona','933 176 240','Rbla. Catalunya 88'],
+      ['Peluquería Lola Style','lolastyle.es','bel',72,'Sin ficha de Google enlazada','Nuevo','—','Murcia','Murcia','968 273 415','Gran Vía 12'],
+      ['Hostal Miramar','hostalmiramar.es','hos',79,'Motor de reservas externo caído','Cliente','8 jul','Santander','Cantabria','942 361 088','P.º Pereda 27'],
+      ['Viajes Meridiano','viajesmeridiano.es','age',55,'Blog abandonado desde 2021','Descartado','—','Valencia','Valencia','963 514 902','C/ Colón 60'],
+      ['Carpintería Robledal','carpinteriarobledal.es','ofi',86,'Sin web móvil ni HTTPS','En cola','—','León','León','987 226 174','Ctra. Asturias km 3'],
+      ['Panadería San Isidro','panaderiasanisidro.es','com',61,'Sin horarios ni ubicación visibles','Rebotado','12 jul','Córdoba','Córdoba','957 483 310','C/ Realejo 9'],
+      ['Clínica Veterinaria Kuna','vetkuna.es','sal',70,'Sin cita online','Baja','10 jul','Bilbao','Bizkaia','944 152 637','C/ Licenciado Poza 33'],
+      ['Gestoría Navarro','gestorianavarro.es','ser',67,'Textos ilegibles por falta de contraste','Contactado','17 jul','Pamplona','Navarra','948 227 501','Av. Carlos III 15']
+    ].map(a => ({ nombre:a[0], dominio:a[1], sector:a[2], score:a[3], hallazgo:a[4], estado:a[5], contacto:a[6], ciudad:a[7], prov:a[8], tel:a[9], direccion:a[10] }));
+    this.SECTORES_TABLA = [
+      ['sal',612,318,'71,4',74,16,'21,6'], ['ofi',640,356,'74,2',68,12,'17,6'], ['hos',934,512,'69,8',96,14,'14,6'],
+      ['bel',488,231,'66,1',52,7,'13,5'], ['com',1021,402,'62,3',88,8,'9,1'], ['ser',726,289,'60,8',44,3,'6,8'], ['age',391,107,'54,9',16,1,'6,3'] ];
+    this.EMBUDO = [['Leads totales',4812],['Con email de rol',3391],['Clasificados',3102],['Rastreados',2748],['Auditados',2215],['En cola',512],['Contactados',438],['Respondidos',61],['Clientes',9]];
+    this.RESPUESTAS = [
+      ['sonrisalud.es','Pues sí que va lenta, sí. ¿Qué me proponéis exactamente?','21 jul'],
+      ['elfogondemarta.es','Me interesa, ¿podéis llamar el lunes por la mañana?','21 jul'],
+      ['fisiovidal.es','Gracias por el aviso, no sabíamos lo del formulario.','18 jul'],
+      ['tapiceriabravo.es','¿Cuánto costaría algo sencillo para empezar?','17 jul'],
+      ['clinicadeltoro.es','Ahora mismo no, pero guardadme el contacto.','16 jul'],
+      ['hostalmiramar.es','Adelante con la propuesta, nos encaja.','15 jul'],
+      ['floristerialaspalmas.es','¿Esto incluye llevar también las redes?','14 jul'],
+      ['autoescuelavertice.es','Buen ojo con lo del móvil, nos lo dicen mucho.','13 jul'],
+      ['mesonelcandil.es','Pásame precios y lo miro con mi socia.','12 jul'],
+      ['opticavisium.es','¿Podéis enseñarme algo parecido que hayáis hecho?','11 jul'] ];
+    this.COLA = [
+      ['09:12','hos','elfogondemarta.es','Una cosa que he visto en la web de El Fogón de Marta','Sin versión móvil utilizable','enviado',0],
+      ['09:47','sal','sonrisalud.es','Vuestra web tarda 6 segundos en abrir','Carga de 6,4 s en portada','enviado',0],
+      ['10:21','com','ferreteriaruiz.es','El catálogo de vuestra web, visto desde fuera','Catálogo sin buscador ni fichas','enviado',0],
+      ['11:05','bel','esteticaalba.es','Reservar en Estética Alba desde el móvil','Reservas solo por teléfono','enviado',0],
+      ['11:52','ofi','fontaneriaagil.es','Vuestra web se ve cortada en el móvil','Web no adaptada a móvil','enviando',0],
+      ['12:38','hos','alareira.gal','La carta de A Lareira no se puede leer en el móvil','Carta en PDF escaneado','pendiente',0],
+      ['13:24','ser','penaprat.com','El formulario de contacto de vuestra web no envía','Formulario de contacto roto','pendiente',0],
+      ['16:10','ofi','carpinteriarobledal.es','He intentado ver vuestros trabajos desde el móvil','Sin web móvil ni HTTPS','pendiente',0],
+      ['17:03','sal','fisiovidal.es','Aparecer en Google cuando buscan fisio en Alicante','Sin SEO local','pendiente',0],
+      ['17:48','com','libreriaelfaro.es','La portada de vuestra web pesa 9 MB','Imágenes sin optimizar','pendiente',0],
+      ['09:05','bel','lolastyle.es','Vuestra ficha de Google no enlaza a la web','Sin ficha de Google enlazada','pendiente',1],
+      ['09:50','hos','mesonelcandil.es','Los horarios del Mesón El Candil en Google','Horarios inconsistentes','pendiente',1],
+      ['10:35','ser','gestorianavarro.es','Un detalle de legibilidad en vuestra web','Textos con poco contraste','pendiente',1] ];
+    this.EVENTOS = [
+      ['Respuestas',61,'↩',this.C.okC,this.C.okBg], ['Rebotes duros',4,'✕',this.C.rojC,this.C.rojBg], ['Rebotes blandos',9,'~','#96660F','#FAF0DC'],
+      ['Bajas',3,'−','#9A5A50','#F5EAE8'], ['Quejas',0,'!','#B0432F','#F9E9E6'], ['Ignorados',361,'·','#5F6B66','#EEF1EF'] ];
+    this.PROCESOS = [
+      ['Cosecha','Recolección de empresas por provincia','vivo','hace 2 min'],
+      ['Rastreo','Visita y captura de páginas web','vivo','hace 40 s'],
+      ['Planificador','Reparte la cola diaria de envíos','vivo','hace 4 min'],
+      ['Despachador','Entrega los correos programados','vivo','hace 1 min'],
+      ['Bandeja','Lee respuestas, rebotes y bajas','vivo','hace 3 min'] ];
+    this.PROVINCIAS = [
+      ['01','Araba/Álava','hecho',44,31,'2 jun'],['02','Albacete','pendiente',0,0,'—'],['03','Alicante','hecho',331,242,'18 may'],
+      ['04','Almería','hecho',38,26,'28 jun'],['05','Ávila','pendiente',0,0,'—'],['06','Badajoz','proceso',18,11,'hoy'],
+      ['07','Illes Balears','hecho',144,103,'9 jun'],['08','Barcelona','hecho',588,431,'12 may'],['09','Burgos','pendiente',0,0,'—'],
+      ['10','Cáceres','hecho',52,37,'30 jun'],['11','Cádiz','hecho',96,68,'21 jun'],['12','Castellón','hecho',55,39,'25 jun'],
+      ['13','Ciudad Real','pendiente',0,0,'—'],['14','Córdoba','hecho',52,36,'27 jun'],['15','A Coruña','hecho',188,134,'4 jun'],
+      ['16','Cuenca','error',6,2,'19 jul'],['17','Girona','hecho',86,61,'15 jun'],['18','Granada','hecho',120,85,'11 jun'],
+      ['19','Guadalajara','pendiente',0,0,'—'],['20','Gipuzkoa','hecho',66,47,'23 jun'],['21','Huelva','pendiente',0,0,'—'],
+      ['22','Huesca','pendiente',0,0,'—'],['23','Jaén','pendiente',0,0,'—'],['24','León','proceso',22,14,'hoy'],
+      ['25','Lleida','hecho',49,34,'26 jun'],['26','La Rioja','hecho',40,28,'29 jun'],['27','Lugo','pendiente',0,0,'—'],
+      ['28','Madrid','hecho',604,447,'8 may'],['29','Málaga','hecho',318,229,'20 may'],['30','Murcia','hecho',236,168,'26 may'],
+      ['31','Navarra','hecho',70,50,'22 jun'],['32','Ourense','pendiente',0,0,'—'],['33','Asturias','hecho',138,97,'7 jun'],
+      ['34','Palencia','pendiente',0,0,'—'],['35','Las Palmas','hecho',150,106,'6 jun'],['36','Pontevedra','hecho',90,63,'19 jun'],
+      ['37','Salamanca','pendiente',0,0,'—'],['38','Santa Cruz de Tenerife','hecho',118,83,'13 jun'],['39','Cantabria','hecho',58,41,'24 jun'],
+      ['40','Segovia','pendiente',0,0,'—'],['41','Sevilla','hecho',356,258,'16 may'],['42','Soria','error',3,1,'17 jul'],
+      ['43','Tarragona','hecho',84,59,'17 jun'],['44','Teruel','pendiente',0,0,'—'],['45','Toledo','hecho',48,33,'1 jul'],
+      ['46','Valencia','hecho',402,294,'14 may'],['47','Valladolid','proceso',31,19,'hoy'],['48','Bizkaia','hecho',214,152,'31 may'],
+      ['49','Zamora','pendiente',0,0,'—'],['50','Zaragoza','hecho',170,121,'5 jun'],['51','Ceuta','pendiente',0,0,'—'],['52','Melilla','pendiente',0,0,'—'] ];
+    this.DIAS30 = this._mkDias30();
+  }
+  _mkDias30() {
+    const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const hoy = new Date(2026, 6, 25), out = [];
+    const enviadosPlan = [10,10,10,10,10,10,15,0,15,15,15,15,15,15,22,20,22,22,21,22,22,22,22,19,22,22,22,22,22,14];
+    const rebotesPlan =  [0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(hoy); d.setDate(hoy.getDate() - (29 - i));
+      const env = enviadosPlan[i], reb = rebotesPlan[i];
+      const cuota = env <= 10 ? 10 : env <= 15 ? 15 : 22;
+      const tasa = env ? (reb / env) * 100 : 0;
+      const salud = env === 0 ? 'detenido' : tasa >= 5 ? 'rojo' : tasa >= 2 ? 'ambar' : 'verde';
+      out.push({ fecha: d.getDate() + ' ' + meses[d.getMonth()], escalon: cuota === 10 ? 1 : cuota === 15 ? 2 : 3, cuota, enviados: env, rebotes: reb, tasaNum: tasa, salud });
+    }
+    return out;
+  }
+  componentDidMount(){ this._onR = () => this.setState({w: window.innerWidth}); window.addEventListener('resize', this._onR); }
+  componentWillUnmount(){ window.removeEventListener('resize', this._onR); }
+  fmt(n){ return n.toLocaleString('es-ES'); }
+  badge(c, bg, extra){ return Object.assign({display:'inline-flex',alignItems:'center',gap:'5px',padding:'2px 9px',borderRadius:'999px',fontSize:'11px',fontWeight:700,color:c,background:bg,whiteSpace:'nowrap'}, extra||{}); }
+  chip(s){ return {width:'18px',height:'18px',borderRadius:'5px',background:s.bg,color:s.c,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'9px',fontWeight:800,flex:'none'}; }
+  gaugeColor(v){ return v < 45 ? '#B0432F' : v < 70 ? '#96660F' : '#2C7A3F'; }
+  go(screen){ this.setState({ screen }); }
+  renderVals() {
+    const C = this.C, st = this.state;
+    const estado = st.estadoOverride || this.props.estadoCampana || 'activa';
+    const escalon = Math.max(1, Math.min(5, Math.round(this.props.escalon ?? 3)));
+    const cuota = this.CUOTAS[escalon - 1];
+    const enviadosHoy = estado === 'detenida' ? 0 : Math.round(cuota * 0.64);
+    const tasaRebote = this.props.tasaRebote ?? 1.2;
+    const saludKey = estado === 'detenida' ? 'detenido' : tasaRebote >= 5 ? 'rojo' : tasaRebote >= 2 ? 'ambar' : 'verde';
+    const SEM = this.SEMAFORO[saludKey];
+    const tasaTxt = tasaRebote.toLocaleString('es-ES', {minimumFractionDigits:1, maximumFractionDigits:1});
+    const screens = { resumen:'Resumen', leads:'Leads', ficha:'Ficha del lead', cola:'Cola de hoy', email:'Previsualización del correo', salud:'Salud del sistema', cosecha:'Cosecha', sistema:'Sistema de diseño' };
+    const navIds = [['resumen','Resumen'],['leads','Leads'],['cola','Cola de hoy'],['salud','Salud'],['cosecha','Cosecha']];
+    const activeNav = st.screen === 'ficha' ? 'leads' : st.screen === 'email' ? 'cola' : st.screen;
+    const w = st.w || 1400, compact = w < 960, mid = w < 1240, narrow = w < 1100;
+    const navBase = {display:'block',width:compact?'auto':'100%',padding:compact?'7px 11px':'9px 12px',border:'none',borderRadius:'7px',fontSize:compact?'12.5px':'13px',fontWeight:700,textAlign:'left',cursor:'pointer',background:'transparent',color:'#9FB4AC',whiteSpace:'nowrap'};
+    const navHover = {background:'rgba(250,250,247,.07)',color:'#FAFAF7'};
+    const navMain = navIds.map(([id,label]) => ({ id, label, go: () => this.go(id),
+      style: id === activeNav ? Object.assign({},navBase,{background:C.savia,color:'#FAFAF7'}) : navBase,
+      hover: id === activeNav ? {} : navHover }));
+    const pillMap = { activa:['Activa',C.okC,C.okBg], pausada:['Pausada',C.ambC,C.ambBg], detenida:['Detenida',C.rojC,C.rojBg] };
+    const [pillLabel, pillC, pillBg] = pillMap[estado];
+    const pausada = estado !== 'activa';
+    const embMax = this.EMBUDO[0][1];
+    const embudo = this.EMBUDO.map(([label,n],i) => ({ label, n:this.fmt(n),
+      drop: i === 0 ? '' : Math.round(n / this.EMBUDO[i-1][1] * 100) + ' %',
+      barStyle: {width: Math.max(1.5, n/embMax*100) + '%', height:'100%', background: i >= 6 ? C.savia : '#7FA99A', borderRadius:'4px'} }));
+    const sectoresTabla = this.SECTORES_TABLA.map((r,i) => { const s = this.SECT[r[0]]; return {
+      nombre:s.nombre, ab:s.ab, chipStyle:this.chip(s), leads:this.fmt(r[1]), auditados:this.fmt(r[2]), punt:r[3], contactados:r[4], respondidos:r[5], tasa:r[6],
+      rowStyle: i === 0 ? {background:'#F2F8F4'} : {},
+      topTagStyle: i === 0 ? this.badge(C.okC, C.okBg, {fontSize:'9.5px',padding:'1px 7px'}) : {display:'none'} }; });
+    const respuestas = this.RESPUESTAS.map(r => ({ dominio:r[0], extracto:r[1], fecha:r[2], open: e => { e.preventDefault(); const l = this.LEADS.find(x=>x.dominio===r[0]); if(l) this.setState({leadSel:l, screen:'ficha'}); else this.go('leads'); } }));
+    // Leads
+    const estadosLead = Object.keys(this.ESTADOS);
+    const efEstado = l => st.leadEstados[l.dominio] || l.estado;
+    const filtered = this.LEADS.filter(l =>
+      (st.fEstado === 'Todos' || efEstado(l) === st.fEstado) &&
+      (st.fSector === 'Todos' || this.SECT[l.sector].nombre === st.fSector) &&
+      l.score >= Number(st.fScore) && (!st.fVerif || l.score % 3 !== 0));
+    const leadsRows = filtered.map(l => { const s = this.SECT[l.sector], e = efEstado(l), es = this.ESTADOS[e], gc = this.gaugeColor(l.score); return {
+      nombre:l.nombre, dominio:l.dominio, ab:s.ab, sectorNombre:s.nombre, chipStyle:this.chip(s), score:l.score, hallazgo:l.hallazgo, estado:e, contacto:l.contacto,
+      estadoStyle:this.badge(es[0],es[1]), scoreBarStyle:{display:'block',width:l.score+'%',height:'100%',background:gc,borderRadius:'999px'},
+      scoreNumStyle:{fontSize:'12.5px',fontWeight:800,color:gc,fontVariantNumeric:'tabular-nums',width:'22px',textAlign:'right'},
+      open: () => this.setState({leadSel:l, screen:'ficha'}) }; });
+    // Ficha
+    const L = st.leadSel || this.LEADS[1];
+    const s = this.SECT[L.sector], fe = efEstado(L), fes = this.ESTADOS[fe];
+    const psiDefs = [['Rendimiento', Math.max(8, 108 - L.score - 0)], ['SEO', Math.max(10, 134 - L.score) > 95 ? 52 : 134 - L.score], ['Accesibilidad', 147 - L.score], ['Buenas prácticas', 138 - L.score]];
+    const psi = psiDefs.map(([label,v0]) => { const v = Math.max(5, Math.min(95, v0)); const gc = this.gaugeColor(v); return { label, v,
+      numStyle:{color:gc,fontWeight:800,fontVariantNumeric:'tabular-nums'}, barStyle:{width:v+'%',height:'100%',background:gc,borderRadius:'999px'} }; });
+    const sevStyles = { Alta:this.badge(C.rojC,C.rojBg,{fontSize:'10px',width:'46px',justifyContent:'center'}), Media:this.badge('#96660F',C.ambBg,{fontSize:'10px',width:'46px',justifyContent:'center'}), Baja:this.badge(C.grC,C.grBg,{fontSize:'10px',width:'46px',justifyContent:'center'}) };
+    const genericos = [
+      ['Sin certificado SSL en el formulario de contacto','El navegador marca la página como no segura al escribir datos.','Alta'],
+      ['Imágenes sin comprimir en portada','Más de 4 MB de imágenes; en móvil con datos tarda el doble.','Media'],
+      ['Sin datos estructurados (LocalBusiness)','Google no puede mostrar horario, teléfono ni reseñas en el buscador.','Media'],
+      ['Títulos de página duplicados','Varias páginas compiten entre sí por la misma búsqueda.','Baja'] ];
+    const hallazgos = [{titulo:L.hallazgo, detalle:'Es el hallazgo que motiva el primer correo de la secuencia.', sev:'Alta'}]
+      .concat(genericos.filter(g => g[0] !== L.hallazgo).slice(0,4).map(g => ({titulo:g[0], detalle:g[1], sev:g[2]})))
+      .map(h => Object.assign(h, {sevStyle: sevStyles[h.sev]}));
+    const rutas = ['/','/servicios','/sobre-nosotros','/contacto','/blog','/aviso-legal'];
+    const paginas = rutas.map((ruta,i) => { const code = (i === 4 && L.score > 75) ? 404 : 200; return {
+      ruta, code, ms: 380 + ((L.score * (i+3)) % 900), titulo: (i===0 ? 'Inicio · ' : '') + L.nombre,
+      movil: L.score > 80 ? 'No' : i % 2 ? 'Sí' : 'No', datos: 'No',
+      codeStyle: this.badge(code === 200 ? C.okC : C.rojC, code === 200 ? C.okBg : C.rojBg, {fontSize:'10.5px',padding:'1px 7px',fontVariantNumeric:'tabular-nums'}) }; });
+    const correos = [
+      {email:'info@'+L.dominio, verif:'Verificado', verifStyle:this.badge(C.okC,C.okBg,{fontSize:'10px'})},
+      {email:'hola@'+L.dominio, verif:'Sin verificar', verifStyle:this.badge(C.grC,C.grBg,{fontSize:'10px'})} ];
+    const rank = estadosLead.indexOf(fe);
+    const tl = [];
+    const dot = c => ({width:'9px',height:'9px',borderRadius:'50%',background:c,flex:'none',marginTop:'4px'});
+    const line = {width:'1px',flex:'1',background:'#E4E8E4'};
+    if (rank >= 4 || fe === 'Rebotado' || fe === 'Baja') tl.push({titulo:'Primer correo enviado', fecha:'12 jul, 10:40', detalle:'Asunto: «Una cosa que he visto en la web de '+L.nombre+'»'});
+    if (fe === 'Seguimiento enviado' || rank >= 6) tl.push({titulo:'Seguimiento enviado', fecha:'19 jul, 09:15', detalle:'Recordatorio breve, sin insistencia.'});
+    if (fe === 'Respondido' || fe === 'Cliente') tl.push({titulo:'Respuesta recibida', fecha:L.contacto+', 13:02', detalle:'«'+(this.RESPUESTAS.find(r=>r[0]===L.dominio)?.[1] || 'Nos interesa, hablamos.')+'»', ok:true});
+    if (fe === 'Cliente') tl.push({titulo:'Convertido en cliente', fecha:L.contacto, detalle:'Propuesta aceptada.', ok:true});
+    if (fe === 'Rebotado') tl.push({titulo:'Rebote duro', fecha:L.contacto, detalle:'La dirección no existe. Lead marcado como rebotado.', bad:true});
+    if (fe === 'Baja') tl.push({titulo:'Solicitud de baja', fecha:L.contacto, detalle:'No volverá a recibir correos.', bad:true});
+    if (!tl.length) tl.push({titulo:'Sin mensajes todavía', fecha:'—', detalle:'Este lead aún no ha entrado en la cola de envío.'});
+    const timeline = tl.map((t,i) => Object.assign(t, { dotStyle: dot(t.ok ? C.okC : t.bad ? C.rojC : '#B8C1BB'), lineStyle: i === tl.length-1 ? {display:'none'} : line }));
+    const ficha = { nombre:L.nombre, dominio:L.dominio, tel:L.tel, direccion:L.direccion, ciudad:L.ciudad, prov:L.prov,
+      ab:s.ab, sectorNombre:s.nombre, chipStyle:this.chip(s), metodo:'palabras clave del contenido', confianza: 80 + (L.score % 17),
+      estado:fe, estadoStyle:this.badge(fes[0],fes[1]), score:L.score,
+      scoreCircleStyle:{width:'86px',height:'86px',borderRadius:'50%',border:'4px solid '+this.gaugeColor(L.score),color:this.gaugeColor(L.score),display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flex:'none',fontVariantNumeric:'tabular-nums'},
+      carga:(L.score/14).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1}), psi, hallazgos, numHallazgos:hallazgos.length, paginas, numPaginas:paginas.length, correos, timeline };
+    // Cola
+    const colaRows = this.COLA.map((r,i) => { const sx = this.SECT[r[1]]; const cancel = st.canceladas[i];
+      const key = cancel ? 'cancelado' : r[5]; const ec = this.ESTADOS_CORREO[key]; const done = key === 'enviado' || key === 'cancelado';
+      return { hora:(r[6] ? 'mañana ' : '') + r[0], ab:sx.ab, chipStyle:this.chip(sx), dominio:r[2], asunto:r[3], hallazgo:r[4],
+        estadoLabel:ec[0], estadoStyle:this.badge(ec[1],ec[2]),
+        rowStyle: done ? {opacity:.55} : {},
+        preview: () => this.setState({emailSel:{dominio:r[2], asunto:r[3], hallazgo:r[4], hora:r[0], manana:r[6]}, screen:'email'}),
+        cancelar: () => { if (key === 'pendiente') this.setState({canceladas: Object.assign({},st.canceladas,{[i]:true})}); },
+        cancelBtnStyle: key === 'pendiente' ? {border:'1px solid #E7D5D1',background:'#FBF4F2',color:C.rojC,fontSize:'11.5px',fontWeight:700,borderRadius:'6px',padding:'3px 9px',cursor:'pointer',marginLeft:'6px'} : {display:'none'} }; });
+    // Email
+    const E = st.emailSel || {dominio:'alareira.gal', asunto:'La carta de A Lareira no se puede leer en el móvil', hallazgo:'Carta en PDF escaneado', hora:'12:38', manana:0};
+    const email = { asunto:E.asunto, para:'info@'+E.dominio, fecha:(E.manana ? '26 jul' : '25 jul') + ', ' + E.hora,
+      messageId:'<20260725.'+E.hora.replace(':','')+'.a8f3@mail.onez.es>',
+      parrafos: [
+        'Hola, soy Marta, de ONEZ. Le escribo porque estuve viendo la web de ' + E.dominio + ' y me fijé en un detalle: ' + E.hallazgo.charAt(0).toLowerCase() + E.hallazgo.slice(1) + '.',
+        'Nos dedicamos justo a eso: hacemos webs sencillas y rápidas para negocios como el suyo. Creo que con un par de cambios su web podría traerle bastantes más clientes de los que le trae ahora.',
+        'Si le parece, le preparo una propuesta corta y sin compromiso. Y si no es buen momento, me lo dice y no le vuelvo a escribir.' ] };
+    // Salud
+    const maxEnv = 22;
+    const dias30 = this.DIAS30.map(d => { const sm = this.SEMAFORO[d.salud]; return {
+      tooltip: d.fecha + ': ' + d.enviados + ' enviados, ' + d.rebotes + ' rebotes',
+      barStyle: {height: Math.max(3, d.enviados/maxEnv*100) + '%', background: d.salud === 'verde' ? '#7FA99A' : sm.c, borderRadius:'3px 3px 0 0', opacity: d.salud === 'detenido' ? .9 : 1, minHeight:'3px', backgroundClip:'border-box'} }; });
+    const dias30Desc = this.DIAS30.slice().reverse().map(d => { const sm = this.SEMAFORO[d.salud]; return {
+      fecha:d.fecha, escalon:d.escalon, cuota:d.cuota, enviados:d.enviados, rebotes:d.rebotes,
+      tasa: d.enviados ? d.tasaNum.toLocaleString('es-ES',{maximumFractionDigits:1}) + ' %' : '—',
+      saludLabel: sm.icon + ' ' + sm.label, saludStyle: this.badge(sm.c, sm.bg) }; });
+    const eventos = this.EVENTOS.map(e => ({ label:e[0], n:this.fmt(e[1]), icon:e[2],
+      iconStyle:{width:'26px',height:'26px',borderRadius:'8px',background:e[4],color:e[3],display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:800},
+      cardStyle:{border:'1px solid #EFF2EF',borderRadius:'10px',padding:'14px 16px'} }));
+    const procesos = this.PROCESOS.map(p => { const vivo = p[2] === 'vivo'; return { nombre:p[0], desc:p[1], ultima:p[3],
+      estadoLabel: vivo ? '✓ Vivo' : '✕ Caído', estadoStyle:this.badge(vivo?C.okC:C.rojC, vivo?C.okBg:C.rojBg),
+      dotStyle:{width:'10px',height:'10px',borderRadius:'50%',background:vivo?C.okC:C.rojC,flex:'none'} }; });
+    // Cosecha
+    const estadoProv = { hecho:['Hecho',C.savia,'#EAF4F0'], proceso:['En proceso','#0F6E56','#DFF3EA'], error:['Error',C.rojC,C.rojBg], pendiente:['Pendiente',C.grC,C.grBg] };
+    estadoProv.proceso = ['En proceso','#2C8A6E','#E2F4EC'];
+    const counts = {hecho:0, proceso:0, error:0, pendiente:0};
+    this.PROVINCIAS.forEach(p => counts[p[2]]++);
+    const cosechaPct = Math.round(counts.hecho / 52 * 100);
+    const provColors = {hecho:C.savia, proceso:C.brote, error:C.rojC, pendiente:'#E2E8E3'};
+    const cosechaLeyenda = [['hecho','Hecho'],['proceso','En proceso'],['error','Error'],['pendiente','Pendiente']].map(([k,label]) => ({
+      label, n:counts[k], dotStyle:{width:'10px',height:'10px',borderRadius:'3px',background:provColors[k],border:k==='pendiente'?'1px solid #D6DDD8':'none',flex:'none'} }));
+    const ordered = this.PROVINCIAS.slice().sort((a,b) => b[3] - a[3]);
+    const provinciasRows = ordered.map(p => { const ep = estadoProv[p[2]]; return {
+      nombre:p[1], estadoLabel:ep[0], estadoStyle:this.badge(ep[1],ep[2]), leads: p[2]==='pendiente' ? '—' : this.fmt(p[3]), emails: p[2]==='pendiente' ? '—' : this.fmt(p[4]), fecha:p[5] }; });
+    const mapStatuses = JSON.stringify(Object.fromEntries(this.PROVINCIAS.map(p => [p[0], p[2]])));
+    // Sistema
+    const paleta = [
+      ['Bosque','#0B1F1A','Texto, sidebar, dark','#FAFAF7'], ['Savia','#0F6E56','Acción y navegación','#FAFAF7'], ['Brote','#5DCAA5','Hover, progreso, detalle','#0B1F1A'], ['Hueso','#FAFAF7','Fondo general','#22312B'],
+      ['Gris frío 1','#5F6B66','Texto secundario','#FAFAF7'], ['Gris frío 2','#8B968F','Texto terciario','#FAFAF7'], ['Gris frío 3','#E4E8E4','Bordes','#22312B'],
+      ['Sano','#2C7A3F','Semántico: bien','#FAFAF7'], ['Atención','#96660F','Semántico: vigilar','#FAFAF7'], ['Problema','#B0432F','Semántico: mal','#FAFAF7'], ['Información','#2F5E96','Semántico: info','#FAFAF7'] ];
+    const paletaVals = paleta.map(p => ({ nombre:p[0], hex:p[1], uso:p[2], muestra:'Aa',
+      swatchStyle:{height:'56px',borderRadius:'9px',background:p[1],color:p[3],display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:700,border:p[1]==='#FAFAF7'||p[1]==='#E4E8E4'?'1px solid #D6DDD8':'none'} }));
+    const semaforoMuestras = Object.values(this.SEMAFORO).map(sm => ({ label:sm.label, icon:sm.icon, style:this.badge(sm.c, sm.bg, {fontSize:'12px',padding:'4px 12px'}) }));
+    const estadosLeadMuestras = estadosLead.map(k => { const e = this.ESTADOS[k]; return {label:k, style:this.badge(e[0],e[1])}; });
+    const estadosCorreoMuestras = Object.values(this.ESTADOS_CORREO).map(e => ({label:e[0], style:this.badge(e[1],e[2])}));
+    const sectoresMuestras = Object.values(this.SECT).map(sx => ({nombre:sx.nombre, ab:sx.ab, chipStyle:this.chip(sx)}));
+    const medidoresMuestras = [['Bajo',23],['Medio',55],['Alto',86]].map(([label,v]) => { const gc = this.gaugeColor(v); return {label, v,
+      numStyle:{color:gc,fontWeight:800,fontVariantNumeric:'tabular-nums'}, barStyle:{width:v+'%',height:'100%',background:gc,borderRadius:'999px'}}; });
+    const card = {background:'#fff',border:'1px solid #E4E8E4',borderRadius:'12px',boxShadow:'0 1px 2px rgba(11,31,26,.04)',padding:'18px 22px',minWidth:0};
+    return {
+      screenTitle: screens[st.screen],
+      navMain, navHover,
+      rootStyle: {display:'flex',flexDirection:compact?'column':'row',height:'100vh',overflow:'hidden'},
+      asideStyle: compact
+        ? {width:'100%',flex:'none',background:C.bosque,display:'flex',flexDirection:'row',alignItems:'center',flexWrap:'wrap',gap:'4px 10px',padding:'10px 14px'}
+        : {width:'212px',flex:'none',background:C.bosque,display:'flex',flexDirection:'column',padding:'18px 12px 14px'},
+      logoBoxStyle: compact ? {padding:'0 8px 0 0'} : {padding:'4px 10px 22px'},
+      logoSubStyle: compact ? {display:'none'} : {fontSize:'10px',fontWeight:600,letterSpacing:'.1em',textTransform:'uppercase',color:'#4E6A61',marginTop:'3px'},
+      navListStyle: compact ? {display:'flex',flexDirection:'row',flexWrap:'wrap',gap:'3px',flex:'1',minWidth:0} : {display:'flex',flexDirection:'column',gap:'3px'},
+      spacerStyle: compact ? {display:'none'} : {flex:1},
+      navBottomStyle: compact ? {display:'flex',flexDirection:'row',gap:'3px'} : {display:'flex',flexDirection:'column',gap:'3px',borderTop:'1px solid rgba(250,250,247,.09)',paddingTop:'12px'},
+      logoutBtnStyle: Object.assign({},navBase,{fontSize:'12.5px',color:'#7E948C'}),
+      headerStyle: {flex:'none',display:'flex',alignItems:'center',flexWrap:'wrap',gap:compact?'8px':'14px',padding:compact?'10px 16px':'10px 28px',minHeight:compact?'0':'58px',borderBottom:'1px solid #E4E8E4',background:'#FAFAF7'},
+      mainStyle: {flex:1,overflow:'auto',padding:compact?'14px 14px 32px':mid?'20px 20px 36px':'24px 28px 40px'},
+      resumenGridStyle: {display:'grid',gridTemplateColumns:'repeat(12,1fr)',gap:mid?'12px':'16px',maxWidth:'1240px'},
+      rampaDividerStyle: w < 1020 ? {display:'none'} : {width:'1px',background:'#EFF2EF'},
+      embudoCardStyle: Object.assign({},card,{gridColumn:mid?'1/-1':'span 5'}),
+      sectoresCardStyle: Object.assign({},card,{gridColumn:mid?'1/-1':'span 7',overflowX:'auto'}),
+      fichaGridStyle: {display:'grid',gridTemplateColumns:narrow?'1fr':'7fr 5fr',gap:'16px',alignItems:'start'},
+      cosechaGridStyle: {display:'grid',gridTemplateColumns:narrow?'1fr':'6fr 6fr',gap:'16px',alignItems:'start'},
+      goSistema: () => this.go('sistema'),
+      sistemaBtnStyle: st.screen === 'sistema' ? Object.assign({},navBase,{fontSize:'12.5px',background:C.savia,color:'#FAFAF7'}) : Object.assign({},navBase,{fontSize:'12.5px',color:'#7E948C'}),
+      estadoLabel: pillLabel,
+      estadoPillStyle: this.badge(pillC, pillBg, {fontSize:'12px',padding:'5px 12px'}),
+      estadoDotStyle: {width:'8px',height:'8px',borderRadius:'50%',background:pillC,flex:'none'},
+      togglePausa: () => this.setState({estadoOverride: pausada ? 'activa' : 'pausada'}),
+      pausarLabel: pausada ? 'Reanudar envíos' : 'Pausar envíos',
+      pausarBtnStyle: pausada
+        ? {border:'none',background:C.savia,color:'#FAFAF7',fontSize:'12.5px',fontWeight:800,borderRadius:'8px',padding:'8px 16px',cursor:'pointer'}
+        : {border:'1px solid #E7D5D1',background:'#FBF4F2',color:C.rojC,fontSize:'12.5px',fontWeight:800,borderRadius:'8px',padding:'8px 16px',cursor:'pointer'},
+      rampaBtnStyle: pausada
+        ? {border:'none',background:C.savia,color:'#FAFAF7',fontSize:'12.5px',fontWeight:800,borderRadius:'8px',padding:'8px 16px',cursor:'pointer'}
+        : {border:'1px solid #E7D5D1',background:'#FBF4F2',color:C.rojC,fontSize:'12.5px',fontWeight:800,borderRadius:'8px',padding:'8px 16px',cursor:'pointer'},
+      isResumen: st.screen === 'resumen', isLeads: st.screen === 'leads', isFicha: st.screen === 'ficha', isCola: st.screen === 'cola',
+      isEmail: st.screen === 'email', isSalud: st.screen === 'salud', isCosecha: st.screen === 'cosecha', isSistema: st.screen === 'sistema',
+      escalon, cuota, enviadosHoy, racha: 23,
+      cuotaBarStyle: {width: Math.min(100, enviadosHoy/cuota*100) + '%', height:'100%', background:C.savia, borderRadius:'999px'},
+      escalones: [1,2,3,4,5].map(n => ({ title:'Escalón '+n+' · '+this.CUOTAS[n-1]+'/día',
+        style:{width:'9px',height:'9px',borderRadius:'50%',display:'inline-block',background: n < escalon ? C.brote : n === escalon ? C.savia : '#E2E8E3', outline: n === escalon ? '2px solid #C8E8DC' : 'none'} })),
+      saludIcon: SEM.icon,
+      saludCircleStyle: {width:'64px',height:'64px',borderRadius:'50%',background:SEM.bg,color:SEM.c,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:800,flex:'none',border:'2px solid '+SEM.c},
+      saludTitulo: saludKey === 'verde' ? 'Campaña sana' : saludKey === 'ambar' ? 'Atención a los rebotes' : saludKey === 'rojo' ? 'Rebotes altos' : 'Campaña detenida',
+      saludDetalle: estado === 'detenida' ? 'Los envíos están detenidos. Nadie recibirá correos hasta reanudar.' : tasaTxt + ' % de rebotes · umbral de atención en 2 %',
+      embudo, sectoresTabla, respuestas,
+      estadoOpts: ['Todos'].concat(estadosLead), sectorOpts: ['Todos'].concat(Object.values(this.SECT).map(x=>x.nombre)),
+      fEstado: st.fEstado, fSector: st.fSector, fScore: st.fScore,
+      setFEstado: e => this.setState({fEstado:e.target.value}), setFSector: e => this.setState({fSector:e.target.value}), setFScore: e => this.setState({fScore:e.target.value}),
+      toggleVerif: () => this.setState({fVerif: !st.fVerif}),
+      verifBtnStyle: {display:'inline-flex',alignItems:'center',gap:'7px',border:'1px solid '+(st.fVerif?C.savia:'#D6DDD8'),background:st.fVerif?'#EAF4F0':'#FAFAF7',color:st.fVerif?C.savia:'#5F6B66',fontSize:'12px',fontWeight:700,borderRadius:'999px',padding:'6px 12px',cursor:'pointer',marginLeft:'8px'},
+      verifDotStyle: {width:'8px',height:'8px',borderRadius:'50%',background:st.fVerif?C.savia:'#C6CEC9',flex:'none'},
+      limpiarFiltros: () => this.setState({fEstado:'Todos',fSector:'Todos',fScore:'0',fVerif:false}),
+      leadsCount: leadsRows.length, leadsRows,
+      rowHover: {background:'#F3F6F3'}, linkHover: {textDecoration:'underline'}, btnHover: {background:'#F3F6F3'},
+      estadosLead, ficha,
+      setFichaEstado: e => this.setState({leadEstados: Object.assign({}, st.leadEstados, {[L.dominio]: e.target.value})}),
+      backLeads: () => this.go('leads'),
+      colaRows, backCola: () => this.go('cola'), email,
+      dias30, dias30Desc, dia30Inicio: this.DIAS30[0].fecha, eventos, procesos,
+      cosechaPct, cosechaHechas: counts.hecho,
+      cosechaBarStyle: {width:cosechaPct+'%',height:'100%',background:C.savia,borderRadius:'999px'},
+      cosechaLeyenda, provinciasRows, mapStatuses,
+      paleta: paletaVals, semaforoMuestras, estadosLeadMuestras, estadosCorreoMuestras, sectoresMuestras, medidoresMuestras
+    };
+  }
+}
+</script>
+</body>
+</html>

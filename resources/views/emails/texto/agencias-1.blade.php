@@ -4,10 +4,13 @@ Hola,
 
 Si en algún momento vais cargados de curro, os puedo echar una mano con la parte de desarrollo.
 
-Si te encaja, respóndeme y te enseño algún trabajo; y si ahora no es el momento, sin lío.
+Si te encaja, respóndeme y te enseño algún trabajo.
+
+Mi nombre es Camilo Silva, soy desarrollador web y tengo más de 6 años de experiencia.
 
 Un saludo,
-Camilo
+
+@include('emails.partials.firma_texto')
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.

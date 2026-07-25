@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * Provincias y ciudades autónomas (códigos INE) para el mapa de cosecha.
+ * `nombre` = valor en areas_cosecha.nombre (seeder).
+ * `etiqueta` = nombre de visualización (alineado con es-atlas / maqueta ONEZ).
+ *
+ * @return list<array{codigo:string, nombre:string, etiqueta:string}>
+ */
+return [
+    ['codigo' => '01', 'nombre' => 'Álava', 'etiqueta' => 'Araba/Álava'],
+    ['codigo' => '02', 'nombre' => 'Albacete', 'etiqueta' => 'Albacete'],
+    ['codigo' => '03', 'nombre' => 'Alicante', 'etiqueta' => 'Alicante'],
+    ['codigo' => '04', 'nombre' => 'Almería', 'etiqueta' => 'Almería'],
+    ['codigo' => '05', 'nombre' => 'Ávila', 'etiqueta' => 'Ávila'],
+    ['codigo' => '06', 'nombre' => 'Badajoz', 'etiqueta' => 'Badajoz'],
+    ['codigo' => '07', 'nombre' => 'Baleares', 'etiqueta' => 'Illes Balears'],
+    ['codigo' => '08', 'nombre' => 'Barcelona', 'etiqueta' => 'Barcelona'],
+    ['codigo' => '09', 'nombre' => 'Burgos', 'etiqueta' => 'Burgos'],
+    ['codigo' => '10', 'nombre' => 'Cáceres', 'etiqueta' => 'Cáceres'],
+    ['codigo' => '11', 'nombre' => 'Cádiz', 'etiqueta' => 'Cádiz'],
+    ['codigo' => '12', 'nombre' => 'Castellón', 'etiqueta' => 'Castellón'],
+    ['codigo' => '13', 'nombre' => 'Ciudad Real', 'etiqueta' => 'Ciudad Real'],
+    ['codigo' => '14', 'nombre' => 'Córdoba', 'etiqueta' => 'Córdoba'],
+    ['codigo' => '15', 'nombre' => 'A Coruña', 'etiqueta' => 'A Coruña'],
+    ['codigo' => '16', 'nombre' => 'Cuenca', 'etiqueta' => 'Cuenca'],
+    ['codigo' => '17', 'nombre' => 'Girona', 'etiqueta' => 'Girona'],
+    ['codigo' => '18', 'nombre' => 'Granada', 'etiqueta' => 'Granada'],
+    ['codigo' => '19', 'nombre' => 'Guadalajara', 'etiqueta' => 'Guadalajara'],
+    ['codigo' => '20', 'nombre' => 'Guipúzcoa', 'etiqueta' => 'Gipuzkoa'],
+    ['codigo' => '21', 'nombre' => 'Huelva', 'etiqueta' => 'Huelva'],
+    ['codigo' => '22', 'nombre' => 'Huesca', 'etiqueta' => 'Huesca'],
+    ['codigo' => '23', 'nombre' => 'Jaén', 'etiqueta' => 'Jaén'],
+    ['codigo' => '24', 'nombre' => 'León', 'etiqueta' => 'León'],
+    ['codigo' => '25', 'nombre' => 'Lleida', 'etiqueta' => 'Lleida'],
+    ['codigo' => '26', 'nombre' => 'La Rioja', 'etiqueta' => 'La Rioja'],
+    ['codigo' => '27', 'nombre' => 'Lugo', 'etiqueta' => 'Lugo'],
+    ['codigo' => '28', 'nombre' => 'Madrid', 'etiqueta' => 'Madrid'],
+    ['codigo' => '29', 'nombre' => 'Málaga', 'etiqueta' => 'Málaga'],
+    ['codigo' => '30', 'nombre' => 'Murcia', 'etiqueta' => 'Murcia'],
+    ['codigo' => '31', 'nombre' => 'Navarra', 'etiqueta' => 'Navarra'],
+    ['codigo' => '32', 'nombre' => 'Ourense', 'etiqueta' => 'Ourense'],
+    ['codigo' => '33', 'nombre' => 'Asturias', 'etiqueta' => 'Asturias'],
+    ['codigo' => '34', 'nombre' => 'Palencia', 'etiqueta' => 'Palencia'],
+    ['codigo' => '35', 'nombre' => 'Las Palmas', 'etiqueta' => 'Las Palmas'],
+    ['codigo' => '36', 'nombre' => 'Pontevedra', 'etiqueta' => 'Pontevedra'],
+    ['codigo' => '37', 'nombre' => 'Salamanca', 'etiqueta' => 'Salamanca'],
+    ['codigo' => '38', 'nombre' => 'Santa Cruz de Tenerife', 'etiqueta' => 'Santa Cruz de Tenerife'],
+    ['codigo' => '39', 'nombre' => 'Cantabria', 'etiqueta' => 'Cantabria'],
+    ['codigo' => '40', 'nombre' => 'Segovia', 'etiqueta' => 'Segovia'],
+    ['codigo' => '41', 'nombre' => 'Sevilla', 'etiqueta' => 'Sevilla'],
+    ['codigo' => '42', 'nombre' => 'Soria', 'etiqueta' => 'Soria'],
+    ['codigo' => '43', 'nombre' => 'Tarragona', 'etiqueta' => 'Tarragona'],
+    ['codigo' => '44', 'nombre' => 'Teruel', 'etiqueta' => 'Teruel'],
+    ['codigo' => '45', 'nombre' => 'Toledo', 'etiqueta' => 'Toledo'],
+    ['codigo' => '46', 'nombre' => 'Valencia', 'etiqueta' => 'Valencia'],
+    ['codigo' => '47', 'nombre' => 'Valladolid', 'etiqueta' => 'Valladolid'],
+    ['codigo' => '48', 'nombre' => 'Vizcaya', 'etiqueta' => 'Bizkaia'],
+    ['codigo' => '49', 'nombre' => 'Zamora', 'etiqueta' => 'Zamora'],
+    ['codigo' => '50', 'nombre' => 'Zaragoza', 'etiqueta' => 'Zaragoza'],
+    ['codigo' => '51', 'nombre' => 'Ceuta', 'etiqueta' => 'Ceuta'],
+    ['codigo' => '52', 'nombre' => 'Melilla', 'etiqueta' => 'Melilla'],
+];
