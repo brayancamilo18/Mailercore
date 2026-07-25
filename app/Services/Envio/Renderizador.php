@@ -95,5 +95,15 @@ class Renderizador
         if (str_contains($texto, '{') || str_contains($html, '{')) {
             throw new PlantillaInvalida('Quedan marcadores sin sustituir');
         }
+
+        // Marca en el cuerpo
+        if (preg_match('/silgo\s?dev/i', $texto.' '.$html)) {
+            throw new PlantillaInvalida('El correo no puede mencionar la marca');
+        }
+
+        // Enlaces http(s) en el texto plano (List-Unsubscribe va en cabecera)
+        if (preg_match('#https?://#i', $texto)) {
+            throw new PlantillaInvalida('El cuerpo no puede llevar enlaces');
+        }
     }
 }

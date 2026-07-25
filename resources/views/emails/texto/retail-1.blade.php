@@ -2,16 +2,13 @@ Hola,
 
 {{ $apertura }}
 
-Es una pena, porque el género ya está fotografiado y descrito: falta el paso de que alguien pueda comprarlo un domingo por la noche.
+Le daría un buen lavado de cara sin demasiado lío; no es nada grave, de verdad.
 
-Monto tiendas online sobre WooCommerce para comercios que ya tienen catálogo.
-
-¿Te mando lo que he visto en {{ $dominio }} y cómo lo resolvería?
+Si te pica la curiosidad tengo un par de tiendas que he ido montando y te las puedo enseñar; me dices y hablamos, sin agobios.
 
 Un saludo,
-Camilo Silva
-silgodev.es
+Camilo
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
-Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.
+Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.

@@ -2,16 +2,13 @@ Hola,
 
 {{ $apertura }}
 
-Con la mitad de las reservas entrando desde el móvil, cada persona que abre la carta y tiene que hacer zoom acaba mirando otro sitio.
+No es nada grave, la verdad; son un par de detalles que se arreglan en un rato y le darían un buen lavado de cara.
 
-Me dedico a esto: webs de hostelería que cargan rápido y donde reservar cuesta dos toques.
-
-Si quieres te mando en un correo lo que he visto en {{ $dominio }}, sin más.
+Estuve montando hace poco un par de webs parecidas y quedaron chulas. Si te apetece verlas respóndeme y te las enseño, y si no, sin problema.
 
 Un saludo,
-Camilo Silva
-silgodev.es
+Camilo
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
-Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.
+Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.

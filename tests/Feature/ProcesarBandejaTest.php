@@ -24,6 +24,12 @@ class ProcesarBandejaTest extends TestCase
     {
         parent::setUp();
 
+        // El comando omite la bandeja si IMAP no está configurado.
+        config([
+            'imap.accounts.default.host' => 'imap.example.com',
+            'imap.accounts.default.username' => 'bandeja@example.com',
+        ]);
+
         $this->lector = new FakeLectorBandeja;
         $this->app->instance(LectorBandeja::class, $this->lector);
         Cache::forget('bandeja:fallos_seguidos');

@@ -1,8 +1,7 @@
 <p>Hola,</p>
 <p>{{ $apertura }}</p>
-<p>Quien busca despacho o asesoría compara varias webs en minutos: si la vuestra no carga o no deja escribiros, ese cliente llama a otro.</p>
-<p>Hago webs para despachos y estudios: claras, rápidas y con el contacto a un toque.</p>
-<p>¿Te mando lo que he visto en {{ $dominio }}?</p>
-<p>Un saludo,<br>Camilo Silva<br><a href="https://silgodev.es">silgodev.es</a></p>
+<p>No es nada grave; son un par de detalles que se dejan decentes en un rato y la web se nota más clara.</p>
+<p>Si quieres le damos una vuelta juntos y te enseño algo que he hecho parecido, sin líos de nada.</p>
+<p>Un saludo,<br>Camilo</p>
 <hr>
-<p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.</small></p>
+<p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.</small></p>

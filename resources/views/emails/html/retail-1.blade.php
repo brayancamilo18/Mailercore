@@ -1,8 +1,7 @@
 <p>Hola,</p>
 <p>{{ $apertura }}</p>
-<p>Es una pena, porque el género ya está fotografiado y descrito: falta el paso de que alguien pueda comprarlo un domingo por la noche.</p>
-<p>Monto tiendas online sobre WooCommerce para comercios que ya tienen catálogo.</p>
-<p>¿Te mando lo que he visto en {{ $dominio }} y cómo lo resolvería?</p>
-<p>Un saludo,<br>Camilo Silva<br><a href="https://silgodev.es">silgodev.es</a></p>
+<p>Le daría un buen lavado de cara sin demasiado lío; no es nada grave, de verdad.</p>
+<p>Si te pica la curiosidad tengo un par de tiendas que he ido montando y te las puedo enseñar; me dices y hablamos, sin agobios.</p>
+<p>Un saludo,<br>Camilo</p>
 <hr>
-<p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.</small></p>
+<p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.</small></p>

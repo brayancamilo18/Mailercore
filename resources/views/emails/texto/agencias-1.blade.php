@@ -2,16 +2,13 @@ Hola,
 
 {{ $apertura }}
 
-Cuando un cliente os pide una web o un arreglo técnico y no tenéis manos libres, ese proyecto se atrasa o se cae del pipeline.
+No es nada grave; son detalles que se dejan finos en un rato cuando hay un hueco para cacharrear.
 
-Soy el brazo técnico white-label de agencias: desarrollo y mantengo lo que vosotros vendéis, bajo vuestra marca.
-
-¿Te mando lo que he visto en {{ $dominio }} y cómo lo abordaría?
+Cuando vais hasta arriba a veces viene bien que alguien eche una mano con la parte técnica. Si te pica la curiosidad te enseño un par de cosas que he montado; respóndeme y hablamos, y si no, sin problema.
 
 Un saludo,
-Camilo Silva
-silgodev.es
+Camilo
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
-Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.
+Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.

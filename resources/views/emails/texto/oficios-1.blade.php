@@ -2,16 +2,13 @@ Hola,
 
 {{ $apertura }}
 
-Quien necesita un arreglo hoy no pierde el tiempo con una web que no carga o donde no encuentra el teléfono: llama al de al lado.
+Son cosas que se arreglan en un rato; no es nada grave y le dejan a la web mejor pinta al entrar desde el móvil.
 
-Hago webs para oficios: rápidas, pensadas para el móvil y con el contacto bien visible.
-
-¿Te paso lo que he visto en {{ $dominio }}?
+Si te apetece ver alguna cosa que he montado, respóndeme y te enseño; y si no, sin problema.
 
 Un saludo,
-Camilo Silva
-silgodev.es
+Camilo
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
-Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.
+Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.

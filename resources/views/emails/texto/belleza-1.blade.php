@@ -2,16 +2,13 @@ Hola,
 
 {{ $apertura }}
 
-Quien busca hueco para una cita lo hace desde el móvil: si no puede reservar en dos toques, se va al salón de al lado.
+No es nada grave; con un lavado de cara de un rato la web se siente más cómoda, sobre todo desde el móvil.
 
-Desarrollo webs para salones y centros: reserva online, carga rápida y diseño limpio.
-
-¿Te mando lo que he visto en {{ $dominio }}?
+Estuve montando hace poco un par de webs parecidas y quedaron bien. Si te apetece verlas respóndeme y te las enseño, y si no, sin problema.
 
 Un saludo,
-Camilo Silva
-silgodev.es
+Camilo
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
-Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.
+Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.

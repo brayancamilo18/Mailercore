@@ -1,6 +1,6 @@
 <p>Hola,</p>
-<p>{{ $apertura }}</p>
-<p>Si no es el momento, dímelo y paro.</p>
-<p>Camilo — <a href="https://silgodev.es">silgodev.es</a></p>
+<p>Te escribí por {{ $dominio }}. {{ $apertura }}</p>
+<p>Si te encaja lo miramos; si no, paro.</p>
+<p>Un saludo,<br>Camilo</p>
 <hr>
-<p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.</small></p>
+<p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.</small></p>

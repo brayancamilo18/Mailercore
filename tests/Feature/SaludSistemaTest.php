@@ -29,6 +29,8 @@ class SaludSistemaTest extends TestCase
 
     public function test_devuelve_dos_si_el_despachador_esta_muerto(): void
     {
+        config(['outreach.envio.activo' => true]);
+
         $this->marcarTodosLosLatidos();
         Cache::forget('latido:despachador');
 

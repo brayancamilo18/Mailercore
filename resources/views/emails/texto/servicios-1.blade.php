@@ -2,16 +2,13 @@ Hola,
 
 {{ $apertura }}
 
-Quien busca despacho o asesoría compara varias webs en minutos: si la vuestra no carga o no deja escribiros, ese cliente llama a otro.
+No es nada grave; son un par de detalles que se dejan decentes en un rato y la web se nota más clara.
 
-Hago webs para despachos y estudios: claras, rápidas y con el contacto a un toque.
-
-¿Te mando lo que he visto en {{ $dominio }}?
+Si quieres le damos una vuelta juntos y te enseño algo que he hecho parecido, sin líos de nada.
 
 Un saludo,
-Camilo Silva
-silgodev.es
+Camilo
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
-Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.
+Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.

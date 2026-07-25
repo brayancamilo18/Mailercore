@@ -111,7 +111,7 @@ class RedactorHallazgoTest extends TestCase
 
         $this->assertNotNull($resultado);
         $this->assertSame('la carta en el móvil', $resultado['asunto']);
-        $this->assertStringContainsString('dónde va a comer', $resultado['apertura']);
+        $this->assertStringContainsString('trompicones', $resultado['apertura']);
     }
 
     public function test_cae_a_generico_si_no_hay_variante_de_sector(): void
@@ -133,7 +133,7 @@ class RedactorHallazgoTest extends TestCase
         $resultado = (new RedactorHallazgo)->redactar($lead, $auditoria);
 
         $this->assertNotNull($resultado);
-        $this->assertSame('cómo contactaros', $resultado['asunto']);
+        $this->assertSame('cómo contactarte', $resultado['asunto']);
         $this->assertStringContainsString('agenciax.es', $resultado['apertura']);
     }
 

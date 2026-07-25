@@ -8,360 +8,360 @@
 return [
     'sin_viewport' => [
         'generico' => [
-            'asunto' => 'vuestra web en el móvil',
-            'apertura' => 'Entré en {dominio} desde el móvil y la página no se adapta a la pantalla: hay que hacer zoom para leer.',
+            'asunto' => 'tu web en el móvil',
+            'apertura' => 'Estuve trasteando con {dominio} desde el móvil y me di cuenta de que la página no se adapta bien a la pantalla: toca hacer zoom para leer.',
         ],
         'hosteleria' => [
             'asunto' => 'la carta en el móvil',
-            'apertura' => 'Vuestra web no se adapta a la pantalla del móvil, y ahí es donde la mayoría de la gente decide dónde va a comer.',
+            'apertura' => 'Le eché un ojo a tu web desde el móvil y la carta no se adapta del todo a la pantalla; se lee un poco a trompicones.',
         ],
         'retail' => [
-            'asunto' => 'vuestra tienda en el móvil',
-            'apertura' => 'Entré en {dominio} desde el móvil y la página no se adapta: hay que hacer zoom para leer los precios.',
+            'asunto' => 'tu tienda en el móvil',
+            'apertura' => 'Entré en {dominio} desde el móvil y me costó un poco moverme por la tienda: la página no se ajusta a la pantalla.',
         ],
         'salud' => [
-            'asunto' => 'la web en el móvil',
-            'apertura' => 'Vuestra web no está adaptada al móvil, que es desde donde la gente busca clínica y compara.',
+            'asunto' => 'tu web en el móvil',
+            'apertura' => 'Le eché un ojo a {dominio} desde el móvil y la página no se adapta del todo; hay que acercar un poco para leer con calma.',
         ],
         'servicios_profesionales' => [
-            'asunto' => 'la web en el móvil',
-            'apertura' => 'Entré en {dominio} desde el móvil y la página no se adapta bien a la pantalla.',
+            'asunto' => 'tu web en el móvil',
+            'apertura' => 'Entré en {dominio} desde el móvil y la página no se adapta bien a la pantalla; se lee un pelín incómoda.',
         ],
         'oficios' => [
-            'asunto' => 'vuestra web en el móvil',
-            'apertura' => 'Desde el móvil {dominio} no se lee bien: hay que hacer zoom para ver el teléfono o el formulario.',
+            'asunto' => 'tu web en el móvil',
+            'apertura' => 'Desde el móvil {dominio} se lee a trompicones: toca hacer zoom para ver el teléfono o el formulario.',
         ],
         'belleza' => [
             'asunto' => 'la cita en el móvil',
-            'apertura' => 'Vuestra web no se adapta al móvil, y es desde ahí donde mucha gente busca hueco para una cita.',
+            'apertura' => 'Le eché un ojo a tu web desde el móvil y no se adapta del todo a la pantalla; pedir cita se ve un poco engorroso.',
         ],
         'agencias' => [
-            'asunto' => 'vuestra web en el móvil',
-            'apertura' => 'Entré en {dominio} desde el móvil y la maquetación no se adapta a la pantalla.',
+            'asunto' => 'tu web en el móvil',
+            'apertura' => 'Entré en {dominio} desde el móvil y la maquetación no se adapta bien a la pantalla; se nota al navegar.',
         ],
     ],
 
     'title_malo' => [
         'generico' => [
-            'asunto' => 'el título de vuestra web',
-            'apertura' => 'En {dominio} el título de la página mide {longitud} caracteres; Google suele mostrar mejor entre 30 y 60.',
+            'asunto' => 'el título de tu web',
+            'apertura' => 'Le di una vuelta a {dominio} y el título de la página mide {longitud} caracteres; Google suele mostrar mejor entre 30 y 60.',
         ],
     ],
 
     'sin_meta_description' => [
         'generico' => [
-            'asunto' => 'la descripción en google',
-            'apertura' => 'En {dominio} no encuentro una meta description clara; en Google suele salir un trozo de texto al azar.',
+            'asunto' => 'una cosilla de tu web',
+            'apertura' => 'En {dominio} no veo una descripción clara para Google; en los resultados suele salir un trozo de texto al azar.',
         ],
     ],
 
     'h1_incorrecto' => [
         'generico' => [
-            'asunto' => 'el encabezado principal',
-            'apertura' => 'En la home de {dominio} veo {total} encabezados H1; lo habitual es tener uno solo y claro.',
+            'asunto' => 'el encabezado de tu web',
+            'apertura' => 'En la home de {dominio} veo {total} encabezados principales; lo habitual es tener uno solo y clarito.',
         ],
     ],
 
     'imagenes_sin_alt' => [
         'generico' => [
-            'asunto' => 'imágenes sin texto alt',
-            'apertura' => 'En {dominio} un {porcentaje}% de las imágenes van sin texto alternativo; eso afecta a accesibilidad y a cómo las lee Google.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'En {dominio} un {porcentaje}% de las imágenes van sin texto alternativo; es de esas cosillas que Google y la accesibilidad agradecen.',
         ],
     ],
 
     'sin_jsonld' => [
         'generico' => [
-            'asunto' => 'datos para google',
-            'apertura' => 'En {dominio} no encuentro datos estructurados (JSON-LD); Google no tiene pistas claras de qué tipo de negocio sois.',
+            'asunto' => 'una cosilla del seo',
+            'apertura' => 'Le eché un ojo a {dominio} y hay un par de cosas del SEO que Google agradecería; no veo bien marcados los datos del negocio.',
         ],
     ],
 
     'sin_https' => [
         'generico' => [
-            'asunto' => 'el candado de vuestra web',
-            'apertura' => 'Al entrar en {dominio} el navegador no muestra una conexión segura; mucha gente se va en ese momento.',
+            'asunto' => 'el candado de tu web',
+            'apertura' => 'Entré en {dominio} y el navegador la marca como no segura (le falta el candadito de HTTPS).',
         ],
         'hosteleria' => [
-            'asunto' => 'conexión sin candado',
-            'apertura' => 'Vuestra web no carga con HTTPS. Quien reserva o pide mesa desde el móvil suele desconfiar si el navegador avisa.',
+            'asunto' => 'el candado de tu web',
+            'apertura' => 'Al abrir tu web el navegador no pone el candadito de HTTPS; se ve como no segura.',
         ],
         'retail' => [
-            'asunto' => 'tienda sin https',
-            'apertura' => 'En {dominio} la conexión no es segura. En una tienda online eso frena justo antes de comprar.',
+            'asunto' => 'el candado de tu tienda',
+            'apertura' => 'Entré en {dominio} y el navegador avisa de que la conexión no es segura; le falta el HTTPS.',
         ],
         'salud' => [
-            'asunto' => 'clínica sin https',
-            'apertura' => 'Vuestra web no usa HTTPS. En salud la gente es especialmente sensible a avisos del navegador.',
+            'asunto' => 'el candado de tu web',
+            'apertura' => 'Al entrar en tu web el navegador la marca como no segura; no veo el candado de HTTPS.',
         ],
         'servicios_profesionales' => [
-            'asunto' => 'web sin https',
-            'apertura' => 'En {dominio} no hay candado de seguridad. Para un despacho o consulta transmite poca confianza.',
+            'asunto' => 'el candado de tu web',
+            'apertura' => 'En {dominio} no aparece el candadito de seguridad; el navegador la trata como no segura.',
         ],
         'oficios' => [
-            'asunto' => 'web sin candado',
-            'apertura' => 'Al abrir {dominio} el navegador no marca la conexión como segura; muchos dejan de pedir presupuesto ahí.',
+            'asunto' => 'el candado de tu web',
+            'apertura' => 'Al abrir {dominio} el navegador no marca la conexión como segura; le falta el HTTPS.',
         ],
         'belleza' => [
-            'asunto' => 'web sin https',
-            'apertura' => 'Vuestra web no carga con HTTPS. Quien quiere pedir cita suele abandonar si el navegador avisa.',
+            'asunto' => 'el candado de tu web',
+            'apertura' => 'Entré en tu web y el navegador avisa de que no es segura; no veo el candado de HTTPS.',
         ],
         'agencias' => [
-            'asunto' => 'web sin https',
-            'apertura' => 'En {dominio} no veo HTTPS. Si vendéis servicios digitales, el aviso del navegador pesa bastante.',
+            'asunto' => 'el candado de tu web',
+            'apertura' => 'En {dominio} no veo HTTPS; el navegador la deja marcada como no segura.',
         ],
     ],
 
     'cert_caduca' => [
         'generico' => [
-            'asunto' => 'el certificado ssl',
-            'apertura' => 'El certificado SSL de {dominio} caduca en {dias} días; cuando expire el navegador empezará a avisar.',
+            'asunto' => 'el certificado de tu web',
+            'apertura' => 'Le eché un ojo a {dominio} y el certificado de seguridad caduca en {dias} días; cuando expire el navegador empezará a avisar.',
         ],
     ],
 
     'web_abandonada' => [
         'generico' => [
-            'asunto' => 'el año del copyright',
-            'apertura' => 'En el pie de {dominio} el copyright sigue en {anio}; da la impresión de que la web lleva tiempo sin tocarse.',
+            'asunto' => 'una cosilla de tu web',
+            'apertura' => 'Le di una vuelta a {dominio} y vi que el pie sigue marcando {anio}; tiene pinta de que hace un tiempo que no le das un repaso.',
         ],
         'hosteleria' => [
-            'asunto' => 'copyright de {anio}',
-            'apertura' => 'En vuestra web el copyright marca {anio}. Quien mira la carta online puede pensar que el local ya no actualiza nada.',
+            'asunto' => 'una cosilla de tu web',
+            'apertura' => 'En tu web el pie sigue en {anio}; da la sensación de que la carta online lleva un tiempo sin tocarse.',
         ],
         'retail' => [
-            'asunto' => 'tienda de {anio}',
-            'apertura' => 'El pie de {dominio} sigue en {anio}. En comercio eso suele leerse como catálogo viejo.',
+            'asunto' => 'una cosilla de tu tienda',
+            'apertura' => 'El pie de {dominio} sigue en {anio}; parece que el catálogo lleva un rato sin un lavado de cara.',
         ],
         'salud' => [
-            'asunto' => 'web de {anio}',
-            'apertura' => 'El copyright de vuestra web es de {anio}. En clínica eso transmite poco cuidado con la información pública.',
+            'asunto' => 'una cosilla de tu web',
+            'apertura' => 'El copyright de tu web es de {anio}; tiene pinta de que hace tiempo que no le das una vuelta.',
         ],
         'servicios_profesionales' => [
-            'asunto' => 'web de {anio}',
-            'apertura' => 'En {dominio} el copyright sigue en {anio}; parece una web dejada de lado.',
+            'asunto' => 'una cosilla de tu web',
+            'apertura' => 'En {dominio} el pie sigue en {anio}; parece una web a la que hace un tiempo que no se le echa un ojo.',
         ],
         'oficios' => [
-            'asunto' => 'web de {anio}',
-            'apertura' => 'El pie de {dominio} marca {anio}. Quien busca un oficio suele preferir un sitio al día.',
+            'asunto' => 'una cosilla de tu web',
+            'apertura' => 'El pie de {dominio} marca {anio}; da la impresión de que lleva un tiempo sin actualizarse.',
         ],
         'belleza' => [
-            'asunto' => 'web de {anio}',
-            'apertura' => 'Vuestra web lleva el copyright de {anio}; da sensación de sitio sin actualizar.',
+            'asunto' => 'una cosilla de tu web',
+            'apertura' => 'Tu web lleva el copyright de {anio}; se nota un pelín dejada de lado.',
         ],
         'agencias' => [
-            'asunto' => 'web de {anio}',
-            'apertura' => 'En {dominio} el copyright es de {anio}. Para una agencia, una web antigua pesa en la primera impresión.',
+            'asunto' => 'una cosilla de tu web',
+            'apertura' => 'En {dominio} el pie marca {anio}; da la sensación de que hace un tiempo que no le das un repaso.',
         ],
     ],
 
     'generador_obsoleto' => [
         'generico' => [
-            'asunto' => 'web hecha con {generador}',
-            'apertura' => 'En {dominio} el generador detectado es {generador}; en muchos casos limita el diseño y la velocidad.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'Cacharreando con {dominio} vi que está hecha con {generador}; a veces eso deja la web un poco pillada de diseño y de velocidad.',
         ],
     ],
 
     'sin_aviso_legal' => [
         'generico' => [
-            'asunto' => 'aviso legal y privacidad',
-            'apertura' => 'En {dominio} no encuentro aviso legal ni política de privacidad visibles.',
+            'asunto' => 'una cosilla legal',
+            'apertura' => 'Le eché un ojo a {dominio} y no encuentro aviso legal ni política de privacidad a la vista.',
         ],
     ],
 
     'sin_cookies' => [
         'generico' => [
             'asunto' => 'el aviso de cookies',
-            'apertura' => 'En {dominio} no veo un aviso de cookies; es algo que mucha gente (y la normativa) espera encontrar.',
+            'apertura' => 'En {dominio} no veo un aviso de cookies; es de esas cosas que suele echarse en falta al entrar.',
         ],
     ],
 
     'sin_redes' => [
         'generico' => [
-            'asunto' => 'enlaces a redes sociales',
-            'apertura' => 'En {dominio} no encuentro enlaces a redes sociales desde la web.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'Estuve mirando {dominio} y no encontré enlaces a tus redes desde la web.',
         ],
     ],
 
     'sin_formulario' => [
         'generico' => [
-            'asunto' => 'cómo contactaros',
-            'apertura' => 'En {dominio} no encuentro un formulario de contacto; no queda claro cómo escribiros desde la web.',
+            'asunto' => 'cómo contactarte',
+            'apertura' => 'En {dominio} no encuentro un formulario de contacto; no queda del todo claro cómo escribirte desde la web.',
         ],
     ],
 
     'contacto_roto' => [
         'generico' => [
             'asunto' => 'la página de contacto',
-            'apertura' => 'La ruta de contacto de {dominio} responde con error {status}; quien quiere escribiros se queda a medias.',
+            'apertura' => 'La ruta de contacto de {dominio} responde con error {status}; quien quiere escribirte se queda a medias.',
         ],
     ],
 
     'sin_reservas' => [
         'generico' => [
             'asunto' => 'reservar desde la web',
-            'apertura' => 'En {dominio} no encuentro forma de reservar online.',
+            'apertura' => 'Estuve curioseando {dominio} y no encontré forma de reservar desde ahí.',
         ],
         'hosteleria' => [
-            'asunto' => 'reservar mesa online',
-            'apertura' => 'En vuestra web no encuentro forma de reservar mesa. Mucha gente que decide desde el móvil se va a otro sitio.',
+            'asunto' => 'reservar desde la web',
+            'apertura' => 'Estuve curioseando tu web y no encontré forma de reservar mesa desde ahí; se ve que todo va por teléfono.',
         ],
         'salud' => [
-            'asunto' => 'pedir cita online',
-            'apertura' => 'En {dominio} no veo forma de pedir cita online; quien busca hueco suele irse a otra clínica.',
+            'asunto' => 'pedir cita desde la web',
+            'apertura' => 'Le eché un ojo a {dominio} y no veo forma clara de pedir cita desde la web; parece que va más por teléfono.',
         ],
         'belleza' => [
             'asunto' => 'reservar cita online',
-            'apertura' => 'No encuentro en la web una forma clara de reservar cita; mucha gente lo busca antes de llamar.',
+            'apertura' => 'En tu web no encontré una forma clara de reservar cita; se echa un poco en falta al curiosear.',
         ],
     ],
 
     'sin_carrito' => [
         'generico' => [
-            'asunto' => 'comprar desde la web',
-            'apertura' => 'En {dominio} no detecto carrito ni checkout; no queda claro cómo comprar online.',
+            'asunto' => 'el catálogo de {dominio}',
+            'apertura' => 'Le eché un ojo a {dominio} y vi el catálogo, pero no encontré forma clara de comprar desde la web.',
         ],
         'retail' => [
-            'asunto' => 'el carrito de compra',
-            'apertura' => 'En vuestra tienda online no encuentro carrito ni proceso de compra visible.',
+            'asunto' => 'el catálogo de {dominio}',
+            'apertura' => 'Le eché un ojo a {dominio} y vi que tienes el catálogo puesto pero no se puede comprar desde la web.',
         ],
     ],
 
     'sin_whatsapp' => [
         'generico' => [
-            'asunto' => 'whatsapp en la web',
-            'apertura' => 'En {dominio} no veo un enlace a WhatsApp; mucha gente prefiere escribir por ahí antes de llamar.',
+            'asunto' => 'whatsapp en tu web',
+            'apertura' => 'En {dominio} no veo un enlace a WhatsApp; a veces se echa de menos para escribir rápido.',
         ],
     ],
 
     'html_pesado' => [
         'generico' => [
-            'asunto' => 'peso de la página',
-            'apertura' => 'La home de {dominio} pesa unos {kb} KB de HTML; eso suele ir lento en móvil con mala cobertura.',
+            'asunto' => 'el peso de tu web',
+            'apertura' => 'Estuve mirando {dominio} y la home pesa unos {kb} KB de HTML; en el móvil con mala cobertura se nota un pelín.',
         ],
     ],
 
     'respuesta_lenta' => [
         'generico' => [
-            'asunto' => '{segundos} s de respuesta',
-            'apertura' => 'La home de {dominio} tarda unos {segundos} segundos en responder; en móvil se nota enseguida.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'Estuve mirando {dominio} y tarda unos {segundos} segundos en responder; en el móvil se nota al entrar.',
         ],
         'hosteleria' => [
-            'asunto' => 'web lenta en móvil',
-            'apertura' => 'Vuestra web tarda unos {segundos} segundos en responder. Quien busca dónde comer no suele esperar.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'Tu web tarda unos {segundos} segundos en responder; desde el móvil se nota un pelín lenta al abrirla.',
         ],
         'retail' => [
-            'asunto' => 'tienda lenta',
-            'apertura' => 'En {dominio} la respuesta tarda unos {segundos} segundos; en tienda online eso corta muchas visitas.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'En {dominio} la tienda tarda unos {segundos} segundos en responder; se nota al entrar desde el móvil.',
         ],
         'salud' => [
-            'asunto' => 'web lenta',
-            'apertura' => 'Vuestra web tarda unos {segundos} segundos en responder; quien busca cita desde el móvil lo nota.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'Tu web tarda unos {segundos} segundos en responder; desde el móvil se nota al primer vistazo.',
         ],
         'servicios_profesionales' => [
-            'asunto' => 'web lenta',
-            'apertura' => 'En {dominio} la respuesta tarda unos {segundos} segundos; da sensación de sitio poco cuidado.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'En {dominio} la respuesta tarda unos {segundos} segundos; da un pelín de sensación de web perezosa.',
         ],
         'oficios' => [
-            'asunto' => 'web lenta',
-            'apertura' => 'Vuestra web tarda unos {segundos} segundos en cargar la primera respuesta; en móvil se abandona fácil.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'Tu web tarda unos {segundos} segundos en dar señales de vida; en el móvil se nota al entrar.',
         ],
         'belleza' => [
-            'asunto' => 'web lenta',
-            'apertura' => 'La web tarda unos {segundos} segundos en responder; quien quiere pedir cita desde el móvil se impacienta.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'La web tarda unos {segundos} segundos en responder; desde el móvil se hace un poco de espera.',
         ],
         'agencias' => [
-            'asunto' => 'web lenta',
-            'apertura' => 'En {dominio} la respuesta tarda unos {segundos} segundos; para una agencia es una primera impresión floja.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'En {dominio} la respuesta tarda unos {segundos} segundos; se nota un pelín lenta al abrirla.',
         ],
     ],
 
     'psi_rendimiento' => [
         'generico' => [
-            'asunto' => 'rendimiento {puntuacion}/100',
-            'apertura' => 'PageSpeed marca el rendimiento de {dominio} en {puntuacion} sobre 100 en móvil.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'Le di una vuelta a {dominio} en el móvil y el rendimiento sale a {puntuacion} sobre 100; hay margen para que vaya más fina.',
         ],
         'hosteleria' => [
-            'asunto' => 'rendimiento {puntuacion}/100',
-            'apertura' => 'En móvil PageSpeed deja el rendimiento de vuestra web en {puntuacion}/100. Quien busca mesa desde el móvil lo nota.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'En el móvil el rendimiento de tu web sale a {puntuacion}/100; se nota que podría ir un poco más ágil.',
         ],
         'retail' => [
-            'asunto' => 'rendimiento {puntuacion}/100',
-            'apertura' => 'PageSpeed da {puntuacion}/100 de rendimiento a {dominio} en móvil; en tienda eso suele restar ventas.',
+            'asunto' => 'un detalle de tu tienda',
+            'apertura' => 'Entré en {dominio} desde el móvil y el rendimiento marca {puntuacion}/100; la tienda se siente un pelín pesada.',
         ],
         'salud' => [
-            'asunto' => 'rendimiento {puntuacion}/100',
-            'apertura' => 'El rendimiento móvil de vuestra web está en {puntuacion}/100 según PageSpeed.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'El rendimiento móvil de tu web está en {puntuacion}/100; hay un par de cosas que la dejan un poco lenta.',
         ],
         'servicios_profesionales' => [
-            'asunto' => 'rendimiento {puntuacion}/100',
-            'apertura' => 'PageSpeed deja {dominio} en {puntuacion}/100 de rendimiento en móvil.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'Le eché un ojo a {dominio} en el móvil y el rendimiento queda en {puntuacion}/100.',
         ],
         'oficios' => [
-            'asunto' => 'rendimiento {puntuacion}/100',
-            'apertura' => 'En móvil el rendimiento de {dominio} sale a {puntuacion}/100 en PageSpeed.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'En el móvil el rendimiento de {dominio} sale a {puntuacion}/100; se nota al navegar un rato.',
         ],
         'belleza' => [
-            'asunto' => 'rendimiento {puntuacion}/100',
-            'apertura' => 'PageSpeed marca {puntuacion}/100 de rendimiento en móvil; quien busca cita suele abandonar webs lentas.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'Desde el móvil tu web marca {puntuacion}/100 de rendimiento; va un pelín justa.',
         ],
         'agencias' => [
-            'asunto' => 'rendimiento {puntuacion}/100',
-            'apertura' => 'El rendimiento móvil de {dominio} está en {puntuacion}/100 según PageSpeed; llama la atención en una agencia.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'El rendimiento móvil de {dominio} está en {puntuacion}/100; hay margen para dejarla más fina.',
         ],
     ],
 
     'psi_lcp' => [
         'generico' => [
-            'asunto' => '{segundos} segundos de carga',
-            'apertura' => 'Vuestra web tarda {segundos} segundos en cargar en móvil. Google considera aceptable por debajo de 2,5.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'Estuve mirando {dominio} y tarda {segundos} segundos en cargar en el móvil; se nota un pelín lenta al entrar.',
         ],
         'hosteleria' => [
             'asunto' => '{segundos} segundos',
-            'apertura' => 'Vuestra web tarda {segundos} segundos en cargar en el móvil. Quien está buscando dónde cenar no espera tanto.',
+            'apertura' => 'Tu web tarda {segundos} segundos en cargar en el móvil; al entrar se nota un pelín de espera.',
         ],
         'retail' => [
-            'asunto' => '{segundos} s de carga',
-            'apertura' => 'En {dominio} el contenido principal tarda {segundos} segundos en verse en móvil; mucha gente se va antes.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'En {dominio} el contenido principal tarda {segundos} segundos en verse en el móvil; se hace un poco de espera.',
         ],
         'salud' => [
             'asunto' => '{segundos} segundos',
-            'apertura' => 'Vuestra web tarda {segundos} segundos en mostrar el contenido en móvil; quien busca clínica suele comparar rápido.',
+            'apertura' => 'Tu web tarda {segundos} segundos en mostrar el contenido en el móvil; se nota al primer vistazo.',
         ],
         'servicios_profesionales' => [
-            'asunto' => '{segundos} s de carga',
-            'apertura' => 'En móvil {dominio} tarda {segundos} segundos en pintar el contenido principal.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'En el móvil {dominio} tarda {segundos} segundos en pintar el contenido principal; va un pelín justa.',
         ],
         'oficios' => [
-            'asunto' => '{segundos} s de carga',
-            'apertura' => 'Vuestra web tarda {segundos} segundos en cargar en móvil; quien necesita un oficio suele llamar a otro.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'Tu web tarda {segundos} segundos en cargar en el móvil; al abrirla se nota la espera.',
         ],
         'belleza' => [
             'asunto' => '{segundos} segundos',
-            'apertura' => 'La web tarda {segundos} segundos en cargar en el móvil; quien busca cita no suele quedarse esperando.',
+            'apertura' => 'La web tarda {segundos} segundos en cargar en el móvil; se siente un poco lenta al entrar.',
         ],
         'agencias' => [
-            'asunto' => '{segundos} s de carga',
-            'apertura' => 'En móvil {dominio} tarda {segundos} segundos en cargar el contenido principal.',
+            'asunto' => '{segundos} segundos',
+            'apertura' => 'En el móvil {dominio} tarda {segundos} segundos en cargar el contenido principal; se nota al entrar.',
         ],
     ],
 
     'psi_peso' => [
         'generico' => [
-            'asunto' => '{mb} mb de peso',
-            'apertura' => 'PageSpeed mide unos {mb} MB de peso total en {dominio}; en móvil con datos limitados se nota.',
+            'asunto' => 'el peso de tu web',
+            'apertura' => 'Estuve cacharreando con {dominio} y la página se va a unos {mb} MB; en el móvil con datos se nota un pelín.',
         ],
     ],
 
     'psi_seo' => [
         'generico' => [
-            'asunto' => 'seo a {puntuacion} puntos',
-            'apertura' => 'PageSpeed deja el SEO de {dominio} en {puntuacion} sobre 100; hay señales básicas que no están bien marcadas.',
+            'asunto' => 'una cosilla del seo',
+            'apertura' => 'Le eché un ojo a {dominio} y hay un par de cosas del SEO que Google agradecería; ahora mismo queda en {puntuacion} sobre 100.',
         ],
     ],
 
     'psi_accesibilidad' => [
         'generico' => [
-            'asunto' => 'accesibilidad {puntuacion}/100',
-            'apertura' => 'La accesibilidad de {dominio} sale a {puntuacion}/100 en PageSpeed; hay elementos difíciles de usar o de leer.',
+            'asunto' => 'un detalle de tu web',
+            'apertura' => 'En {dominio} hay un par de detalles de accesibilidad que se notan al usarla; sale a {puntuacion}/100.',
         ],
     ],
 ];

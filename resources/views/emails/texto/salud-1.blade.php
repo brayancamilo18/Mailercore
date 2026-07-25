@@ -2,16 +2,13 @@ Hola,
 
 {{ $apertura }}
 
-Cuando alguien busca clínica compara tres o cuatro webs en cinco minutos. La que deja pedir cita sin llamar se lleva la visita.
+No es nada del otro mundo; son cosillas que se dejan finas en un rato y la web se siente más cuidada al entrar.
 
-Desarrollo webs para clínicas: cita online, carga rápida y los textos legales en regla.
-
-¿Te paso lo que he visto en {{ $dominio }}?
+Si te apetece ver alguna cosa que he montado para clínicas o consultas, respóndeme y te enseño; y si no, sin problema.
 
 Un saludo,
-Camilo Silva
-silgodev.es
+Camilo
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
-Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.
+Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.

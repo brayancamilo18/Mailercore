@@ -1,8 +1,7 @@
 <p>Hola,</p>
 <p>{{ $apertura }}</p>
-<p>Quien busca hueco para una cita lo hace desde el móvil: si no puede reservar en dos toques, se va al salón de al lado.</p>
-<p>Desarrollo webs para salones y centros: reserva online, carga rápida y diseño limpio.</p>
-<p>¿Te mando lo que he visto en {{ $dominio }}?</p>
-<p>Un saludo,<br>Camilo Silva<br><a href="https://silgodev.es">silgodev.es</a></p>
+<p>No es nada grave; con un lavado de cara de un rato la web se siente más cómoda, sobre todo desde el móvil.</p>
+<p>Estuve montando hace poco un par de webs parecidas y quedaron bien. Si te apetece verlas respóndeme y te las enseño, y si no, sin problema.</p>
+<p>Un saludo,<br>Camilo</p>
 <hr>
-<p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.</small></p>
+<p><small>{{ $remitenteNombre }}, {{ $remitenteDireccion }}.<br>Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.</small></p>

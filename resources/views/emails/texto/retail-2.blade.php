@@ -1,11 +1,12 @@
 Hola,
 
-{{ $apertura }}
+Te escribí por {{ $dominio }}. {{ $apertura }}
 
-Si no es el momento, dímelo y paro.
+Si te encaja lo miramos; si no, paro.
 
-Camilo — silgodev.es
+Un saludo,
+Camilo
 
 ---
 {{ $remitenteNombre }}, {{ $remitenteDireccion }}.
-Si no quieres recibir más mensajes míos, responde BAJA a este correo o escribe a {{ $emailBaja }}.
+Si no quieres recibir más correos míos, responde BAJA a este mensaje o escribe a {{ $emailBaja }}.

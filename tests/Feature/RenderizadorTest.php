@@ -17,6 +17,20 @@ class RenderizadorTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Pie legal de pruebas sin marca ni http, para no falsear las validaciones nuevas.
+        config([
+            'outreach.envio.remitente.nombre_legal' => 'Camilo',
+            'outreach.envio.remitente.direccion' => 'Madrid',
+            'outreach.envio.remitente.email_baja' => 'baja@example.com',
+            'outreach.envio.remitente.url_baja' => '',
+            'outreach.envio.remitente.responder_a' => 'hola@example.com',
+        ]);
+    }
+
     /**
      * @return array<string, array{0: string, 1: int}>
      */
@@ -73,13 +87,37 @@ class RenderizadorTest extends TestCase
         }
     }
 
-    public function test_ninguna_plantilla_tiene_mas_de_un_enlace(): void
+    public function test_cuerpo_no_supera_110_palabras(): void
     {
         foreach (array_keys(config('sectores')) as $sector) {
             foreach ([1, 2] as $paso) {
                 $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
                 $this->assertNotNull($resultado);
-                $this->assertLessThanOrEqual(1, substr_count($resultado['html'], '<a '));
+
+                $cuerpo = explode("\n---", $resultado['texto'])[0];
+                $palabras = str_word_count(strip_tags($cuerpo), 0, 'áéíóúñüÁÉÍÓÚÑÜ');
+                $maximo = $paso === 1 ? 110 : 40;
+
+                $this->assertLessThanOrEqual(
+                    $maximo,
+                    $palabras,
+                    "{$sector}-{$paso}: {$palabras} palabras (máx {$maximo})"
+                );
+            }
+        }
+    }
+
+    public function test_ninguna_plantilla_tiene_enlaces(): void
+    {
+        foreach (array_keys(config('sectores')) as $sector) {
+            foreach ([1, 2] as $paso) {
+                $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
+                $this->assertNotNull($resultado);
+                $this->assertSame(
+                    0,
+                    substr_count($resultado['html'], '<a '),
+                    "{$sector}-{$paso} tiene enlaces <a>"
+                );
             }
         }
     }
@@ -91,6 +129,94 @@ class RenderizadorTest extends TestCase
                 $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
                 $this->assertNotNull($resultado);
                 $this->assertStringNotContainsString('<img', $resultado['html']);
+            }
+        }
+    }
+
+    public function test_ninguna_plantilla_menciona_la_marca(): void
+    {
+        foreach (array_keys(config('sectores')) as $sector) {
+            foreach ([1, 2] as $paso) {
+                $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
+                $this->assertNotNull($resultado);
+
+                $conjunto = mb_strtolower($resultado['texto'].' '.$resultado['html']);
+                $this->assertStringNotContainsString(
+                    'silgodev',
+                    $conjunto,
+                    "{$sector}-{$paso} menciona la marca"
+                );
+            }
+        }
+    }
+
+    public function test_ninguna_plantilla_lleva_enlaces(): void
+    {
+        foreach (array_keys(config('sectores')) as $sector) {
+            foreach ([1, 2] as $paso) {
+                $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
+                $this->assertNotNull($resultado);
+
+                $this->assertStringNotContainsString(
+                    '<a ',
+                    $resultado['html'],
+                    "{$sector}-{$paso} HTML tiene <a>"
+                );
+                $this->assertStringNotContainsString(
+                    'http',
+                    $resultado['texto'],
+                    "{$sector}-{$paso} texto tiene http"
+                );
+            }
+        }
+    }
+
+    public function test_todas_firman_solo_camilo(): void
+    {
+        foreach (array_keys(config('sectores')) as $sector) {
+            foreach ([1, 2] as $paso) {
+                $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
+                $this->assertNotNull($resultado);
+
+                $this->assertStringContainsString(
+                    'Camilo',
+                    $resultado['texto'],
+                    "{$sector}-{$paso} no firma Camilo"
+                );
+                $this->assertStringNotContainsString(
+                    'Camilo Silva',
+                    $resultado['texto'],
+                    "{$sector}-{$paso} firma Camilo Silva"
+                );
+                $this->assertStringNotContainsString(
+                    'Camilo Silva',
+                    $resultado['html'],
+                    "{$sector}-{$paso} HTML firma Camilo Silva"
+                );
+            }
+        }
+    }
+
+    public function test_ninguna_plantilla_suena_comercial(): void
+    {
+        $prohibidas = [
+            'presupuesto', 'reunión', 'servicios', 'woocommerce',
+            'brazo técnico', 'sin compromiso', 'atentamente', 'estimado',
+        ];
+
+        foreach (array_keys(config('sectores')) as $sector) {
+            foreach ([1, 2] as $paso) {
+                $resultado = app(Renderizador::class)->renderizar($this->leadConAuditoria($sector), $paso);
+                $this->assertNotNull($resultado);
+
+                $conjunto = mb_strtolower($resultado['texto'].' '.$resultado['html']);
+                foreach ($prohibidas as $palabra) {
+                    $this->assertStringNotContainsString(
+                        mb_strtolower($palabra),
+                        $conjunto,
+                        "{$sector}-{$paso} contiene «{$palabra}»"
+                    );
+                }
             }
         }
     }
@@ -112,7 +238,24 @@ class RenderizadorTest extends TestCase
         $original = file_get_contents($ruta);
         $this->assertNotFalse($original);
 
-        file_put_contents($ruta, str_replace('móvil', 'gratis', $original));
+        // Inserta una de las palabras comerciales nuevas en el cuerpo.
+        file_put_contents($ruta, str_replace('lavado de cara', 'presupuesto', $original));
+
+        try {
+            $this->expectException(PlantillaInvalida::class);
+            app(Renderizador::class)->renderizar($this->leadConAuditoria('hosteleria'), 1);
+        } finally {
+            file_put_contents($ruta, $original);
+        }
+    }
+
+    public function test_lanza_si_menciona_la_marca(): void
+    {
+        $ruta = resource_path('views/emails/texto/hosteleria-1.blade.php');
+        $original = file_get_contents($ruta);
+        $this->assertNotFalse($original);
+
+        file_put_contents($ruta, str_replace('Camilo', "Camilo\nsilgodev", $original));
 
         try {
             $this->expectException(PlantillaInvalida::class);
@@ -153,18 +296,18 @@ class RenderizadorTest extends TestCase
     public function test_mailable_incluye_list_unsubscribe(): void
     {
         config([
-            'outreach.envio.remitente.email_baja' => 'baja@silgodev.es',
-            'outreach.envio.remitente.url_baja' => 'https://silgodev.es/baja',
-            'outreach.envio.remitente.responder_a' => 'hola@silgodev.es',
+            'outreach.envio.remitente.email_baja' => 'baja@example.com',
+            'outreach.envio.remitente.url_baja' => 'https://example.com/baja',
+            'outreach.envio.remitente.responder_a' => 'hola@example.com',
         ]);
 
         Mail::fake();
 
         $mensaje = Mensaje::factory()->create([
-            'asunto' => 'vuestra web en el móvil',
+            'asunto' => 'tu web en el móvil',
             'cuerpo_texto' => "Hola,\n\nPrueba.\n\n---\nPie",
             'cuerpo_html' => '<p>Hola,</p><p>Prueba.</p>',
-            'message_id' => '<test-123@silgodev.es>',
+            'message_id' => '<test-123@example.com>',
         ]);
 
         Mail::to('destino@example.com')->send(new CorreoOutreach($mensaje));
@@ -173,8 +316,8 @@ class RenderizadorTest extends TestCase
             $texto = $mail->headers()->text;
 
             return isset($texto['List-Unsubscribe'])
-                && str_contains($texto['List-Unsubscribe'], 'mailto:baja@silgodev.es')
-                && str_contains($texto['List-Unsubscribe'], 'https://silgodev.es/baja')
+                && str_contains($texto['List-Unsubscribe'], 'mailto:baja@example.com')
+                && str_contains($texto['List-Unsubscribe'], 'https://example.com/baja')
                 && ($texto['List-Unsubscribe-Post'] ?? null) === 'List-Unsubscribe=One-Click';
         });
     }

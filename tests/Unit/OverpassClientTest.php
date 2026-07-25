@@ -54,7 +54,16 @@ class OverpassClientTest extends TestCase
         ));
 
         $this->assertNotEmpty($resultados);
-        foreach ($resultados as $r) {
+
+        // El fake devuelve el fixture completo; solo los que coinciden con el
+        // lote llevan osm_tag/osm_valor (p. ej. el bar del fixture no).
+        $etiquetados = array_values(array_filter(
+            $resultados,
+            fn (array $r): bool => ($r['osm_tag'] ?? null) !== null
+        ));
+
+        $this->assertNotEmpty($etiquetados);
+        foreach ($etiquetados as $r) {
             $this->assertSame('amenity', $r['osm_tag']);
             $this->assertSame('restaurant', $r['osm_valor']);
         }

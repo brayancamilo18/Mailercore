@@ -28,11 +28,11 @@ class PlanificadorDiarioTest extends TestCase
             'outreach.envio.minutos_min_entre_correos' => 4,
             'outreach.envio.porcentaje_seguimientos' => 25,
             'outreach.envio.ventana_seguimiento_dias' => [5, 9],
-            'outreach.envio.remitente.nombre_legal' => 'Camilo Silva',
+            'outreach.envio.remitente.nombre_legal' => 'Camilo',
             'outreach.envio.remitente.direccion' => 'Calle 1',
-            'outreach.envio.remitente.email_baja' => 'baja@silgodev.es',
-            'outreach.envio.remitente.url_baja' => 'https://silgodev.es/baja',
-            'app.url' => 'https://silgodev.es',
+            'outreach.envio.remitente.email_baja' => 'baja@example.com',
+            'outreach.envio.remitente.url_baja' => 'https://example.com/baja',
+            'app.url' => 'https://example.com',
         ]);
     }
 
