@@ -55,6 +55,48 @@
         .onez-nav-a.is-active{background:var(--savia);color:#FAFAF7}
         .onez-nav-a.is-active:hover{background:var(--savia);color:#FAFAF7}
 
+        .nav-hamburguesa,.nav-cerrar{
+            display:inline-flex;align-items:center;justify-content:center;
+            width:40px;height:40px;border-radius:8px;border:0;cursor:pointer;padding:0;flex:none;
+        }
+        .nav-hamburguesa{background:transparent;color:var(--bosque)}
+        .nav-hamburguesa:hover{background:rgba(11,31,26,.06)}
+        .nav-cerrar{background:rgba(250,250,247,.08);color:#FAFAF7}
+        .nav-cerrar:hover{background:rgba(250,250,247,.14)}
+        .nav-backdrop{
+            display:none;position:fixed;inset:0;z-index:40;
+            background:rgba(11,31,26,.45);opacity:0;pointer-events:none;
+            transition:opacity .22s ease;
+        }
+
+        @media (max-width:767.98px){
+            .nav-hamburguesa{display:inline-flex}
+            .onez-aside{
+                position:fixed;top:0;left:0;bottom:0;z-index:50;
+                width:min(280px,86vw);max-width:280px;
+                flex-direction:column;align-items:stretch;flex-wrap:nowrap;
+                padding:18px 12px 14px;
+                transform:translateX(-105%);
+                transition:transform .28s cubic-bezier(.22,.8,.28,1);
+                box-shadow:none;
+            }
+            .onez-aside .nav-marca{padding:0 10px 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+            .onez-aside .nav-marca .nav-subtitulo{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4E6A61;margin-top:3px}
+            .onez-aside nav{flex-direction:column;flex-wrap:nowrap;gap:3px;flex:none}
+            .onez-aside .nav-spacer{display:block;flex:1}
+            .onez-aside .nav-pie{flex-direction:column;width:100%;border-top:1px solid rgba(255,255,255,.09);padding-top:12px}
+            html.nav-abierta .onez-aside{
+                transform:translateX(0);
+                box-shadow:12px 0 40px rgba(11,31,26,.28);
+            }
+            html.nav-abierta .nav-backdrop{display:block;opacity:1;pointer-events:auto}
+            html.nav-abierta{overflow:hidden}
+        }
+        @media (min-width:768px){
+            .nav-hamburguesa,.nav-cerrar,.nav-backdrop{display:none!important}
+            html.nav-abierta{overflow:auto}
+        }
+
         .btn-savia{
             border:none;background:var(--savia);color:#FAFAF7;font-size:12.5px;font-weight:800;
             border-radius:8px;padding:8px 16px;cursor:pointer;font-family:inherit;line-height:1.2;
@@ -100,18 +142,27 @@
     @endphp
 
     <div class="flex flex-col md:flex-row h-screen overflow-hidden">
-        <aside class="onez-aside w-full md:w-[212px] flex-none flex flex-row md:flex-col flex-wrap md:flex-nowrap items-center md:items-stretch gap-2 md:gap-0 px-3.5 py-2.5 md:px-3 md:py-[18px] md:pb-3.5">
-            <div class="pr-2 md:px-2.5 md:pb-5 md:pt-1">
-                <div class="flex items-baseline gap-0.5">
-                    <span style="font-size:21px;font-weight:800;letter-spacing:.14em;color:#FAFAF7;line-height:1">ONEZ</span>
-                    <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#5DCAA5"></span>
+        <div id="nav-backdrop" class="nav-backdrop" aria-hidden="true"></div>
+
+        <aside id="panel-nav" class="onez-aside w-[212px] flex-none flex flex-col items-stretch gap-0 px-3 py-[18px] pb-3.5">
+            <div class="nav-marca px-2.5 pb-5 pt-1">
+                <div>
+                    <div class="flex items-baseline gap-0.5">
+                        <span style="font-size:21px;font-weight:800;letter-spacing:.14em;color:#FAFAF7;line-height:1">ONEZ</span>
+                        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#5DCAA5"></span>
+                    </div>
+                    <div class="nav-subtitulo hidden md:block" style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4E6A61;margin-top:3px">
+                        Panel de captación
+                    </div>
                 </div>
-                <div class="hidden md:block" style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4E6A61;margin-top:3px">
-                    Panel de captación
-                </div>
+                <button type="button" id="nav-cerrar" class="nav-cerrar md:hidden" aria-label="Cerrar menú">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18"/>
+                    </svg>
+                </button>
             </div>
 
-            <nav class="flex flex-row md:flex-col flex-wrap md:flex-nowrap gap-[3px] flex-1 md:flex-none min-w-0">
+            <nav class="flex flex-col gap-[3px] flex-none min-w-0">
                 <a href="{{ route('panel.resumen') }}"
                    class="onez-nav-a {{ request()->routeIs('panel.resumen') ? 'is-active' : '' }}">Resumen</a>
                 <a href="{{ route('leads.indice') }}"
@@ -124,9 +175,9 @@
                    class="onez-nav-a {{ request()->routeIs('cosecha.*') ? 'is-active' : '' }}">Cosecha</a>
             </nav>
 
-            <div class="hidden md:block flex-1"></div>
+            <div class="nav-spacer hidden md:block flex-1"></div>
 
-            <div class="flex flex-row md:flex-col gap-[3px] md:border-t md:border-white/[0.09] md:pt-3 w-full md:w-auto">
+            <div class="nav-pie flex flex-col gap-[3px] md:border-t md:border-white/[0.09] md:pt-3 w-full mt-auto md:mt-0">
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
                     <button type="submit" class="onez-nav-a" style="color:#7E948C;width:100%;cursor:pointer;background:transparent;border:0">
@@ -137,7 +188,12 @@
         </aside>
 
         <div class="flex-1 flex flex-col min-w-0 min-h-0">
-            <header class="flex-none flex items-center flex-wrap gap-2 md:gap-3.5 px-4 py-2.5 md:px-7 md:min-h-[58px] border-b border-marca-bd bg-hueso">
+            <header class="flex-none flex items-center flex-wrap gap-2 md:gap-3.5 px-3 py-2.5 md:px-7 md:min-h-[58px] border-b border-marca-bd bg-hueso">
+                <button type="button" id="nav-abrir" class="nav-hamburguesa md:hidden" aria-label="Abrir menú" aria-expanded="false" aria-controls="panel-nav">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"/>
+                    </svg>
+                </button>
                 <div class="flex-1 min-w-0">
                     <div class="text-[17px] font-extrabold text-bosque leading-tight">@yield('title', 'Panel')</div>
                 </div>
@@ -177,6 +233,9 @@
     </main>
 @endauth
 
+@auth
+<script src="{{ asset('js/panel-nav.js') }}" defer></script>
+@endauth
 @stack('scripts')
 </body>
 </html>
