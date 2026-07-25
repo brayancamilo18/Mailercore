@@ -47,14 +47,14 @@
 
             <div class="px-5 py-6 sm:px-6 sm:py-7">
                 @if (filled($mensaje->cuerpo_html))
-                    <iframe
-                        class="w-full min-h-[28rem] border-0 bg-white"
-                        sandbox=""
-                        srcdoc="{{ e($mensaje->cuerpo_html) }}"
-                        title="Vista previa del correo"
-                    ></iframe>
-                @else
+                    {{-- Render directo: el iframe+srcdoc chocaba con CSP y mostraba las etiquetas crudas. --}}
+                    <div class="email-preview text-[14px] leading-[1.65] text-marca-txt max-w-[60ch]">
+                        {!! $mensaje->cuerpo_html !!}
+                    </div>
+                @elseif (filled($mensaje->cuerpo_texto))
                     <div class="text-[14px] leading-[1.65] text-marca-txt whitespace-pre-line max-w-[60ch]">{{ $mensaje->cuerpo_texto }}</div>
+                @else
+                    <p class="text-sm text-marca-mut m-0">Sin cuerpo.</p>
                 @endif
             </div>
         </section>

@@ -70,6 +70,12 @@
             border-radius:999px;padding:5px 12px;white-space:nowrap;
         }
         .pill-campana .dot{width:8px;height:8px;border-radius:50%;flex:none}
+
+        /* Vista previa de correo en el panel (HTML real, no iframe) */
+        .email-preview p{margin:0 0 .85em}
+        .email-preview p:last-child{margin-bottom:0}
+        .email-preview hr{border:0;border-top:1px solid #E4E8E4;margin:1.1em 0}
+        .email-preview small{font-size:11.5px;color:#5F6B66;line-height:1.45}
     </style>
 </head>
 <body class="bg-hueso text-marca-txt font-sans antialiased">
