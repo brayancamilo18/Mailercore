@@ -60,7 +60,10 @@ class ProcesadorBandeja
         ];
 
         foreach ($items as $item) {
-            if (EventoInbox::query()->where('raw_hash', $item->entrante->rawHash)->exists()) {
+            $hash = $item->entrante->rawHash;
+
+            if (EventoInbox::query()->where('raw_hash', $hash)->exists()
+                || Cache::has($this->claveOmitido($hash))) {
                 $resumen['omitidos']++;
 
                 continue;
@@ -70,6 +73,15 @@ class ProcesadorBandeja
 
             if (! $dryRun) {
                 $tipoFinal = $this->aplicarEfectos($item->entrante, $resultado);
+
+                // Correo ajeno (newsletter, spam, etc.): no cuenta en el panel.
+                if ($tipoFinal === 'ignorado') {
+                    Cache::put($this->claveOmitido($hash), 1, now()->addDays(14));
+                    $this->lector->marcarVisto($item->id);
+
+                    continue;
+                }
+
                 $this->crearEvento($item->entrante, $resultado, $tipoFinal);
                 $this->lector->marcarVisto($item->id);
                 $resumen[$tipoFinal] = ($resumen[$tipoFinal] ?? 0) + 1;
@@ -229,5 +241,10 @@ class ProcesadorBandeja
         $email = Suppression::normalizarEmail($email);
 
         return LeadEmail::query()->where('email', $email)->first()?->lead;
+    }
+
+    private function claveOmitido(string $rawHash): string
+    {
+        return 'bandeja:omitido:'.$rawHash;
     }
 }

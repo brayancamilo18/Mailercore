@@ -212,9 +212,8 @@ class ProcesarBandejaTest extends TestCase
         $this->artisan('outreach:bandeja')->assertSuccessful();
 
         $this->assertSame('contactado', $lead->fresh()->estado);
-        $this->assertDatabaseHas('eventos_inbox', [
-            'email' => $email,
-            'tipo' => 'ignorado',
+        // Autorespuesta / correo irrelevante: no se guarda como evento de panel.
+        $this->assertDatabaseMissing('eventos_inbox', [
             'raw_hash' => 'hash-auto',
         ]);
         $this->assertFalse(Suppression::existe($email));
