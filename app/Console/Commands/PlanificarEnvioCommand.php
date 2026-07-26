@@ -11,19 +11,17 @@ class PlanificarEnvioCommand extends Command
 {
     protected $signature = 'envio:planificar
                             {--fecha=}
+                            {--proximo : Planifica el siguiente día de envío (p. ej. el domingo prepara el lunes)}
                             {--dry-run}';
 
     protected $description = 'Planifica los correos del día según la rampa y los candidatos';
 
     public function handle(PlanificadorDiario $planificador): int
     {
-        $fecha = $this->option('fecha')
-            ? Carbon::parse((string) $this->option('fecha'))->startOfDay()
-            : today();
-
+        $fecha = $this->resolverFecha();
         $dryRun = (bool) $this->option('dry-run');
 
-        Latido::marcar('planificador');
+        Latido::marcar('planificador', 'Planificando '.$fecha->toDateString());
 
         $resultado = $planificador->planificar($fecha, $dryRun);
 
@@ -69,5 +67,29 @@ class PlanificarEnvioCommand extends Command
         ));
 
         return self::SUCCESS;
+    }
+
+    private function resolverFecha(): Carbon
+    {
+        if ($this->option('fecha')) {
+            return Carbon::parse((string) $this->option('fecha'), 'Europe/Madrid')->startOfDay();
+        }
+
+        if ($this->option('proximo')) {
+            /** @var list<int> $dias */
+            $dias = array_map('intval', config('outreach.envio.dias', [1, 2, 3, 4]));
+            $cursor = Carbon::now('Europe/Madrid')->startOfDay()->addDay();
+
+            for ($i = 0; $i < 14; $i++) {
+                if (in_array($cursor->dayOfWeekIso, $dias, true)) {
+                    return $cursor;
+                }
+                $cursor->addDay();
+            }
+
+            return Carbon::now('Europe/Madrid')->addDay()->startOfDay();
+        }
+
+        return Carbon::now('Europe/Madrid')->startOfDay();
     }
 }

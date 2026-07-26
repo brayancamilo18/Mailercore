@@ -41,6 +41,21 @@ class PlanificadorDiario
             return $this->vacio($fecha, 0, 'No es día de envío', $dryRun);
         }
 
+        // Evita duplicar la cola si ya se preparó la noche anterior o por el vigilante.
+        if (! $dryRun && self::yaPlanificado($fecha)) {
+            $ya = Mensaje::query()->whereDate('programado_para', $fecha->toDateString())->count();
+
+            return [
+                'cuota' => (int) (DiaEnvio::query()->whereDate('fecha', $fecha->toDateString())->value('cuota_planificada') ?? 0),
+                'primer_contacto' => 0,
+                'seguimientos' => 0,
+                'omitidos' => 0,
+                'motivo' => $ya > 0
+                    ? "Ya planificado ({$ya} mensajes)"
+                    : 'Ya planificado',
+            ];
+        }
+
         $rampa = $this->rampa->calcular($fecha);
 
         if ($rampa['cuota'] === 0) {

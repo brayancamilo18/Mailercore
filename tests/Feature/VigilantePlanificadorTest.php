@@ -21,26 +21,41 @@ class VigilantePlanificadorTest extends TestCase
         config(['outreach.envio.dias' => [1, 2, 3, 4]]);
     }
 
-    public function test_en_fin_de_semana_mantiene_latido_del_planificador(): void
+    public function test_antes_de_las_20_en_domingo_espera(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-07-26 12:00:00', 'Europe/Madrid')); // domingo
 
         $this->artisan('sistema:vigilante')->assertExitCode(0);
 
         $this->assertTrue(Latido::estaVivo('planificador'));
+        $this->assertFalse(PlanificadorDiario::yaPlanificado(Carbon::parse('2026-07-27', 'Europe/Madrid')));
         $detalle = Cache::get('latido:planificador')['detalle'] ?? '';
-        $this->assertStringContainsString('En espera', (string) $detalle);
+        $this->assertStringContainsString('20:00', (string) $detalle);
     }
 
-    public function test_antes_de_las_siete_marca_programado(): void
+    public function test_tras_las_20_prepara_la_cola_del_lunes(): void
     {
-        Carbon::setTestNow(Carbon::parse('2026-07-27 06:30:00', 'Europe/Madrid')); // lunes
+        Carbon::setTestNow(Carbon::parse('2026-07-26 20:10:00', 'Europe/Madrid')); // domingo noche
+
+        $lunes = Carbon::parse('2026-07-27', 'Europe/Madrid')->startOfDay();
+        $this->assertFalse(PlanificadorDiario::yaPlanificado($lunes));
 
         $this->artisan('sistema:vigilante')->assertExitCode(0);
 
+        $this->assertTrue(PlanificadorDiario::yaPlanificado($lunes));
         $this->assertTrue(Latido::estaVivo('planificador'));
-        $detalle = Cache::get('latido:planificador')['detalle'] ?? '';
-        $this->assertStringContainsString('07:00', (string) $detalle);
+    }
+
+    public function test_antes_de_las_siete_en_lunes_con_cola_ya_lista(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-26 20:10:00', 'Europe/Madrid'));
+        $this->artisan('sistema:vigilante')->assertExitCode(0);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-27 06:30:00', 'Europe/Madrid'));
+        $this->artisan('sistema:vigilante')->assertExitCode(0);
+
+        $this->assertTrue(Latido::estaVivo('planificador'));
+        $this->assertTrue(PlanificadorDiario::yaPlanificado(Carbon::parse('2026-07-27', 'Europe/Madrid')));
     }
 
     public function test_si_falta_la_cola_tras_las_siete_la_regenera(): void

@@ -143,9 +143,9 @@ class VigilanteCommand extends Command
     }
 
     /**
-     * El planificador solo corre laborables a las 07:00. En fin de semana o
-     * antes de esa hora no hay latido natural: aquí lo mantenemos vivo y, si
-     * un día de envío pasó de las 07:05 sin cola, la regeneramos solos.
+     * Mantiene el latido del planificador y asegura la cola:
+     *  - La noche anterior (≥20:00) prepara el siguiente día de envío.
+     *  - En día de envío, si tras las 07:05 aún no hay cola, la regenera.
      */
     private function asegurarPlanificador(): void
     {
@@ -161,44 +161,60 @@ class VigilanteCommand extends Command
 
             /** @var list<int> $dias */
             $dias = array_map('intval', config('outreach.envio.dias', [1, 2, 3, 4]));
+            $proximo = $this->proximoDiaEnvio($ahora, $dias);
             $esDiaEnvio = in_array($ahora->dayOfWeekIso, $dias, true);
 
-            if (! $esDiaEnvio) {
-                $proximo = $this->proximoDiaEnvio($ahora, $dias)->setTime(7, 0);
-                Latido::marcar(
-                    'planificador',
-                    'En espera — próximo '.$proximo->locale('es')->isoFormat('ddd D MMM HH:mm')
-                );
-
-                return;
-            }
-
-            if ($ahora->lt($hoy->copy()->setTime(7, 0))) {
-                Latido::marcar('planificador', 'Programado hoy a las 07:00');
-
-                return;
-            }
-
-            if (! PlanificadorDiario::yaPlanificado($hoy)) {
-                // Margen de 5 min por si el schedule de las 07:00 aún está en curso.
-                if ($ahora->lt($hoy->copy()->setTime(7, 5))) {
-                    Latido::marcar('planificador', 'Planificando a las 07:00…');
+            // Desde las 20:00 del día previo, la cola del próximo envío debe existir.
+            $horaPreparacion = $proximo->copy()->subDay()->setTime(20, 0);
+            if ($ahora->gte($horaPreparacion) && ! PlanificadorDiario::yaPlanificado($proximo)) {
+                if ($ahora->lt($horaPreparacion->copy()->addMinutes(5))) {
+                    Latido::marcar(
+                        'planificador',
+                        'Preparando cola del '.$proximo->locale('es')->isoFormat('ddd D')
+                    );
 
                     return;
                 }
 
-                Artisan::call('envio:planificar');
+                Artisan::call('envio:planificar', ['--fecha' => $proximo->toDateString()]);
+                $this->acciones[] = 'Planificador: cola de '.$proximo->toDateString().' preparada';
+                Log::channel('outreach')->warning('Vigilante: preparó la cola del próximo día', [
+                    'fecha' => $proximo->toDateString(),
+                ]);
+            }
+
+            if ($esDiaEnvio && $ahora->gte($hoy->copy()->setTime(7, 5)) && ! PlanificadorDiario::yaPlanificado($hoy)) {
+                Artisan::call('envio:planificar', ['--fecha' => $hoy->toDateString()]);
                 $this->acciones[] = 'Planificador: cola del día regenerada (faltaba tras las 07:00)';
                 Log::channel('outreach')->warning('Vigilante: regeneró la cola diaria', [
                     'fecha' => $hoy->toDateString(),
                 ]);
             }
 
+            // En día de envío priorizamos la cola de hoy si ya existe o ya pasó las 07:00.
+            $fechaLatido = ($esDiaEnvio && (
+                PlanificadorDiario::yaPlanificado($hoy)
+                || $ahora->gte($hoy->copy()->setTime(7, 0))
+            )) ? $hoy : $proximo;
+
             $n = Schema::hasTable('mensajes')
-                ? Mensaje::query()->whereDate('programado_para', $hoy->toDateString())->count()
+                ? Mensaje::query()->whereDate('programado_para', $fechaLatido->toDateString())->count()
                 : 0;
 
-            Latido::marcar('planificador', $n > 0 ? "Cola de hoy lista ({$n})" : 'Cola de hoy revisada');
+            if (PlanificadorDiario::yaPlanificado($fechaLatido)) {
+                $etiqueta = $fechaLatido->isSameDay($hoy) ? 'hoy' : $fechaLatido->locale('es')->isoFormat('ddd D');
+                Latido::marcar(
+                    'planificador',
+                    $n > 0 ? "Cola de {$etiqueta} lista ({$n})" : "Cola de {$etiqueta} revisada"
+                );
+
+                return;
+            }
+
+            Latido::marcar(
+                'planificador',
+                'En espera — cola del '.$proximo->locale('es')->isoFormat('ddd D').' a las 20:00'
+            );
         } catch (\Throwable $e) {
             Log::channel('outreach')->error('Vigilante: fallo asegurando planificador', [
                 'error' => $e->getMessage(),

@@ -29,6 +29,23 @@ Schedule::command('sistema:salud --json')
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/salud.log'));
 
+// La noche anterior prepara la cola del siguiente día de envío (domingo → lunes).
+Schedule::command('envio:planificar --proximo')
+    ->dailyAt('20:00')
+    ->timezone('Europe/Madrid')
+    ->withoutOverlapping()
+    ->when(function (): bool {
+        if (! (bool) config('outreach.envio.activo')) {
+            return false;
+        }
+
+        $dias = array_map('intval', config('outreach.envio.dias', [1, 2, 3, 4]));
+        $manana = now('Europe/Madrid')->addDay();
+
+        return in_array($manana->dayOfWeekIso, $dias, true);
+    });
+
+// Red de seguridad: si la noche anterior falló, planifica el día en curso a las 07:00.
 Schedule::command('envio:planificar')
     ->weekdays()
     ->at('07:00')
