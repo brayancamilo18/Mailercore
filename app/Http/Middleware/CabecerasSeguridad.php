@@ -30,7 +30,7 @@ class CabecerasSeguridad
             "font-src 'self' https://fonts.gstatic.com data:",
             "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com",
             "script-src 'self' https://cdn.tailwindcss.com https://unpkg.com",
-            "connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com",
+            "connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://code.highcharts.com",
         ]);
 
         $response->headers->set('Content-Security-Policy', $csp);

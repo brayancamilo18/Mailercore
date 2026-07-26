@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\Soporte\Latido;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
 
 class AreaCosecha extends Model
@@ -19,7 +20,9 @@ class AreaCosecha extends Model
     ];
 
     protected $fillable = [
+        'pais_codigo',
         'nombre',
+        'codigo_mapa',
         'admin_level',
         'estado',
         'prioridad',
@@ -44,18 +47,43 @@ class AreaCosecha extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<PaisCosecha, $this>
+     */
+    public function pais(): BelongsTo
+    {
+        return $this->belongsTo(PaisCosecha::class, 'pais_codigo', 'codigo');
+    }
+
+    /**
+     * Siguiente área pendiente de un país que aún no ha agotado sus ciclos.
+     */
     public static function siguientePendiente(): ?self
     {
         return self::query()
-            ->where('estado', 'pendiente')
-            ->orderBy('prioridad')
-            ->orderBy('id')
+            ->where('areas_cosecha.estado', 'pendiente')
+            ->whereHas('pais', function (Builder $q): void {
+                $q->whereColumn('ciclos_completados', '<', 'max_ciclos')
+                    ->where('estado', '!=', 'hecho');
+            })
+            ->join('paises_cosecha', 'paises_cosecha.codigo', '=', 'areas_cosecha.pais_codigo')
+            ->orderBy('paises_cosecha.prioridad')
+            ->orderBy('areas_cosecha.prioridad')
+            ->orderBy('areas_cosecha.id')
+            ->select('areas_cosecha.*')
             ->first();
     }
 
+    /** @param  Builder<AreaCosecha>  $query */
     public function scopeOrdenadas(Builder $query): Builder
     {
         return $query->orderBy('prioridad')->orderBy('nombre');
+    }
+
+    /** @param  Builder<AreaCosecha>  $query */
+    public function scopeDelPais(Builder $query, string $codigo): Builder
+    {
+        return $query->where('pais_codigo', $codigo);
     }
 
     public function reiniciar(): void
@@ -70,27 +98,13 @@ class AreaCosecha extends Model
     }
 
     /**
-     * Vuelve a poner en cola todas las áreas ya barridas para otro ciclo
-     * completo (buscar negocios nuevos en OSM). No borra leads.
+     * @deprecated Usar PaisCosecha::procesarCiclosCompletos()
      */
     public static function reiniciarCicloCompleto(): int
     {
-        $ids = self::query()
-            ->whereIn('estado', ['hecho', 'error'])
-            ->pluck('id');
-
-        foreach ($ids as $id) {
-            self::query()->whereKey($id)->first()?->reiniciar();
-        }
-
-        return $ids->count();
+        return PaisCosecha::procesarCiclosCompletos();
     }
 
-    /**
-     * Recupera esta área huérfana (proceso de cosecha muerto). La devuelve a
-     * 'pendiente' para que se reintente, salvo que ya se haya recuperado
-     * demasiadas veces: entonces la marca 'error' para no bloquear el barrido.
-     */
     public function recuperarHuerfana(): void
     {
         $max = (int) config('outreach.cosecha.max_reintentos', 5);
@@ -120,18 +134,11 @@ class AreaCosecha extends Model
         ])->save();
     }
 
-    /**
-     * Barre áreas atascadas en 'en_proceso' cuyo proceso ha muerto (latido de
-     * cosecha caduco) y las recupera. Devuelve cuántas recuperó.
-     *
-     * Si el latido es reciente, hay una cosecha viva y no se toca nada.
-     */
     public static function recuperarHuerfanasSiMuertas(): int
     {
         $umbral = (int) config('outreach.cosecha.area_atascada_segundos', 600);
         $edadLatido = Latido::edad('cosecha');
 
-        // Latido fresco = cosecha viva. No interferir.
         if ($edadLatido !== null && $edadLatido < $umbral) {
             return 0;
         }
@@ -142,7 +149,6 @@ class AreaCosecha extends Model
             return 0;
         }
 
-        // El proceso está muerto: liberamos el lock (por si murió sin soltarlo).
         Cache::lock('cosecha:run')->forceRelease();
 
         foreach ($huerfanas as $area) {

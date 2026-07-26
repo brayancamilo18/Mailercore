@@ -6,6 +6,7 @@ use App\Excepciones\OverpassNoDisponible;
 use App\Jobs\RastrearSitioJob;
 use App\Models\AreaCosecha;
 use App\Models\Lead;
+use App\Models\PaisCosecha;
 use App\Services\Overpass\OverpassClient;
 use App\Services\Overpass\ServicioCosecha;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,7 +21,18 @@ class CosechaTest extends TestCase
 
     private function area(): AreaCosecha
     {
+        PaisCosecha::query()->firstOrCreate(
+            ['codigo' => 'ES'],
+            [
+                'nombre' => 'España',
+                'prioridad' => 1,
+                'max_ciclos' => 3,
+                'mapa_motor' => 'spain',
+            ]
+        );
+
         return AreaCosecha::query()->create([
+            'pais_codigo' => 'ES',
             'nombre' => 'Madrid',
             'admin_level' => 6,
             'estado' => 'pendiente',

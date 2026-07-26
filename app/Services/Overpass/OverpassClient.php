@@ -16,7 +16,7 @@ class OverpassClient
     /**
      * Emite candidatos filtro a filtro.
      *
-     * @param  list<array{nombre: string, admin_level: int}>  $areas
+     * @param  list<array{nombre: string, admin_level: int, pais_codigo?: string|null}>  $areas
      * @param  list<array{0: string, 1: string}>  $filtros
      * @return \Generator<int, array<string, mixed>>
      */
@@ -32,6 +32,7 @@ class OverpassClient
         foreach ($areas as $area) {
             $nombre = $area['nombre'];
             $adminLevel = (int) $area['admin_level'];
+            $paisCodigo = isset($area['pais_codigo']) ? (string) $area['pais_codigo'] : null;
 
             // Agrupamos los filtros en lotes y hacemos una consulta combinada por
             // lote (una unión de nwr en Overpass). Así pasamos de ~90 peticiones
@@ -46,7 +47,7 @@ class OverpassClient
 
                 try {
                     $elementos = $this->fetchElementos(
-                        $this->construirConsultaCombinada($nombre, $adminLevel, $lote)
+                        $this->construirConsultaCombinada($nombre, $adminLevel, $lote, $paisCodigo)
                     );
                 } catch (\Throwable $e) {
                     $fallos++;
@@ -236,7 +237,7 @@ class OverpassClient
      *
      * @param  list<array{0: string, 1: string}>  $filtros
      */
-    private function construirConsultaCombinada(string $area, int $adminLevel, array $filtros): string
+    private function construirConsultaCombinada(string $area, int $adminLevel, array $filtros, ?string $paisCodigo = null): string
     {
         $areaEscapada = addslashes($area);
         $timeout = $this->config['timeout'];
@@ -248,6 +249,23 @@ class OverpassClient
             $lineas[] = "  nwr(area.a)[\"{$tagEsc}\"=\"{$valorEsc}\"];";
         }
         $union = implode("\n", $lineas);
+
+        // Acotar por ISO3166-1 evita colisiones de nombre (p. ej. La Rioja ES/AR).
+        $paisEsc = $paisCodigo !== null && $paisCodigo !== ''
+            ? addslashes(strtoupper($paisCodigo))
+            : null;
+
+        if ($paisEsc !== null) {
+            return <<<CONSULTA
+[out:json][timeout:{$timeout}];
+area["ISO3166-1"="{$paisEsc}"]->.country;
+area["name"="{$areaEscapada}"]["admin_level"="{$adminLevel}"](area.country)->.a;
+(
+{$union}
+);
+out center tags;
+CONSULTA;
+        }
 
         return <<<CONSULTA
 [out:json][timeout:{$timeout}];

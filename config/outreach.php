@@ -143,7 +143,9 @@ return [
         // Cada minuto: si ya hay una pasada en marcha, withoutOverlapping la omite.
         'intervalo_minutos' => 1,
         'pausa_entre_areas_segundos' => 15,
-        // Tras un ciclo completo de España sin leads nuevos, espera antes de repetir.
+        // Máximo de barridos completos por país antes de marcarlo como hecho.
+        'max_ciclos_pais' => (int) env('OUTREACH_COSECHA_MAX_CICLOS', 3),
+        // Tras un ciclo completo sin áreas pendientes, espera antes de reintentar.
         'pausa_entre_ciclos_segundos' => 300,
         // TTL del lock: generoso, para que una provincia grande (con Overpass
         // lento) no lo pierda a media cosecha. La detección real de procesos

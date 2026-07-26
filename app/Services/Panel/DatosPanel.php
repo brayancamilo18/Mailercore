@@ -212,25 +212,49 @@ class DatosPanel
 
     /**
      * @return array{
+     *   paises: Collection,
+     *   pais_activo: \App\Models\PaisCosecha|null,
      *   areas: Collection,
      *   avance: float,
      *   total: int,
      *   hechas: int,
-     *   mapa_estados: array<string, string>
+     *   mapa_estados: array<string, string>,
+     *   max_ciclos: int
      * }
      */
-    public function cosecha(): array
+    public function cosecha(?string $paisCodigo = null): array
     {
-        $areas = AreaCosecha::query()->ordenadas()->get();
+        $paises = \App\Models\PaisCosecha::query()->ordenados()->withCount([
+            'areas',
+            'areas as areas_hechas_count' => fn ($q) => $q->where('estado', 'hecho'),
+            'areas as areas_proceso_count' => fn ($q) => $q->where('estado', 'en_proceso'),
+            'areas as areas_error_count' => fn ($q) => $q->where('estado', 'error'),
+            'areas as areas_pendiente_count' => fn ($q) => $q->where('estado', 'pendiente'),
+        ])->get();
+
+        $codigo = $paisCodigo && $paises->firstWhere('codigo', $paisCodigo)
+            ? $paisCodigo
+            : ($paises->firstWhere('estado', 'en_proceso')?->codigo
+                ?? $paises->first(fn ($p) => ! $p->completado())?->codigo
+                ?? $paises->first()?->codigo);
+
+        $paisActivo = $paises->firstWhere('codigo', $codigo);
+        $areas = $codigo
+            ? AreaCosecha::query()->delPais($codigo)->ordenadas()->get()
+            : collect();
+
         $total = $areas->count();
         $hechas = $areas->where('estado', 'hecho')->count();
 
         return [
+            'paises' => $paises,
+            'pais_activo' => $paisActivo,
             'areas' => $areas,
             'total' => $total,
             'hechas' => $hechas,
             'avance' => $total > 0 ? round(($hechas / $total) * 100, 1) : 0.0,
-            'mapa_estados' => \App\Support\ProvinciasIne::statusesDesdeAreas($areas),
+            'mapa_estados' => \App\Support\MapaCosecha::statusesDesdeAreas($areas),
+            'max_ciclos' => (int) config('outreach.cosecha.max_ciclos_pais', 3),
         ];
     }
 

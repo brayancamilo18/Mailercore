@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Excepciones\OverpassNoDisponible;
 use App\Models\AreaCosecha;
+use App\Models\PaisCosecha;
 use App\Services\Overpass\ServicioCosecha;
 use App\Services\Soporte\Latido;
 use Illuminate\Console\Command;
@@ -75,19 +76,21 @@ class CosechaRunCommand extends Command
                         break;
                     }
 
-                    // Ciclo completo: si en esta ronda aún creamos leads, reiniciamos
-                    // todas las áreas y seguimos. Si no, esperamos y reintentamos
-                    // (OSM/webs cambian; no nos detenemos del todo).
-                    $reiniciadas = AreaCosecha::reiniciarCicloCompleto();
-                    if ($reiniciadas === 0) {
-                        $this->info('No hay áreas configuradas.');
+                    // Países con todas las áreas terminadas: +1 ciclo (máx 3) o check ✓.
+                    $avanzados = PaisCosecha::procesarCiclosCompletos();
+                    $siguiente = AreaCosecha::siguientePendiente();
 
-                        break;
-                    }
+                    if ($siguiente === null) {
+                        $pendientesPais = PaisCosecha::query()->activos()->count();
+                        if ($pendientesPais === 0) {
+                            $this->info('Todos los países han completado sus ciclos de cosecha.');
+                            Latido::marcar('cosecha', 'paises_completados');
 
-                    if ($creadosTotales === 0 && $procesadas > 0) {
-                        $this->warn("Ciclo sin leads nuevos. Pausa {$pausaCiclo}s y se vuelve a barrer España…");
-                        Latido::marcar('cosecha', 'ciclo_sin_novedades');
+                            break;
+                        }
+
+                        $this->warn("Esperando áreas activas. Pausa {$pausaCiclo}s…");
+                        Latido::marcar('cosecha', 'ciclo_sin_areas');
                         sleep($pausaCiclo);
                         $creadosTotales = 0;
                         $procesadas = 0;
@@ -95,15 +98,19 @@ class CosechaRunCommand extends Command
                         continue;
                     }
 
-                    $this->info("Ciclo completo ({$creadosTotales} leads nuevos). Reiniciando {$reiniciadas} áreas para seguir buscando…");
+                    if ($avanzados > 0) {
+                        $this->info("Avance de ciclo en {$avanzados} país(es). {$creadosTotales} leads nuevos en la ronda.");
+                    }
+
                     $creadosTotales = 0;
                     $procesadas = 0;
 
                     continue;
                 }
 
-                $this->info("Cosechando «{$area->nombre}» (admin_level={$area->admin_level})...");
-                Latido::marcar('cosecha', $area->nombre);
+                $etiqueta = ($area->pais_codigo ?: '?').'/'.$area->nombre;
+                $this->info("Cosechando «{$etiqueta}» (admin_level={$area->admin_level})...");
+                Latido::marcar('cosecha', $etiqueta);
 
                 try {
                     $resultado = $servicio->cosechar($area, (bool) $this->option('dry-run'));
@@ -119,10 +126,13 @@ class CosechaRunCommand extends Command
                         ]]
                     );
                 } catch (OverpassNoDisponible $e) {
+                    // Fallo transitorio: no abortar la campaña global.
                     $this->error('Overpass no disponible: '.$e->getMessage());
                     Latido::marcar('cosecha', 'overpass_caido');
+                    $area->fresh()?->reiniciar();
+                    sleep(min($pausaCiclo, 120));
 
-                    return self::FAILURE;
+                    continue;
                 } catch (\Throwable $e) {
                     if ($area->fresh()?->estado === 'en_proceso') {
                         $area->forceFill([
@@ -137,6 +147,10 @@ class CosechaRunCommand extends Command
                     if ($this->esErrorRecuperable($e->getMessage())) {
                         $area->fresh()?->reiniciar();
                         $this->warn("Área «{$area->nombre}» reencolada; se continúa.");
+                    } else {
+                        // El área queda en error (cuenta como terminada) para no
+                        // bloquear el ciclo del país; se reintentará en el siguiente ciclo.
+                        $this->warn("Área «{$area->nombre}» en error; se sigue con la siguiente.");
                     }
                 }
 
@@ -163,10 +177,13 @@ class CosechaRunCommand extends Command
     private function reencolarErroresRecuperables(): void
     {
         foreach (AreaCosecha::query()->where('estado', 'error')->get() as $area) {
+            if ($area->pais?->completado()) {
+                continue;
+            }
             $msg = (string) ($area->ultimo_error ?? '');
             if ($msg === '' || $this->esErrorRecuperable($msg)) {
                 $area->reiniciar();
-                $this->warn("Área «{$area->nombre}» reencolada desde error.");
+                $this->warn("Área «{$area->pais_codigo}/{$area->nombre}» reencolada desde error.");
             }
         }
     }

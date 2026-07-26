@@ -39,8 +39,15 @@ class ServicioCosecha
             'finalizada_at' => null,
         ])->save();
 
+        if ($area->pais_codigo) {
+            \App\Models\PaisCosecha::query()
+                ->where('codigo', $area->pais_codigo)
+                ->where('estado', '!=', 'hecho')
+                ->update(['estado' => 'en_proceso']);
+        }
+
         // Latido inicial: el vigilante lo usa para saber que la cosecha vive.
-        Latido::marcar('cosecha', $area->nombre);
+        Latido::marcar('cosecha', ($area->pais_codigo ? $area->pais_codigo.'/' : '').$area->nombre);
         $ultimoLatido = time();
 
         $filtros = [];
@@ -67,7 +74,11 @@ class ServicioCosecha
 
         try {
             $stream = $this->overpass->buscarStream(
-                [['nombre' => $area->nombre, 'admin_level' => (int) $area->admin_level]],
+                [[
+                    'nombre' => $area->nombre,
+                    'admin_level' => (int) $area->admin_level,
+                    'pais_codigo' => $area->pais_codigo,
+                ]],
                 $filtros
             );
 
