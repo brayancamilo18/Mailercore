@@ -86,28 +86,40 @@ class VigilanteCommand extends Command
 
             if ($hayPendientes && ($edad === null || $edad >= $umbral)) {
                 Cache::lock('cosecha:run')->forceRelease();
-                // Limpia mutex del scheduler por si withoutOverlapping quedó colgado.
-                $this->limpiarMutexSchedulerCosecha();
-                $this->acciones[] = 'Cosecha: lock/mutex liberados (latido mudo con pendientes)';
+                $borrados = $this->limpiarMutexSchedulerCosecha();
+                $this->acciones[] = "Cosecha: lock/mutex liberados (latido mudo, {$borrados} clave(s))";
             }
         } catch (\Throwable $e) {
             Log::channel('outreach')->error('Vigilante: fallo recuperando cosecha', ['error' => $e->getMessage()]);
         }
     }
 
-    private function limpiarMutexSchedulerCosecha(): void
+    /** @return int claves de mutex eliminadas */
+    private function limpiarMutexSchedulerCosecha(): int
     {
+        $borrados = 0;
+
         try {
-            $redis = \Illuminate\Support\Facades\Redis::connection();
-            foreach ($redis->keys('*schedule*') as $clave) {
-                // Solo tocamos mutexes; no borramos otros datos de schedule.
-                if (str_contains((string) $clave, 'schedule-')) {
-                    $redis->del($clave);
+            // Cliente raw: evita el doble prefijo de Redis::keys()/del() de Laravel.
+            $client = \Illuminate\Support\Facades\Redis::connection()->client();
+            $patrones = ['*framework/schedule*', '*schedule-*'];
+
+            foreach ($patrones as $patron) {
+                $claves = method_exists($client, 'keys') ? $client->keys($patron) : [];
+                foreach ($claves as $clave) {
+                    $clave = (string) $clave;
+                    if (! str_contains($clave, 'schedule')) {
+                        continue;
+                    }
+                    $client->del($clave);
+                    $borrados++;
                 }
             }
         } catch (\Throwable) {
             // Redis no disponible: el TTL del withoutOverlapping bastará.
         }
+
+        return $borrados;
     }
 
     /**
