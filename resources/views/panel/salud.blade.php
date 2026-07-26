@@ -195,6 +195,9 @@
                             </div>
                             <div class="text-[11.5px] text-marca-mut">
                                 {{ $descripcionesProceso[$proceso] ?? '' }}
+                                @if (! empty($info['detalle']))
+                                    <span class="text-marca-sec"> · {{ $info['detalle'] }}</span>
+                                @endif
                             </div>
                         </div>
                         <span

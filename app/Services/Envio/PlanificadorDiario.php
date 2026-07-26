@@ -10,6 +10,7 @@ use App\Models\Mensaje;
 use App\Models\Suppression;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -33,17 +34,17 @@ class PlanificadorDiario
     public function planificar(Carbon $fecha, bool $dryRun = false): array
     {
         if (! config('outreach.envio.activo')) {
-            return $this->vacio(0, 'El envío está desactivado (OUTREACH_ENVIO_ACTIVO=false)');
+            return $this->vacio($fecha, 0, 'El envío está desactivado (OUTREACH_ENVIO_ACTIVO=false)', $dryRun);
         }
 
         if (! in_array($fecha->dayOfWeekIso, config('outreach.envio.dias'), true)) {
-            return $this->vacio(0, 'No es día de envío');
+            return $this->vacio($fecha, 0, 'No es día de envío', $dryRun);
         }
 
         $rampa = $this->rampa->calcular($fecha);
 
         if ($rampa['cuota'] === 0) {
-            return $this->vacio(0, $rampa['motivo']);
+            return $this->vacio($fecha, 0, $rampa['motivo'], $dryRun);
         }
 
         $cuota = (int) $rampa['cuota'];
@@ -159,6 +160,8 @@ class PlanificadorDiario
             if ($dia !== null) {
                 $dia->update(['generados' => $creadosPrimer + $creadosSeguimiento]);
             }
+
+            self::registrarPlanificado($fecha, $rampa['motivo']);
         }
 
         $resultado = [
@@ -174,6 +177,31 @@ class PlanificadorDiario
         }
 
         return $resultado;
+    }
+
+    /** ¿Ya se ejecutó la planificación de esa fecha? */
+    public static function yaPlanificado(Carbon $fecha): bool
+    {
+        if (Cache::has(self::clavePlanificado($fecha))) {
+            return true;
+        }
+
+        return Mensaje::query()
+            ->whereDate('programado_para', $fecha->toDateString())
+            ->exists();
+    }
+
+    public static function registrarPlanificado(Carbon $fecha, string $motivo = ''): void
+    {
+        Cache::put(self::clavePlanificado($fecha), [
+            'at' => now()->timestamp,
+            'motivo' => $motivo,
+        ], now()->addDays(3));
+    }
+
+    private static function clavePlanificado(Carbon $fecha): string
+    {
+        return 'envio:planificado:'.$fecha->toDateString();
     }
 
     /**
@@ -408,8 +436,12 @@ class PlanificadorDiario
     /**
      * @return array{cuota: int, primer_contacto: int, seguimientos: int, omitidos: int, motivo: string}
      */
-    private function vacio(int $cuota, string $motivo): array
+    private function vacio(Carbon $fecha, int $cuota, string $motivo, bool $dryRun = false): array
     {
+        if (! $dryRun) {
+            self::registrarPlanificado($fecha, $motivo);
+        }
+
         return [
             'cuota' => $cuota,
             'primer_contacto' => 0,

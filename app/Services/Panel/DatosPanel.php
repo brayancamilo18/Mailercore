@@ -163,7 +163,7 @@ class DatosPanel
     }
 
     /**
-     * @return array<string, array{edad: ?int, vivo: bool, ttl: int}>
+     * @return array<string, array{edad: ?int, vivo: bool, ttl: int, detalle: ?string}>
      */
     public function latidos(): array
     {
@@ -173,6 +173,7 @@ class DatosPanel
                 'edad' => $info['edad'],
                 'vivo' => $info['vivo'],
                 'ttl' => $info['umbral'],
+                'detalle' => $info['detalle'],
             ];
         }
 

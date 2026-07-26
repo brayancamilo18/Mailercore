@@ -4,8 +4,11 @@ namespace App\Console\Commands;
 
 use App\Models\AreaCosecha;
 use App\Models\Mensaje;
+use App\Services\Envio\PlanificadorDiario;
 use App\Services\Soporte\Latido;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +20,8 @@ use Illuminate\Support\Facades\Schema;
  *
  *  1. Recupera áreas de cosecha huérfanas (proceso muerto sin soltar el estado).
  *  2. Devuelve a la cola mensajes colgados en 'enviando' sin evidencia de envío.
- *  3. Registra en el log cuando un latido crítico lleva demasiado tiempo mudo.
+ *  3. Mantiene vivo el latido del planificador y regenera la cola si faltó a las 07:00.
+ *  4. Registra en el log cuando un latido crítico lleva demasiado tiempo mudo.
  *
  * Es idempotente y seguro de ejecutar en paralelo (usa withoutOverlapping en el
  * scheduler). Nunca lanza excepciones al scheduler: captura y registra.
@@ -35,6 +39,7 @@ class VigilanteCommand extends Command
     {
         $this->recuperarCosecha();
         $this->recuperarMensajesColgados();
+        $this->asegurarPlanificador();
         $this->revisarLatidosCriticos();
 
         Latido::marcar('vigilante', implode(' | ', $this->acciones) ?: 'sin incidencias');
@@ -135,6 +140,85 @@ class VigilanteCommand extends Command
         } catch (\Throwable $e) {
             Log::channel('outreach')->error('Vigilante: fallo recuperando mensajes', ['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * El planificador solo corre laborables a las 07:00. En fin de semana o
+     * antes de esa hora no hay latido natural: aquí lo mantenemos vivo y, si
+     * un día de envío pasó de las 07:05 sin cola, la regeneramos solos.
+     */
+    private function asegurarPlanificador(): void
+    {
+        try {
+            $ahora = Carbon::now('Europe/Madrid');
+            $hoy = $ahora->copy()->startOfDay();
+
+            if (! (bool) config('outreach.envio.activo')) {
+                Latido::marcar('planificador', 'Envío desactivado');
+
+                return;
+            }
+
+            /** @var list<int> $dias */
+            $dias = array_map('intval', config('outreach.envio.dias', [1, 2, 3, 4]));
+            $esDiaEnvio = in_array($ahora->dayOfWeekIso, $dias, true);
+
+            if (! $esDiaEnvio) {
+                $proximo = $this->proximoDiaEnvio($ahora, $dias)->setTime(7, 0);
+                Latido::marcar(
+                    'planificador',
+                    'En espera — próximo '.$proximo->locale('es')->isoFormat('ddd D MMM HH:mm')
+                );
+
+                return;
+            }
+
+            if ($ahora->lt($hoy->copy()->setTime(7, 0))) {
+                Latido::marcar('planificador', 'Programado hoy a las 07:00');
+
+                return;
+            }
+
+            if (! PlanificadorDiario::yaPlanificado($hoy)) {
+                // Margen de 5 min por si el schedule de las 07:00 aún está en curso.
+                if ($ahora->lt($hoy->copy()->setTime(7, 5))) {
+                    Latido::marcar('planificador', 'Planificando a las 07:00…');
+
+                    return;
+                }
+
+                Artisan::call('envio:planificar');
+                $this->acciones[] = 'Planificador: cola del día regenerada (faltaba tras las 07:00)';
+                Log::channel('outreach')->warning('Vigilante: regeneró la cola diaria', [
+                    'fecha' => $hoy->toDateString(),
+                ]);
+            }
+
+            $n = Schema::hasTable('mensajes')
+                ? Mensaje::query()->whereDate('programado_para', $hoy->toDateString())->count()
+                : 0;
+
+            Latido::marcar('planificador', $n > 0 ? "Cola de hoy lista ({$n})" : 'Cola de hoy revisada');
+        } catch (\Throwable $e) {
+            Log::channel('outreach')->error('Vigilante: fallo asegurando planificador', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /** @param  list<int>  $dias */
+    private function proximoDiaEnvio(Carbon $desde, array $dias): Carbon
+    {
+        $cursor = $desde->copy()->startOfDay()->addDay();
+
+        for ($i = 0; $i < 14; $i++) {
+            if (in_array($cursor->dayOfWeekIso, $dias, true)) {
+                return $cursor;
+            }
+            $cursor->addDay();
+        }
+
+        return $desde->copy()->addDay();
     }
 
     /** Deja constancia en el log si un latido crítico lleva demasiado mudo. */

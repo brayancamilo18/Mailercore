@@ -34,7 +34,15 @@ Schedule::command('envio:planificar')
     ->at('07:00')
     ->timezone('Europe/Madrid')
     ->withoutOverlapping()
-    ->when(fn (): bool => (bool) config('outreach.envio.activo'));
+    ->when(function (): bool {
+        if (! (bool) config('outreach.envio.activo')) {
+            return false;
+        }
+
+        $dias = array_map('intval', config('outreach.envio.dias', [1, 2, 3, 4]));
+
+        return in_array(now('Europe/Madrid')->dayOfWeekIso, $dias, true);
+    });
 
 Schedule::command('envio:despachar')
     ->everyMinute()
