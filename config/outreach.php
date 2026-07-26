@@ -147,13 +147,12 @@ return [
         'max_ciclos_pais' => (int) env('OUTREACH_COSECHA_MAX_CICLOS', 3),
         // Tras un ciclo completo sin áreas pendientes, espera antes de reintentar.
         'pausa_entre_ciclos_segundos' => 300,
-        // TTL del lock: generoso, para que una provincia grande (con Overpass
-        // lento) no lo pierda a media cosecha. La detección real de procesos
-        // muertos la hace el vigilante por latido, no por este TTL.
-        'lock_segundos' => 7200,
-        // Un área «en_proceso» cuyo latido de cosecha lleve más de esto sin
-        // actualizarse se considera huérfana (proceso muerto) y se recupera.
-        'area_atascada_segundos' => 600,
+        // TTL del lock de negocio. Más corto = recuperación más rápida si el
+        // contenedor muere a medias. El servicio Docker «cosecha» relanza solo.
+        'lock_segundos' => (int) env('OUTREACH_COSECHA_LOCK', 900),
+        // Un área «en_proceso» cuyo latido lleve más de esto sin actualizarse
+        // se considera huérfana; el vigilante libera lock y la reencola.
+        'area_atascada_segundos' => (int) env('OUTREACH_COSECHA_ATASCADA', 180),
         // Nº máximo de recuperaciones antes de marcar el área como 'error'.
         'max_reintentos' => 5,
     ],

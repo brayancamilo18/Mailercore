@@ -46,8 +46,8 @@ class CosechaRunCommand extends Command
         $pausaCiclo = max(60, (int) config('outreach.cosecha.pausa_entre_ciclos_segundos', 300));
         $soloUna = filled($this->option('area'));
         $inicio = time();
-        // No monopolizar el worker más de ~lock-5min: el scheduler relanza.
-        $presupuesto = max(300, $lockSegundos - 300);
+        // El servicio Docker «cosecha» relanza al terminar el presupuesto.
+        $presupuesto = max(240, $lockSegundos - 60);
 
         try {
             foreach (AreaCosecha::query()->where('estado', 'en_proceso')->get() as $enProceso) {

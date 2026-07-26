@@ -72,6 +72,14 @@ services:
     command: sh -c "sleep 20 && php artisan schedule:work"
     mem_limit: 256m
 
+  # Cosecha dedicada 24/7: NO depende del scheduler ni de mutexes de schedule.
+  # Si el proceso muere, Docker lo relanza (restart: unless-stopped).
+  cosecha:
+    <<: *app-base
+    command: ["sh", "/app/docker/cosecha-loop.sh"]
+    mem_limit: 384m
+    stop_grace_period: 90s
+
   queue-default:
     <<: *app-base
     command: sh -c "sleep 20 && php artisan queue:work --queue=default --tries=3 --backoff=30 --timeout=300 --max-jobs=200 --max-time=3600 --rest=1 --memory=320"

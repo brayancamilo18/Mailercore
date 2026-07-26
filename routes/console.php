@@ -8,15 +8,9 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Cosecha continua: procesa todas las áreas pendientes en bucle.
-// withoutOverlapping con TTL largo evita solapes; si el proceso muere, el
-// mutex caduca y el vigilante libera huérfanas.
-Schedule::command('cosecha:ejecutar')
-    ->cron('*/'.max(1, min(59, (int) config('outreach.cosecha.intervalo_minutos', 1))).' * * * *')
-    // Mutex corto: el solape real lo evita Cache::lock('cosecha:run') dentro del comando.
-    // Si el proceso muere, en ≤3 min el scheduler vuelve a lanzar.
-    ->withoutOverlapping(3)
-    ->runInBackground();
+// La cosecha ya NO va por el scheduler: corre en el servicio Docker «cosecha»
+// (docker/cosecha-loop.sh) con restart unless-stopped. Así no depende de
+// mutexes de schedule que se quedan colgados si el proceso muere.
 
 // Watchdog de resiliencia: detecta y repara procesos parados cada minuto.
 Schedule::command('sistema:vigilante')

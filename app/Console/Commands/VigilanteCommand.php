@@ -67,27 +67,50 @@ class VigilanteCommand extends Command
         return self::SUCCESS;
     }
 
-    /** Recupera áreas de cosecha atascadas por un proceso muerto. */
+    /**
+     * Autocura de cosecha: huérfanas, locks muertos y mutexes de schedule.
+     * El motor real es el contenedor Docker «cosecha»; esto es red de seguridad.
+     */
     private function recuperarCosecha(): void
     {
         try {
+            if (! Schema::hasTable('areas_cosecha')) {
+                return;
+            }
+
             $recuperadas = AreaCosecha::recuperarHuerfanasSiMuertas();
 
             if ($recuperadas > 0) {
                 $this->acciones[] = "Cosecha: {$recuperadas} área(s) huérfana(s) recuperada(s)";
             }
 
-            // Si hay trabajo pendiente y el latido lleva mucho mudo, fuerza
-            // la liberación del lock por si una pasada murió sin soltarlo.
-            $hayPendientes = Schema::hasTable('areas_cosecha')
-                && DB::table('areas_cosecha')->where('estado', 'pendiente')->exists();
-            $edad = Latido::edad('cosecha');
-            $umbral = (int) config('outreach.cosecha.area_atascada_segundos', 600);
+            $hayTrabajo = DB::table('areas_cosecha')
+                ->whereIn('estado', ['pendiente', 'en_proceso'])
+                ->exists();
 
-            if ($hayPendientes && ($edad === null || $edad >= $umbral)) {
+            if (! $hayTrabajo) {
+                return;
+            }
+
+            $edad = Latido::edad('cosecha');
+            $umbral = (int) config('outreach.cosecha.area_atascada_segundos', 180);
+            $latidoMudo = $edad === null || $edad >= $umbral;
+
+            // Siempre limpia mutexes de schedule huérfanos (ya no lanzamos cosecha
+            // desde schedule, pero pueden quedar claves viejas bloqueando otras cosas).
+            $borrados = $this->limpiarMutexSchedulerCosecha();
+
+            if ($latidoMudo) {
                 Cache::lock('cosecha:run')->forceRelease();
-                $borrados = $this->limpiarMutexSchedulerCosecha();
-                $this->acciones[] = "Cosecha: lock/mutex liberados (latido mudo, {$borrados} clave(s))";
+                // Áreas en_proceso sin latido fresco → pendiente.
+                $huerfanas = AreaCosecha::query()->where('estado', 'en_proceso')->get();
+                foreach ($huerfanas as $area) {
+                    $area->recuperarHuerfana();
+                }
+                $this->acciones[] = 'Cosecha: lock liberado + '.count($huerfanas).' área(s) recuperada(s) (latido mudo)'
+                    .($borrados > 0 ? ", {$borrados} mutex" : '');
+            } elseif ($borrados > 0) {
+                $this->acciones[] = "Cosecha: {$borrados} mutex de schedule residual(es) borrado(s)";
             }
         } catch (\Throwable $e) {
             Log::channel('outreach')->error('Vigilante: fallo recuperando cosecha', ['error' => $e->getMessage()]);
