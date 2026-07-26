@@ -13,7 +13,9 @@ Artisan::command('inspire', function () {
 // mutex caduca y el vigilante libera huérfanas.
 Schedule::command('cosecha:ejecutar')
     ->cron('*/'.max(1, min(59, (int) config('outreach.cosecha.intervalo_minutos', 1))).' * * * *')
-    ->withoutOverlapping((int) config('outreach.cosecha.lock_segundos', 7200) / 60)
+    // TTL del mutex de schedule: si el proceso muere, no bloquear horas.
+    // El lock real de negocio es Cache::lock('cosecha:run').
+    ->withoutOverlapping(30)
     ->runInBackground();
 
 // Watchdog de resiliencia: detecta y repara procesos parados cada minuto.
