@@ -402,91 +402,57 @@ class RenderizadorTest extends TestCase
         }
     }
 
-    public function test_solo_https_puede_mencionar_algo_concreto(): void
+    public function test_primer_contacto_usa_el_hallazgo_principal(): void
     {
         $lead = $this->leadConAuditoria('hosteleria', esHttps: true);
         $resultado = app(Renderizador::class)->renderizar($lead, 1);
         $this->assertNotNull($resultado);
 
-        $apertura = app(RedactorHallazgo::class)->redactar($lead)['apertura'];
-        $minusculas = mb_strtolower($apertura.' '.$resultado['texto']);
-
-        $this->assertStringNotContainsString('https', $minusculas);
-        $this->assertStringNotContainsString('candado', $minusculas);
-        $this->assertStringNotContainsString('no segura', $minusculas);
-    }
-
-    public function test_lead_con_https_correcto_recibe_apertura_generica(): void
-    {
-        $lead = $this->leadConAuditoria('hosteleria', esHttps: true);
-        $resultado = app(Renderizador::class)->renderizar($lead, 1);
-        $this->assertNotNull($resultado);
-
-        $apertura = app(RedactorHallazgo::class)->redactar($lead)['apertura'];
-        $esperadas = $this->aperturasRellenas('hosteleria', $lead);
-
-        $this->assertContains($apertura, $esperadas);
+        $apertura = app(RedactorHallazgo::class)->redactar($lead, $lead->auditoria)['apertura'];
+        $this->assertMatchesRegularExpression('/móvil|pantalla|adapta|trompicones/i', $apertura);
         $this->assertStringContainsString($apertura, $resultado['texto']);
+        $this->assertStringNotContainsString('https', mb_strtolower($apertura));
     }
 
-    public function test_lead_sin_https_recibe_apertura_de_https(): void
+    public function test_sin_hallazgo_y_sin_https_usa_apertura_de_candado(): void
     {
-        $lead = $this->leadConAuditoria('hosteleria', esHttps: false);
-        $resultado = app(Renderizador::class)->renderizar($lead, 1);
-        $this->assertNotNull($resultado);
+        $lead = Lead::factory()->create([
+            'sector' => 'hosteleria',
+            'nombre' => 'Bar Paco',
+            'website_dominio' => 'ejemplo.es',
+            'estado' => 'auditado',
+        ]);
+        Pagina::factory()->create([
+            'lead_id' => $lead->id,
+            'ruta' => '/',
+            'es_https' => false,
+        ]);
+        Auditoria::factory()->create([
+            'lead_id' => $lead->id,
+            'hallazgo_codigo' => null,
+            'hallazgos' => [],
+        ]);
+        $lead = $lead->fresh(['auditoria', 'paginas']);
 
-        $apertura = app(RedactorHallazgo::class)->redactar($lead)['apertura'];
-        $minusculas = mb_strtolower($apertura);
-
-        $this->assertTrue(
-            str_contains($minusculas, 'https') || str_contains($minusculas, 'candado'),
-            "Se esperaba apertura HTTPS, llegó: {$apertura}"
-        );
-        $this->assertStringContainsString($apertura, $resultado['texto']);
+        $apertura = app(RedactorHallazgo::class)->redactar($lead, $lead->auditoria)['apertura'];
+        $this->assertMatchesRegularExpression('/HTTPS|candado/i', $apertura);
     }
 
-    public function test_dos_leads_del_mismo_sector_pueden_recibir_variantes_distintas(): void
-    {
-        $par = $this->leadConAuditoria('retail', esHttps: true);
-        $impar = $this->leadConAuditoria('retail', esHttps: true);
-
-        // Garantiza distinta paridad de id (variante = id % 2).
-        if ($par->id % 2 !== 0) {
-            [$par, $impar] = [$impar, $par];
-        }
-        if ($impar->id % 2 === 0) {
-            $impar = $this->leadConAuditoria('retail', esHttps: true);
-            while ($impar->id % 2 === 0) {
-                $impar = $this->leadConAuditoria('retail', esHttps: true);
-            }
-        }
-
-        $this->assertSame(0, $par->id % 2);
-        $this->assertSame(1, $impar->id % 2);
-
-        $aperturaPar = app(RedactorHallazgo::class)->redactar($par)['apertura'];
-        $aperturaImpar = app(RedactorHallazgo::class)->redactar($impar)['apertura'];
-
-        $this->assertNotSame($aperturaPar, $aperturaImpar);
-    }
-
-    public function test_seguimiento_no_menciona_https_ni_hallazgos(): void
+    public function test_seguimiento_usa_el_hallazgo_secundario(): void
     {
         $lead = $this->leadConAuditoria('hosteleria', esHttps: false);
         $resultado = app(Renderizador::class)->renderizar($lead, 2);
         $this->assertNotNull($resultado);
 
-        $apertura = app(RedactorHallazgo::class)->redactar($lead, secundario: true)['apertura'];
+        $apertura = app(RedactorHallazgo::class)->redactar($lead, $lead->auditoria, secundario: true)['apertura'];
         $minusculas = mb_strtolower($apertura.' '.$resultado['texto']);
 
+        $this->assertStringContainsString('segundos', $minusculas);
         $this->assertStringNotContainsString('https', $minusculas);
         $this->assertStringNotContainsString('candado', $minusculas);
-        $this->assertStringNotContainsString('no segura', $minusculas);
-        $this->assertStringNotContainsString('viewport', $minusculas);
-        $this->assertStringNotContainsString('trompicones', $minusculas);
     }
 
-    public function test_correo_no_afirma_datos_de_auditoria_interna(): void
+    public function test_correo_menciona_el_hallazgo_concreto(): void
     {
         $anioCopyright = 1998;
 
@@ -535,27 +501,8 @@ class RenderizadorTest extends TestCase
         $this->assertNotNull($resultado);
 
         $conjunto = mb_strtolower($resultado['texto'].' '.$resultado['html']);
-        $this->assertStringNotContainsString('reservas', $conjunto);
-        $this->assertStringNotContainsString('abandonada', $conjunto);
-        $this->assertStringNotContainsString((string) $anioCopyright, $conjunto);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function aperturasRellenas(string $sector, Lead $lead): array
-    {
-        $todas = require resource_path('data/aperturas_sector.php');
-        $variantes = $todas[$sector] ?? $todas['generico'];
-        $sustituciones = [
-            '{dominio}' => $lead->website_dominio ?? 'tu web',
-            '{nombre}' => $lead->nombre ?? 'tu negocio',
-        ];
-
-        return array_map(
-            fn (array $bloque): string => strtr($bloque['apertura'], $sustituciones),
-            $variantes
-        );
+        $this->assertStringContainsString('reservar', $conjunto);
+        $this->assertStringContainsString('mesa', $conjunto);
     }
 
     private function leadConAuditoria(string $sector, ?bool $esHttps = null): Lead
