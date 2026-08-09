@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -46,7 +47,9 @@ class CertificadoCaduca implements ContratoComprobacion
             $dias < 0
                 ? 'El certificado ya ha caducado'
                 : "El certificado caduca en {$dias} días",
+            Certeza::HECHO,
             ['dias' => $dias],
+            evidencia: 'cert_expira_at='.$home->cert_expira_at,
         );
     }
 }

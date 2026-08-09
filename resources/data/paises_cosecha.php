@@ -4,20 +4,62 @@
  * Catálogo de países de cosecha (España + Centroamérica + Sudamérica hispana).
  *
  * - admin_level: nivel OSM de la subdivisión (España=6 provincias; LATAM suele=4).
+ * - osm_nombre: name= en OSM si difiere del nombre de panel.
+ * - iso3166_2: código de subdivisión (prioridad en Overpass; más fiable que el nombre).
  * - mapa_src: GeoJSON Highcharts Map Collection (FeatureCollection).
- * - areas: nombre tal cual en OSM (name=…).
  *
  * max_ciclos por defecto: config('outreach.cosecha.max_ciclos_pais', 3)
  */
 return [
     'ES' => [
         'nombre' => 'España',
-        // Tras LATAM (la campaña arranca por Colombia).
         'prioridad' => 100,
         'mapa_motor' => 'spain',
         'mapa_src' => null,
         'admin_level' => 6,
-        'admin_level_especial' => ['Ceuta' => 4, 'Melilla' => 4],
+        'admin_level_especial' => [
+            'Ceuta' => 4,
+            'Melilla' => 4,
+            'Madrid' => 4,
+            'Murcia' => 4,
+            'Asturias' => 4,
+            'Cantabria' => 4,
+            'La Rioja' => 4,
+            'Navarra' => 4,
+            'Baleares' => 4,
+        ],
+        'osm_nombre' => [
+            'Madrid' => 'Comunidad de Madrid',
+            'Murcia' => 'Región de Murcia',
+            'Asturias' => 'Asturias',
+            'Baleares' => 'Illes Balears',
+            'Valencia' => 'València/Valencia',
+            'Alicante' => 'Alacant/Alicante',
+            'Castellón' => 'Castelló/Castellón',
+            'Vizcaya' => 'Bizkaia',
+            'Guipúzcoa' => 'Gipuzkoa',
+            'Álava' => 'Araba/Álava',
+        ],
+        'iso3166_2' => [
+            'A Coruña' => 'ES-C', 'Álava' => 'ES-VI', 'Albacete' => 'ES-AB',
+            'Alicante' => 'ES-A', 'Almería' => 'ES-AL', 'Asturias' => 'ES-O',
+            'Ávila' => 'ES-AV', 'Badajoz' => 'ES-BA', 'Baleares' => 'ES-PM',
+            'Barcelona' => 'ES-B', 'Burgos' => 'ES-BU', 'Cáceres' => 'ES-CC',
+            'Cádiz' => 'ES-CA', 'Cantabria' => 'ES-S', 'Castellón' => 'ES-CS',
+            'Ceuta' => 'ES-CE', 'Ciudad Real' => 'ES-CR', 'Córdoba' => 'ES-CO',
+            'Cuenca' => 'ES-CU', 'Girona' => 'ES-GI', 'Granada' => 'ES-GR',
+            'Guadalajara' => 'ES-GU', 'Guipúzcoa' => 'ES-SS', 'Huelva' => 'ES-H',
+            'Huesca' => 'ES-HU', 'Jaén' => 'ES-J', 'La Rioja' => 'ES-LO',
+            'Las Palmas' => 'ES-GC', 'León' => 'ES-LE', 'Lleida' => 'ES-L',
+            'Lugo' => 'ES-LU', 'Madrid' => 'ES-M', 'Málaga' => 'ES-MA',
+            'Melilla' => 'ES-ML', 'Murcia' => 'ES-MU', 'Navarra' => 'ES-NA',
+            'Ourense' => 'ES-OR', 'Palencia' => 'ES-P', 'Pontevedra' => 'ES-PO',
+            'Salamanca' => 'ES-SA', 'Santa Cruz de Tenerife' => 'ES-TF',
+            'Segovia' => 'ES-SG', 'Sevilla' => 'ES-SE', 'Soria' => 'ES-SO',
+            'Tarragona' => 'ES-T', 'Teruel' => 'ES-TE', 'Toledo' => 'ES-TO',
+            'Valencia' => 'ES-V', 'Valladolid' => 'ES-VA', 'Vizcaya' => 'ES-BI',
+            'Zamora' => 'ES-ZA', 'Zaragoza' => 'ES-Z',
+        ],
         'areas' => [
             'Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Málaga', 'Alicante', 'Vizcaya',
             'Zaragoza', 'Murcia', 'Baleares', 'Las Palmas', 'Santa Cruz de Tenerife',
@@ -30,13 +72,22 @@ return [
         ],
     ],
 
-    // —— Centroamérica ——
     'GT' => [
         'nombre' => 'Guatemala',
         'prioridad' => 10,
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/gt/gt-all.geo.json',
         'admin_level' => 4,
+        'iso3166_2' => [
+            'Guatemala' => 'GT-GU', 'Alta Verapaz' => 'GT-AV', 'Baja Verapaz' => 'GT-BV',
+            'Chimaltenango' => 'GT-CM', 'Chiquimula' => 'GT-CQ', 'El Progreso' => 'GT-PR',
+            'Escuintla' => 'GT-ES', 'Huehuetenango' => 'GT-HU', 'Izabal' => 'GT-IZ',
+            'Jalapa' => 'GT-JA', 'Jutiapa' => 'GT-JU', 'Petén' => 'GT-PE',
+            'Quetzaltenango' => 'GT-QZ', 'Quiché' => 'GT-QC', 'Retalhuleu' => 'GT-RE',
+            'Sacatepéquez' => 'GT-SA', 'San Marcos' => 'GT-SM', 'Santa Rosa' => 'GT-SR',
+            'Sololá' => 'GT-SO', 'Suchitepéquez' => 'GT-SU', 'Totonicapán' => 'GT-TO',
+            'Zacapa' => 'GT-ZA',
+        ],
         'areas' => [
             'Guatemala', 'Alta Verapaz', 'Baja Verapaz', 'Chimaltenango', 'Chiquimula',
             'El Progreso', 'Escuintla', 'Huehuetenango', 'Izabal', 'Jalapa', 'Jutiapa',
@@ -50,6 +101,13 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/sv/sv-all.geo.json',
         'admin_level' => 4,
+        'iso3166_2' => [
+            'Ahuachapán' => 'SV-AH', 'Cabañas' => 'SV-CA', 'Chalatenango' => 'SV-CH',
+            'Cuscatlán' => 'SV-CU', 'La Libertad' => 'SV-LI', 'La Paz' => 'SV-PA',
+            'La Unión' => 'SV-UN', 'Morazán' => 'SV-MO', 'San Miguel' => 'SV-SM',
+            'San Salvador' => 'SV-SS', 'San Vicente' => 'SV-SV', 'Santa Ana' => 'SV-SA',
+            'Sonsonate' => 'SV-SO', 'Usulután' => 'SV-US',
+        ],
         'areas' => [
             'Ahuachapán', 'Cabañas', 'Chalatenango', 'Cuscatlán', 'La Libertad',
             'La Paz', 'La Unión', 'Morazán', 'San Miguel', 'San Salvador',
@@ -62,6 +120,15 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/hn/hn-all.geo.json',
         'admin_level' => 4,
+        'iso3166_2' => [
+            'Atlántida' => 'HN-AT', 'Choluteca' => 'HN-CH', 'Colón' => 'HN-CL',
+            'Comayagua' => 'HN-CM', 'Copán' => 'HN-CP', 'Cortés' => 'HN-CR',
+            'El Paraíso' => 'HN-EP', 'Francisco Morazán' => 'HN-FM',
+            'Gracias a Dios' => 'HN-GD', 'Intibucá' => 'HN-IN',
+            'Islas de la Bahía' => 'HN-IB', 'La Paz' => 'HN-LP', 'Lempira' => 'HN-LE',
+            'Ocotepeque' => 'HN-OC', 'Olancho' => 'HN-OL', 'Santa Bárbara' => 'HN-SB',
+            'Valle' => 'HN-VA', 'Yoro' => 'HN-YO',
+        ],
         'areas' => [
             'Atlántida', 'Choluteca', 'Colón', 'Comayagua', 'Copán', 'Cortés',
             'El Paraíso', 'Francisco Morazán', 'Gracias a Dios', 'Intibucá',
@@ -75,6 +142,18 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/ni/ni-all.geo.json',
         'admin_level' => 4,
+        'osm_nombre' => [
+            'Costa Caribe Norte' => 'Región Autónoma de la Costa Caribe Norte',
+            'Costa Caribe Sur' => 'Región Autónoma de la Costa Caribe Sur',
+        ],
+        'iso3166_2' => [
+            'Boaco' => 'NI-BO', 'Carazo' => 'NI-CA', 'Chinandega' => 'NI-CI',
+            'Chontales' => 'NI-CO', 'Estelí' => 'NI-ES', 'Granada' => 'NI-GR',
+            'Jinotega' => 'NI-JI', 'León' => 'NI-LE', 'Madriz' => 'NI-MD',
+            'Managua' => 'NI-MN', 'Masaya' => 'NI-MS', 'Matagalpa' => 'NI-MT',
+            'Nueva Segovia' => 'NI-NS', 'Río San Juan' => 'NI-SJ', 'Rivas' => 'NI-RI',
+            'Costa Caribe Norte' => 'NI-AN', 'Costa Caribe Sur' => 'NI-AS',
+        ],
         'areas' => [
             'Boaco', 'Carazo', 'Chinandega', 'Chontales', 'Estelí', 'Granada',
             'Jinotega', 'León', 'Madriz', 'Managua', 'Masaya', 'Matagalpa',
@@ -88,6 +167,11 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/cr/cr-all.geo.json',
         'admin_level' => 4,
+        'iso3166_2' => [
+            'San José' => 'CR-SJ', 'Alajuela' => 'CR-A', 'Cartago' => 'CR-C',
+            'Heredia' => 'CR-H', 'Guanacaste' => 'CR-G', 'Puntarenas' => 'CR-P',
+            'Limón' => 'CR-L',
+        ],
         'areas' => [
             'San José', 'Alajuela', 'Cartago', 'Heredia', 'Guanacaste', 'Puntarenas', 'Limón',
         ],
@@ -98,6 +182,18 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/pa/pa-all.geo.json',
         'admin_level' => 4,
+        'osm_nombre' => [
+            'Emberá' => 'Emberá-Wounaan',
+            'Ngäbe-Buglé' => 'Ngäbe-Buglé',
+            'Guna Yala' => 'Guna Yala',
+        ],
+        'iso3166_2' => [
+            'Bocas del Toro' => 'PA-1', 'Coclé' => 'PA-2', 'Colón' => 'PA-3',
+            'Chiriquí' => 'PA-4', 'Darién' => 'PA-5', 'Herrera' => 'PA-6',
+            'Los Santos' => 'PA-7', 'Panamá' => 'PA-8', 'Veraguas' => 'PA-9',
+            'Guna Yala' => 'PA-KY', 'Emberá' => 'PA-EM', 'Ngäbe-Buglé' => 'PA-NB',
+            'Panamá Oeste' => 'PA-10',
+        ],
         'areas' => [
             'Panamá', 'Panamá Oeste', 'Colón', 'Chiriquí', 'Coclé', 'Veraguas',
             'Herrera', 'Los Santos', 'Darién', 'Bocas del Toro',
@@ -105,13 +201,30 @@ return [
         ],
     ],
 
-    // —— Sudamérica ——
     'CO' => [
         'nombre' => 'Colombia',
         'prioridad' => 1,
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/co/co-all.geo.json',
         'admin_level' => 4,
+        'osm_nombre' => [
+            'Bogotá D.C.' => 'Bogotá Distrito Capital',
+            'San Andrés y Providencia' => 'Archipiélago de San Andrés, Providencia y Santa Catalina',
+        ],
+        'iso3166_2' => [
+            'Amazonas' => 'CO-AMA', 'Antioquia' => 'CO-ANT', 'Arauca' => 'CO-ARA',
+            'Atlántico' => 'CO-ATL', 'Bolívar' => 'CO-BOL', 'Boyacá' => 'CO-BOY',
+            'Caldas' => 'CO-CAL', 'Caquetá' => 'CO-CAQ', 'Casanare' => 'CO-CAS',
+            'Cauca' => 'CO-CAU', 'Cesar' => 'CO-CES', 'Chocó' => 'CO-CHO',
+            'Córdoba' => 'CO-COR', 'Cundinamarca' => 'CO-CUN', 'Guainía' => 'CO-GUA',
+            'Guaviare' => 'CO-GUV', 'Huila' => 'CO-HUI', 'La Guajira' => 'CO-LAG',
+            'Magdalena' => 'CO-MAG', 'Meta' => 'CO-MET', 'Nariño' => 'CO-NAR',
+            'Norte de Santander' => 'CO-NSA', 'Putumayo' => 'CO-PUT',
+            'Quindío' => 'CO-QUI', 'Risaralda' => 'CO-RIS',
+            'San Andrés y Providencia' => 'CO-SAP', 'Santander' => 'CO-SAN',
+            'Sucre' => 'CO-SUC', 'Tolima' => 'CO-TOL', 'Valle del Cauca' => 'CO-VAC',
+            'Vaupés' => 'CO-VAU', 'Vichada' => 'CO-VID', 'Bogotá D.C.' => 'CO-DC',
+        ],
         'areas' => [
             'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bolívar', 'Boyacá',
             'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar', 'Chocó', 'Córdoba',
@@ -127,6 +240,20 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/ve/ve-all.geo.json',
         'admin_level' => 4,
+        'osm_nombre' => [
+            'Vargas' => 'La Guaira',
+            'Distrito Capital' => 'Distrito Capital',
+        ],
+        'iso3166_2' => [
+            'Distrito Capital' => 'VE-A', 'Amazonas' => 'VE-Z', 'Anzoátegui' => 'VE-B',
+            'Apure' => 'VE-C', 'Aragua' => 'VE-D', 'Barinas' => 'VE-E',
+            'Bolívar' => 'VE-F', 'Carabobo' => 'VE-G', 'Cojedes' => 'VE-H',
+            'Delta Amacuro' => 'VE-Y', 'Falcón' => 'VE-I', 'Guárico' => 'VE-J',
+            'Lara' => 'VE-K', 'Mérida' => 'VE-L', 'Miranda' => 'VE-M',
+            'Monagas' => 'VE-N', 'Nueva Esparta' => 'VE-O', 'Portuguesa' => 'VE-P',
+            'Sucre' => 'VE-R', 'Táchira' => 'VE-S', 'Trujillo' => 'VE-T',
+            'Yaracuy' => 'VE-U', 'Zulia' => 'VE-V', 'Vargas' => 'VE-X',
+        ],
         'areas' => [
             'Amazonas', 'Anzoátegui', 'Apure', 'Aragua', 'Barinas', 'Bolívar',
             'Carabobo', 'Cojedes', 'Delta Amacuro', 'Falcón', 'Guárico', 'Lara',
@@ -140,6 +267,16 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/ec/ec-all.geo.json',
         'admin_level' => 4,
+        'iso3166_2' => [
+            'Azuay' => 'EC-A', 'Bolívar' => 'EC-B', 'Cañar' => 'EC-F', 'Carchi' => 'EC-C',
+            'Chimborazo' => 'EC-H', 'Cotopaxi' => 'EC-X', 'El Oro' => 'EC-O',
+            'Esmeraldas' => 'EC-E', 'Galápagos' => 'EC-W', 'Guayas' => 'EC-G',
+            'Imbabura' => 'EC-I', 'Loja' => 'EC-L', 'Los Ríos' => 'EC-R',
+            'Manabí' => 'EC-M', 'Morona Santiago' => 'EC-S', 'Napo' => 'EC-N',
+            'Orellana' => 'EC-D', 'Pastaza' => 'EC-Y', 'Pichincha' => 'EC-P',
+            'Santa Elena' => 'EC-SE', 'Santo Domingo de los Tsáchilas' => 'EC-SD',
+            'Sucumbíos' => 'EC-U', 'Tungurahua' => 'EC-T', 'Zamora Chinchipe' => 'EC-Z',
+        ],
         'areas' => [
             'Azuay', 'Bolívar', 'Cañar', 'Carchi', 'Chimborazo', 'Cotopaxi',
             'El Oro', 'Esmeraldas', 'Galápagos', 'Guayas', 'Imbabura', 'Loja',
@@ -154,6 +291,21 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/pe/pe-all.geo.json',
         'admin_level' => 4,
+        'osm_nombre' => [
+            'Áncash' => 'Ancash',
+            'Callao' => 'Callao',
+        ],
+        'iso3166_2' => [
+            'Amazonas' => 'PE-AMA', 'Áncash' => 'PE-ANC', 'Apurímac' => 'PE-APU',
+            'Arequipa' => 'PE-ARE', 'Ayacucho' => 'PE-AYA', 'Cajamarca' => 'PE-CAJ',
+            'Callao' => 'PE-CAL', 'Cusco' => 'PE-CUS', 'Huancavelica' => 'PE-HUV',
+            'Huánuco' => 'PE-HUC', 'Ica' => 'PE-ICA', 'Junín' => 'PE-JUN',
+            'La Libertad' => 'PE-LAL', 'Lambayeque' => 'PE-LAM', 'Lima' => 'PE-LIM',
+            'Loreto' => 'PE-LOR', 'Madre de Dios' => 'PE-MDD', 'Moquegua' => 'PE-MOQ',
+            'Pasco' => 'PE-PAS', 'Piura' => 'PE-PIU', 'Puno' => 'PE-PUN',
+            'San Martín' => 'PE-SAM', 'Tacna' => 'PE-TAC', 'Tumbes' => 'PE-TUM',
+            'Ucayali' => 'PE-UCA',
+        ],
         'areas' => [
             'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho', 'Cajamarca',
             'Callao', 'Cusco', 'Huancavelica', 'Huánuco', 'Ica', 'Junín',
@@ -167,6 +319,14 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/bo/bo-all.geo.json',
         'admin_level' => 4,
+        'osm_nombre' => [
+            'El Beni' => 'Beni',
+        ],
+        'iso3166_2' => [
+            'Chuquisaca' => 'BO-H', 'Cochabamba' => 'BO-C', 'El Beni' => 'BO-B',
+            'La Paz' => 'BO-L', 'Oruro' => 'BO-O', 'Pando' => 'BO-N',
+            'Potosí' => 'BO-P', 'Santa Cruz' => 'BO-S', 'Tarija' => 'BO-T',
+        ],
         'areas' => [
             'Chuquisaca', 'Cochabamba', 'El Beni', 'La Paz', 'Oruro',
             'Pando', 'Potosí', 'Santa Cruz', 'Tarija',
@@ -178,6 +338,33 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/cl/cl-all.geo.json',
         'admin_level' => 4,
+        'osm_nombre' => [
+            'Arica y Parinacota' => 'Región de Arica y Parinacota',
+            'Tarapacá' => 'Región de Tarapacá',
+            'Antofagasta' => 'Región de Antofagasta',
+            'Atacama' => 'Región de Atacama',
+            'Coquimbo' => 'Región de Coquimbo',
+            'Valparaíso' => 'Región de Valparaíso',
+            'Metropolitana de Santiago' => 'Región Metropolitana de Santiago',
+            "Libertador General Bernardo O'Higgins" => "Región del Libertador General Bernardo O'Higgins",
+            'Maule' => 'Región del Maule',
+            'Ñuble' => 'Región de Ñuble',
+            'Biobío' => 'Región del Biobío',
+            'La Araucanía' => 'Región de La Araucanía',
+            'Los Ríos' => 'Región de Los Ríos',
+            'Los Lagos' => 'Región de Los Lagos',
+            'Aysén' => 'Región Aysén del General Carlos Ibáñez del Campo',
+            'Magallanes' => 'Región de Magallanes y de la Antártica Chilena',
+        ],
+        'iso3166_2' => [
+            'Arica y Parinacota' => 'CL-AP', 'Tarapacá' => 'CL-TA',
+            'Antofagasta' => 'CL-AN', 'Atacama' => 'CL-AT', 'Coquimbo' => 'CL-CO',
+            'Valparaíso' => 'CL-VS', 'Metropolitana de Santiago' => 'CL-RM',
+            "Libertador General Bernardo O'Higgins" => 'CL-LI', 'Maule' => 'CL-ML',
+            'Ñuble' => 'CL-NB', 'Biobío' => 'CL-BI', 'La Araucanía' => 'CL-AR',
+            'Los Ríos' => 'CL-LR', 'Los Lagos' => 'CL-LL', 'Aysén' => 'CL-AI',
+            'Magallanes' => 'CL-MA',
+        ],
         'areas' => [
             'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo',
             'Valparaíso', 'Metropolitana de Santiago', "Libertador General Bernardo O'Higgins",
@@ -191,6 +378,17 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/ar/ar-all.geo.json',
         'admin_level' => 4,
+        'iso3166_2' => [
+            'Buenos Aires' => 'AR-B', 'Ciudad Autónoma de Buenos Aires' => 'AR-C',
+            'Catamarca' => 'AR-K', 'Chaco' => 'AR-H', 'Chubut' => 'AR-U',
+            'Córdoba' => 'AR-X', 'Corrientes' => 'AR-W', 'Entre Ríos' => 'AR-E',
+            'Formosa' => 'AR-P', 'Jujuy' => 'AR-Y', 'La Pampa' => 'AR-L',
+            'La Rioja' => 'AR-F', 'Mendoza' => 'AR-M', 'Misiones' => 'AR-N',
+            'Neuquén' => 'AR-Q', 'Río Negro' => 'AR-R', 'Salta' => 'AR-A',
+            'San Juan' => 'AR-J', 'San Luis' => 'AR-D', 'Santa Cruz' => 'AR-Z',
+            'Santa Fe' => 'AR-S', 'Santiago del Estero' => 'AR-G',
+            'Tierra del Fuego' => 'AR-V', 'Tucumán' => 'AR-T',
+        ],
         'areas' => [
             'Buenos Aires', 'Ciudad Autónoma de Buenos Aires', 'Catamarca', 'Chaco',
             'Chubut', 'Córdoba', 'Corrientes', 'Entre Ríos', 'Formosa', 'Jujuy',
@@ -205,6 +403,17 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/py/py-all.geo.json',
         'admin_level' => 4,
+        'admin_level_especial' => [
+            'Asunción' => 8,
+        ],
+        'iso3166_2' => [
+            'Concepción' => 'PY-1', 'San Pedro' => 'PY-2', 'Cordillera' => 'PY-3',
+            'Guairá' => 'PY-4', 'Caaguazú' => 'PY-5', 'Caazapá' => 'PY-6',
+            'Itapúa' => 'PY-7', 'Misiones' => 'PY-8', 'Paraguarí' => 'PY-9',
+            'Alto Paraná' => 'PY-10', 'Central' => 'PY-11', 'Ñeembucú' => 'PY-12',
+            'Amambay' => 'PY-13', 'Canindeyú' => 'PY-14', 'Presidente Hayes' => 'PY-15',
+            'Alto Paraguay' => 'PY-16', 'Boquerón' => 'PY-19', 'Asunción' => 'PY-ASU',
+        ],
         'areas' => [
             'Alto Paraguay', 'Alto Paraná', 'Amambay', 'Asunción', 'Boquerón',
             'Caaguazú', 'Caazapá', 'Canindeyú', 'Central', 'Concepción',
@@ -218,6 +427,15 @@ return [
         'mapa_motor' => 'geojson',
         'mapa_src' => 'https://code.highcharts.com/mapdata/countries/uy/uy-all.geo.json',
         'admin_level' => 4,
+        'iso3166_2' => [
+            'Artigas' => 'UY-AR', 'Canelones' => 'UY-CA', 'Cerro Largo' => 'UY-CL',
+            'Colonia' => 'UY-CO', 'Durazno' => 'UY-DU', 'Flores' => 'UY-FS',
+            'Florida' => 'UY-FD', 'Lavalleja' => 'UY-LA', 'Maldonado' => 'UY-MA',
+            'Montevideo' => 'UY-MO', 'Paysandú' => 'UY-PA', 'Río Negro' => 'UY-RN',
+            'Rivera' => 'UY-RV', 'Rocha' => 'UY-RO', 'Salto' => 'UY-SA',
+            'San José' => 'UY-SJ', 'Soriano' => 'UY-SO', 'Tacuarembó' => 'UY-TA',
+            'Treinta y Tres' => 'UY-TT',
+        ],
         'areas' => [
             'Artigas', 'Canelones', 'Cerro Largo', 'Colonia', 'Durazno', 'Flores',
             'Florida', 'Lavalleja', 'Maldonado', 'Montevideo', 'Paysandú',

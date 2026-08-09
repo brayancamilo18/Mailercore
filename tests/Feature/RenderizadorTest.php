@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Certeza;
 use App\Excepciones\PlantillaInvalida;
 use App\Mail\CorreoOutreach;
 use App\Models\Auditoria;
@@ -409,7 +410,7 @@ class RenderizadorTest extends TestCase
         $this->assertNotNull($resultado);
 
         $apertura = app(RedactorHallazgo::class)->redactar($lead, $lead->auditoria)['apertura'];
-        $this->assertMatchesRegularExpression('/móvil|pantalla|adapta|trompicones/i', $apertura);
+        $this->assertMatchesRegularExpression('/segundos|lenta/i', $apertura);
         $this->assertStringContainsString($apertura, $resultado['texto']);
         $this->assertStringNotContainsString('https', mb_strtolower($apertura));
     }
@@ -447,7 +448,8 @@ class RenderizadorTest extends TestCase
         $apertura = app(RedactorHallazgo::class)->redactar($lead, $lead->auditoria, secundario: true)['apertura'];
         $minusculas = mb_strtolower($apertura.' '.$resultado['texto']);
 
-        $this->assertStringContainsString('segundos', $minusculas);
+        $this->assertStringContainsString('kb', $minusculas);
+        $this->assertStringNotContainsString('segundos', mb_strtolower($apertura));
         $this->assertStringNotContainsString('https', $minusculas);
         $this->assertStringNotContainsString('candado', $minusculas);
     }
@@ -474,6 +476,7 @@ class RenderizadorTest extends TestCase
         Auditoria::factory()->create([
             'lead_id' => $lead->id,
             'hallazgo_codigo' => 'sin_reservas',
+            'hallazgo_certeza' => Certeza::OBSERVADO->value,
             'hallazgo_secundario_codigo' => 'web_abandonada',
             'hallazgo_principal' => 'No tiene reservas online',
             'hallazgos' => [
@@ -482,6 +485,7 @@ class RenderizadorTest extends TestCase
                     'peso' => 30,
                     'titulo' => 'Sin reservas',
                     'detalle' => 'No se detectó sistema de reservas',
+                    'certeza' => Certeza::OBSERVADO->value,
                     'datos' => [],
                 ],
                 [
@@ -489,6 +493,7 @@ class RenderizadorTest extends TestCase
                     'peso' => 25,
                     'titulo' => 'Web abandonada',
                     'detalle' => "Copyright de {$anioCopyright}",
+                    'certeza' => Certeza::INDICIO->value,
                     'datos' => ['anio' => $anioCopyright],
                 ],
             ],
@@ -523,24 +528,29 @@ class RenderizadorTest extends TestCase
             ]);
         }
 
+        // Dos hallazgos que se pueden afirmar: sin certeza registrada el
+        // redactor calla y cae a la apertura genérica del sector.
         Auditoria::factory()->create([
             'lead_id' => $lead->id,
-            'hallazgo_codigo' => 'sin_viewport',
-            'hallazgo_secundario_codigo' => 'respuesta_lenta',
+            'hallazgo_codigo' => 'respuesta_lenta',
+            'hallazgo_certeza' => Certeza::HECHO->value,
+            'hallazgo_secundario_codigo' => 'html_pesado',
             'hallazgos' => [
                 [
-                    'codigo' => 'sin_viewport',
-                    'peso' => 25,
-                    'titulo' => 'Sin viewport',
-                    'detalle' => 'Sin viewport',
-                    'datos' => [],
-                ],
-                [
                     'codigo' => 'respuesta_lenta',
-                    'peso' => 15,
+                    'peso' => 25,
                     'titulo' => 'Respuesta lenta',
                     'detalle' => '3200 ms',
+                    'certeza' => Certeza::HECHO->value,
                     'datos' => ['ms' => 3200, 'segundos' => 3.2],
+                ],
+                [
+                    'codigo' => 'html_pesado',
+                    'peso' => 15,
+                    'titulo' => 'HTML pesado',
+                    'detalle' => '1200 KB de HTML',
+                    'certeza' => Certeza::HECHO->value,
+                    'datos' => ['kb' => 1200],
                 ],
             ],
         ]);

@@ -32,8 +32,8 @@ class Lead extends Model
         'place_id', 'nombre', 'website', 'website_dominio', 'osm_tag', 'osm_valor',
         'osm_tags_raw', 'sector', 'subsector', 'clasificacion_metodo',
         'clasificacion_confianza', 'telefono', 'direccion', 'ciudad', 'provincia',
-        'codigo_postal', 'latitud', 'longitud', 'fuente', 'estado', 'capturado_at',
-        'contactado_at', 'rastreado_at', 'notas',
+        'pais_codigo', 'codigo_postal', 'latitud', 'longitud', 'fuente', 'estado',
+        'capturado_at', 'contactado_at', 'rastreado_at', 'rastreo_fallido_at', 'notas',
     ];
 
     /**
@@ -46,6 +46,7 @@ class Lead extends Model
             'capturado_at' => 'datetime',
             'contactado_at' => 'datetime',
             'rastreado_at' => 'datetime',
+            'rastreo_fallido_at' => 'datetime',
             'latitud' => 'decimal:7',
             'longitud' => 'decimal:7',
         ];

@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -41,7 +42,9 @@ class WebAbandonada implements ContratoComprobacion
                 $this->peso(),
                 'Web abandonada',
                 "Copyright del año {$home->anio_copyright}",
+                Certeza::INDICIO,
                 ['anio' => $home->anio_copyright],
+                evidencia: 'anio_copyright='.$home->anio_copyright.' en '.$home->url,
             );
         }
 

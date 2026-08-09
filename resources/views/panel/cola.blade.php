@@ -29,14 +29,17 @@
         <x-marca.tarjeta :flush="true">
             @if ($mensajes->isEmpty())
                 <div class="px-6 py-14 text-center">
-                    <p class="text-sm text-marca-sec m-0">No hay correos programados para hoy ni mañana.</p>
+                    <p class="text-sm text-marca-sec m-0">
+                        No hay correos programados para hoy ni para el próximo día de envío
+                        ({{ $proximoEnvio->locale('es')->isoFormat('dddd D MMM') }}).
+                    </p>
                 </div>
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[960px] border-collapse">
                         <thead>
                             <tr class="bg-[#F7FAF8]">
-                                <th class="text-left text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-3.5 py-2.5 border-b border-marca-bd">Hora</th>
+                                <th class="text-left text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-3.5 py-2.5 border-b border-marca-bd">Fecha</th>
                                 <th class="text-left text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2.5 border-b border-marca-bd">Sector</th>
                                 <th class="text-left text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2.5 border-b border-marca-bd">Destino</th>
                                 <th class="text-left text-[10px] font-extrabold tracking-[0.06em] uppercase text-marca-mut px-2.5 py-2.5 border-b border-marca-bd">Asunto</th>
@@ -58,7 +61,7 @@
                                             @if ($enviado)
                                                 <span class="text-ok text-[11px]" title="Enviado" aria-hidden="true">✓</span>
                                             @endif
-                                            {{ $m->programado_para?->timezone('Europe/Madrid')->format('H:i') ?? '—' }}
+                                            {{ $m->programado_para?->timezone('Europe/Madrid')->format('d/m H:i') ?? '—' }}
                                         </span>
                                     </td>
                                     <td class="px-2.5 py-[7px] border-b border-[#EFF2EF] text-[12.5px] text-marca-sec whitespace-nowrap">

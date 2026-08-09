@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -41,7 +42,9 @@ class SinMetaDescription implements ContratoComprobacion
                 $home->meta_description === null
                     ? 'No hay meta description'
                     : "Meta description de {$longitud} caracteres",
+                Certeza::INDICIO,
                 ['longitud' => $longitud],
+                evidencia: 'meta_desc_longitud='.var_export($longitud, true).' en '.$home->url,
             );
         }
 

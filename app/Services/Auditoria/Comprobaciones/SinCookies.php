@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -41,6 +42,8 @@ class SinCookies implements ContratoComprobacion
             $this->peso(),
             'Sin política de cookies',
             'No se encontró aviso de cookies',
+            Certeza::INDICIO,
+            evidencia: 'Sin enlace de cookies en las '.$paginas->count().' páginas capturadas',
         );
     }
 }

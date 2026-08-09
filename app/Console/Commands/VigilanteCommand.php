@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -124,7 +125,7 @@ class VigilanteCommand extends Command
 
         try {
             // Cliente raw: evita el doble prefijo de Redis::keys()/del() de Laravel.
-            $client = \Illuminate\Support\Facades\Redis::connection()->client();
+            $client = Redis::connection()->client();
             $patrones = ['*framework/schedule*', '*schedule-*'];
 
             foreach ($patrones as $patron) {

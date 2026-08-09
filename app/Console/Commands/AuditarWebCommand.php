@@ -13,6 +13,7 @@ class AuditarWebCommand extends Command
                             {--sector=}
                             {--limite=}
                             {--reauditar}
+                            {--email-valido : Solo leads con email principal verificado}
                             {--lead=}';
 
     protected $description = 'Audita sitios web de leads con páginas capturadas';
@@ -117,6 +118,12 @@ class AuditarWebCommand extends Command
 
         if ($this->option('sector')) {
             $query->where('sector', $this->option('sector'));
+        }
+
+        if ($this->option('email-valido')) {
+            $query->whereHas('emails', fn (Builder $q) => $q
+                ->where('es_principal', true)
+                ->where('estado_verificacion', 'valido'));
         }
 
         if (! $this->option('reauditar')) {

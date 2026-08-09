@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\PropositoRastreo;
 use App\Excepciones\LimiteRitmoExcedido;
 use App\Excepciones\UrlNoPermitida;
 use App\Models\Lead;
@@ -20,8 +21,10 @@ class RastrearSitioJob implements ShouldQueue
 
     public int $timeout = 120;
 
-    public function __construct(public int $leadId)
-    {
+    public function __construct(
+        public int $leadId,
+        public PropositoRastreo $proposito = PropositoRastreo::COMPLETO,
+    ) {
         $this->onQueue('scraping');
     }
 
@@ -44,7 +47,7 @@ class RastrearSitioJob implements ShouldQueue
         Latido::marcar('scrape', $lead->website_dominio);
 
         try {
-            $resultado = $rastreador->rastrear($lead);
+            $resultado = $rastreador->rastrear($lead, $this->proposito);
         } catch (LimiteRitmoExcedido $e) {
             // No consume intento: simplemente vuelve a la cola más tarde.
             $this->release(120);
@@ -62,9 +65,12 @@ class RastrearSitioJob implements ShouldQueue
         Log::channel('outreach')->info('Sitio rastreado', [
             'lead_id' => $lead->id,
             'dominio' => $lead->website_dominio,
+            'proposito' => $resultado->proposito->value,
             'paginas' => $resultado->paginasGuardadas,
             'emails' => $resultado->emailsGuardados,
             'descartados' => $resultado->emailsDescartados,
+            'rutas_omitidas' => $resultado->rutasOmitidas,
+            'fallo_tipo' => $resultado->falloTipo,
         ]);
     }
 
@@ -75,6 +81,7 @@ class RastrearSitioJob implements ShouldQueue
         if ($lead !== null) {
             $lead->update([
                 'rastreado_at' => now(),
+                'rastreo_fallido_at' => now(),
                 'notas' => trim(($lead->notas ?? '')."\nRastreo fallido: ".($e?->getMessage() ?? 'desconocido')),
             ]);
         }

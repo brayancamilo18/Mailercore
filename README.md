@@ -14,10 +14,10 @@ OpenStreetMap (Overpass)
  leads:backfill-sectores  ──►  sector (7 familias)
         │
         ▼
-   leads:rastrear  ──►  páginas + emails de rol
+   leads:rastrear [--proposito]  ──►  páginas + emails de rol
         │
         ▼
-   auditar:web (+ pagespeed)  ──►  puntuación + hallazgos
+   auditar:web (+ pagespeed)  ──►  puntuación + hallazgos (con certeza)
         │
         ▼
  emails:verificar  ──►  MX / SMTP sonda
@@ -57,15 +57,16 @@ Panel: http://localhost:8000 (login con `PANEL_EMAIL` / `PANEL_PASSWORD`).
 
 1. `php artisan cosecha:ejecutar` — Overpass por provincia (52 áreas).
 2. `php artisan leads:backfill-sectores` — clasifica sector.
-3. `php artisan leads:rastrear` — descarga páginas y emails de rol.
-4. `php artisan auditar:web` — 25 comprobaciones locales.
-5. `php artisan auditar:pagespeed` — PSI (si hay API key).
-6. `php artisan emails:verificar --solo-cola` — valida destinatarios candidatos.
-7. `php artisan envio:diagnostico` — **debe salir en verde** antes del primer envío real.
-8. `php artisan envio:prueba ...` — prueba manual (Mailpit / mail-tester).
-9. `php artisan envio:planificar --dry-run` — revisa la cola del día.
-10. `OUTREACH_ENVIO_ACTIVO=true` y `php artisan envio:planificar` / despacho automático.
-11. `php artisan outreach:bandeja` — procesa rebotes, bajas y respuestas (cada 10 min en schedule).
+3. `php artisan leads:rastrear --proposito=completo` — descarga páginas y emails de rol (`email`|`auditoria`|`completo`).
+4. `php artisan rastreo:diagnostico {id|dominio}` — traza en seco (sin persistir) para verificar a mano.
+5. `php artisan auditar:web` — 25 comprobaciones locales (con certeza: hecho / observado / indicio).
+6. `php artisan auditar:pagespeed` — PSI (si hay API key).
+7. `php artisan emails:verificar --solo-cola` — valida destinatarios candidatos.
+8. `php artisan envio:diagnostico` — **debe salir en verde** antes del primer envío real.
+9. `php artisan envio:prueba ...` — prueba manual (Mailpit / mail-tester).
+10. `php artisan envio:planificar --dry-run` — revisa la cola del día.
+11. `OUTREACH_ENVIO_ACTIVO=true` y `php artisan envio:planificar` / despacho automático.
+12. `php artisan outreach:bandeja` — procesa rebotes, bajas y respuestas (cada 10 min en schedule).
 
 ## 4. Las 7 familias de sector
 
@@ -91,36 +92,44 @@ Clasificación (`ClasificadorSector`), en orden:
 ## 5. La auditoría: 25 hallazgos
 
 Motor: `MotorAuditoria` + comprobaciones en `app/Services/Auditoria/Comprobaciones/`.
+Cada hallazgo lleva una **certeza** (`hecho` | `observado` | `indicio`). Los
+`indicio` puntúan y ordenan, pero **no** se escriben en el correo (cae a la
+apertura genérica del sector), y una auditoría sin certeza registrada tampoco:
+si no consta, no se afirma. Las ausencias de reservas/carrito/formulario/WhatsApp
+solo se afirman si se leyó con un `200` una ruta del sector del lead o una ruta
+descubierta en la home, y la home no enlazaba a esa señal
+(`Pagina::señal($paginas, $campo, $lead->sector) === false`).
 
-| Código | Origen de los datos |
-|--------|---------------------|
-| `sin_https` | Página home: HTTPS / certificado |
-| `psi_rendimiento` | PageSpeed Insights — performance |
-| `psi_lcp` | PSI — LCP |
-| `sin_viewport` | Meta viewport en HTML capturado |
-| `sin_reservas` | Señales de reservas (hostelería/salud/belleza) |
-| `sin_carrito` | Carrito / checkout (retail) |
-| `cert_caduca` | Caducidad del certificado TLS |
-| `psi_peso` | PSI — peso de página |
-| `web_abandonada` | Año de copyright antiguo |
-| `psi_seo` | PSI — SEO |
-| `sin_aviso_legal` | Enlaces a aviso legal / privacidad |
-| `respuesta_lenta` | Tiempo de respuesta HTTP de la home |
-| `psi_accesibilidad` | PSI — accesibilidad |
-| `sin_jsonld` | JSON-LD ausente |
-| `title_malo` | Title ausente o longitud incorrecta |
-| `contacto_roto` | Página de contacto con status malo |
-| `sin_meta_description` | Meta description |
-| `sin_formulario` | Formulario de contacto |
-| `generador_obsoleto` | Generador (Wix/Joomla/WP sin viewport) |
-| `html_pesado` | Tamaño HTML |
-| `h1_incorrecto` | 0 o más de un H1 |
-| `imagenes_sin_alt` | Ratio de imágenes sin alt |
-| `sin_cookies` | Aviso de cookies |
-| `sin_redes` | Enlaces a redes sociales |
-| `sin_whatsapp` | Enlace WhatsApp (oficios/belleza) |
+| Código | Certeza | Origen de los datos |
+|--------|---------|---------------------|
+| `sin_https` | hecho | Página home: HTTPS / certificado |
+| `psi_rendimiento` | hecho | PageSpeed Insights — performance |
+| `psi_lcp` | hecho | PSI — LCP |
+| `sin_viewport` | indicio | Meta viewport en HTML capturado |
+| `sin_reservas` | observado | Señales de reservas (hostelería/salud/belleza) |
+| `sin_carrito` | observado | Carrito / checkout (retail) |
+| `cert_caduca` | hecho | Caducidad del certificado TLS |
+| `psi_peso` | hecho | PSI — peso de página |
+| `web_abandonada` | indicio | Año de copyright antiguo |
+| `psi_seo` | hecho | PSI — SEO |
+| `sin_aviso_legal` | indicio | Enlaces a aviso legal / privacidad |
+| `respuesta_lenta` | hecho | Tiempo de respuesta HTTP de la home |
+| `psi_accesibilidad` | hecho | PSI — accesibilidad |
+| `sin_jsonld` | indicio | JSON-LD ausente |
+| `title_malo` | indicio | Title ausente o longitud incorrecta |
+| `contacto_roto` | hecho | Página de contacto con status malo |
+| `sin_meta_description` | indicio | Meta description |
+| `sin_formulario` | observado | Formulario de contacto |
+| `generador_obsoleto` | indicio | Generador (Wix/Joomla/WP sin viewport) |
+| `html_pesado` | hecho | Tamaño HTML |
+| `h1_incorrecto` | indicio | 0 o más de un H1 |
+| `imagenes_sin_alt` | indicio | Ratio de imágenes sin alt |
+| `sin_cookies` | indicio | Aviso de cookies |
+| `sin_redes` | indicio | Enlaces a redes sociales |
+| `sin_whatsapp` | observado | Enlace WhatsApp (oficios/belleza) |
 
 El hallazgo principal es el de mayor peso; el secundario el siguiente (paso 2 / seguimiento).
+Detalle del rastreador: [`docs/RASTREADOR.md`](docs/RASTREADOR.md).
 
 ## 6. Las plantillas
 
@@ -150,7 +159,8 @@ El envío usa el texto/HTML **ya guardado** en `mensajes` (no re-renderiza en el
 | 4–7 | 15 |
 | 8–12 | 22 |
 | 13–20 | 30 |
-| 21+ | 40 (tope `OUTREACH_MAX_DIARIO`) |
+| 21–28 | 40 |
+| 29+ | 50 (tope `OUTREACH_MAX_DIARIO`) |
 
 Ventana de salud: últimos 200 enviados. Umbrales de tasa de rebote duro:
 
@@ -268,7 +278,8 @@ Monitor externo recomendado: `php artisan sistema:salud` (exit `0` OK / `1` avis
 | `cosecha:pausar` / `cosecha:reanudar` | Pausa/reanudación de cosecha |
 | `leads:backfill-sectores` | Clasifica sectores |
 | `leads:sectores-status` | Conteos por sector |
-| `leads:rastrear` | Encola scrape de webs |
+| `leads:rastrear` | Encola scrape de webs (`--proposito=email\|auditoria\|completo`, def. `completo`) |
+| `rastreo:diagnostico` | Traza en seco de un lead (`{id\|dominio}`, `--proposito=…`) sin persistir |
 | `auditar:web` | Auditoría local |
 | `auditar:pagespeed` | Encola PSI |
 | `emails:verificar` | Verificación MX/SMTP de emails |

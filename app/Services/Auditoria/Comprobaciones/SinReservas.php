@@ -3,13 +3,17 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
+use App\Models\Pagina;
 use App\Services\Auditoria\ContratoComprobacion;
 use Illuminate\Support\Collection;
 
 class SinReservas implements ContratoComprobacion
 {
+    use DescribeCobertura;
+
     public function codigo(): string
     {
         return 'sin_reservas';
@@ -32,7 +36,9 @@ class SinReservas implements ContratoComprobacion
             return null;
         }
 
-        if ($paginas->contains(fn ($p) => $p->tiene_reservas === true)) {
+        // null = nadie abrió una página donde vivirían las reservas, así que no
+        // sabemos si las hay. Callar es mejor que inventarse la ausencia.
+        if (Pagina::señal($paginas, 'tiene_reservas', $lead->sector) !== false) {
             return null;
         }
 
@@ -41,6 +47,8 @@ class SinReservas implements ContratoComprobacion
             $this->peso(),
             'Sin sistema de reservas',
             'No se detectó sistema de reservas online',
+            Certeza::OBSERVADO,
+            evidencia: $this->cobertura($paginas).': ningún sistema de reservas',
         );
     }
 }

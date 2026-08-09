@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -43,7 +44,9 @@ class PsiLcpLento implements ContratoComprobacion
             $this->peso(),
             'LCP demasiado lento',
             "LCP de {$ms} ms",
+            Certeza::HECHO,
             ['ms' => $ms, 'segundos' => round($ms / 1000, 1)],
+            evidencia: 'PageSpeed Insights: LCP '.$ms.' ms',
         );
     }
 }

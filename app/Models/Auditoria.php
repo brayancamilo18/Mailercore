@@ -16,8 +16,9 @@ class Auditoria extends Model
     protected $table = 'auditorias';
 
     protected $fillable = [
-        'lead_id', 'puntuacion', 'hallazgo_codigo', 'hallazgo_principal',
-        'hallazgo_secundario_codigo', 'hallazgo_secundario', 'hallazgos',
+        'lead_id', 'puntuacion', 'hallazgo_codigo', 'hallazgo_certeza',
+        'hallazgo_principal', 'hallazgo_secundario_codigo', 'hallazgo_secundario',
+        'hallazgos',
         'psi_rendimiento', 'psi_seo', 'psi_accesibilidad', 'psi_buenas_practicas',
         'psi_lcp_ms', 'psi_cls', 'psi_tbt_ms', 'psi_peso_kb',
         'psi_solicitado_at', 'psi_error', 'auditada_at',

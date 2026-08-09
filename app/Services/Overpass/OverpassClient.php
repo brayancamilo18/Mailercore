@@ -16,7 +16,7 @@ class OverpassClient
     /**
      * Emite candidatos filtro a filtro.
      *
-     * @param  list<array{nombre: string, admin_level: int, pais_codigo?: string|null}>  $areas
+     * @param  list<array{nombre: string, admin_level: int, pais_codigo?: string|null, iso3166_2?: string|null}>  $areas
      * @param  list<array{0: string, 1: string}>  $filtros
      * @return \Generator<int, array<string, mixed>>
      */
@@ -33,6 +33,7 @@ class OverpassClient
             $nombre = $area['nombre'];
             $adminLevel = (int) $area['admin_level'];
             $paisCodigo = isset($area['pais_codigo']) ? (string) $area['pais_codigo'] : null;
+            $iso31662 = isset($area['iso3166_2']) ? (string) $area['iso3166_2'] : null;
 
             // Agrupamos los filtros en lotes y hacemos una consulta combinada por
             // lote (una unión de nwr en Overpass). Así pasamos de ~90 peticiones
@@ -47,7 +48,7 @@ class OverpassClient
 
                 try {
                     $elementos = $this->fetchElementos(
-                        $this->construirConsultaCombinada($nombre, $adminLevel, $lote, $paisCodigo)
+                        $this->construirConsultaCombinada($nombre, $adminLevel, $lote, $paisCodigo, $iso31662)
                     );
                 } catch (\Throwable $e) {
                     $fallos++;
@@ -234,11 +235,17 @@ class OverpassClient
     /**
      * Construye una consulta con la unión de varios filtros sobre la misma área.
      * El área solo se resuelve una vez, lo que reduce mucho el coste en Overpass.
+     * Preferimos ISO3166-2 (fiable); si no hay, name + admin_level (+ país).
      *
      * @param  list<array{0: string, 1: string}>  $filtros
      */
-    private function construirConsultaCombinada(string $area, int $adminLevel, array $filtros, ?string $paisCodigo = null): string
-    {
+    private function construirConsultaCombinada(
+        string $area,
+        int $adminLevel,
+        array $filtros,
+        ?string $paisCodigo = null,
+        ?string $iso31662 = null,
+    ): string {
         $areaEscapada = addslashes($area);
         $timeout = $this->config['timeout'];
 
@@ -249,6 +256,21 @@ class OverpassClient
             $lineas[] = "  nwr(area.a)[\"{$tagEsc}\"=\"{$valorEsc}\"];";
         }
         $union = implode("\n", $lineas);
+
+        $iso = $iso31662 !== null && $iso31662 !== ''
+            ? addslashes(strtoupper($iso31662))
+            : null;
+
+        if ($iso !== null) {
+            return <<<CONSULTA
+[out:json][timeout:{$timeout}];
+area["ISO3166-2"="{$iso}"]->.a;
+(
+{$union}
+);
+out center tags;
+CONSULTA;
+        }
 
         // Acotar por ISO3166-1 evita colisiones de nombre (p. ej. La Rioja ES/AR).
         $paisEsc = $paisCodigo !== null && $paisCodigo !== ''

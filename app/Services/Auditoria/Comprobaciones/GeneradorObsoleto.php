@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -45,7 +46,9 @@ class GeneradorObsoleto implements ContratoComprobacion
             $this->peso(),
             'Generador obsoleto',
             "Sitio generado con {$generador}",
+            Certeza::INDICIO,
             ['generador' => $generador],
+            evidencia: 'generador='.$generador.' en '.$home->url,
         );
     }
 }

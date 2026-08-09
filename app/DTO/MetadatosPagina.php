@@ -41,6 +41,9 @@ readonly class MetadatosPagina
         public ?array $redesSociales,
         public ?array $telefonos,
         public ?array $emailsEncontrados,
+        // Señales de una sola página: true = detectada aquí, null = no
+        // detectada aquí. Nunca false; la ausencia se decide a nivel de lead
+        // con Pagina::señal().
         public ?bool $tieneFormulario,
         public ?bool $tieneWhatsapp,
         public ?bool $tieneReservas,
@@ -52,6 +55,11 @@ readonly class MetadatosPagina
         public ?string $htmlHash,
         public ?string $error,
         public \DateTimeInterface $capturadaAt,
+        public ?string $proposito = null,
+        public ?string $origenRuta = null,
+        public ?bool $contenidoTruncado = null,
+        public ?int $intentos = null,
+        public ?string $falloTipo = null,
     ) {}
 
     /**
@@ -59,7 +67,7 @@ readonly class MetadatosPagina
      */
     public function aArrayBd(): array
     {
-        return [
+        $datos = [
             'url' => $this->url,
             'ruta' => $this->ruta,
             'http_status' => $this->httpStatus,
@@ -102,5 +110,23 @@ readonly class MetadatosPagina
             'error' => $this->error,
             'capturada_at' => $this->capturadaAt,
         ];
+
+        // Solo se escriben si el llamador los rellena; así no pisan el default
+        // de intentos ni dejan nulls en columnas que aún no rellena el extractor.
+        $opcionales = [
+            'proposito' => $this->proposito,
+            'origen_ruta' => $this->origenRuta,
+            'contenido_truncado' => $this->contenidoTruncado,
+            'intentos' => $this->intentos,
+            'fallo_tipo' => $this->falloTipo,
+        ];
+
+        foreach ($opcionales as $clave => $valor) {
+            if ($valor !== null) {
+                $datos[$clave] = $valor;
+            }
+        }
+
+        return $datos;
     }
 }

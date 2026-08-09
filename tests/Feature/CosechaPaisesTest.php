@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AreaCosecha;
 use App\Models\PaisCosecha;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -96,7 +97,7 @@ class CosechaPaisesTest extends TestCase
     public function test_panel_cosecha_lista_paises(): void
     {
         $this->sembrarDosPaises();
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
 
         $this->actingAs($user)
             ->get(route('cosecha.indice', ['pais' => 'CO']))

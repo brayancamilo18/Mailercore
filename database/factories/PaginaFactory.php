@@ -44,6 +44,7 @@ class PaginaFactory extends Factory
             'tiene_jsonld' => false,
             'es_https' => true,
             'cert_valido' => true,
+            'cert_cadena_valida' => true,
             'capturada_at' => now(),
         ];
     }

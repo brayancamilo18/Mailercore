@@ -3,13 +3,17 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
+use App\Models\Pagina;
 use App\Services\Auditoria\ContratoComprobacion;
 use Illuminate\Support\Collection;
 
 class SinFormularioContacto implements ContratoComprobacion
 {
+    use DescribeCobertura;
+
     public function codigo(): string
     {
         return 'sin_formulario';
@@ -32,7 +36,7 @@ class SinFormularioContacto implements ContratoComprobacion
             return null;
         }
 
-        if ($paginas->contains(fn ($p) => $p->tiene_formulario === true)) {
+        if (Pagina::señal($paginas, 'tiene_formulario', $lead->sector) !== false) {
             return null;
         }
 
@@ -41,6 +45,8 @@ class SinFormularioContacto implements ContratoComprobacion
             $this->peso(),
             'Sin formulario de contacto',
             'No hay formulario de contacto en el sitio',
+            Certeza::OBSERVADO,
+            evidencia: $this->cobertura($paginas).': ningún formulario de contacto',
         );
     }
 }

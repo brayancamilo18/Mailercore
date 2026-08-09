@@ -9,6 +9,9 @@ class ComprobadorRobots
 {
     private const TTL_SEGUNDOS = 86400;
 
+    /** Tope de cortesía: un Crawl-delay mayor se recorta a esto. */
+    private const CRAWL_DELAY_MAXIMO = 30.0;
+
     /**
      * @param  array<string, mixed>  $config
      */
@@ -37,17 +40,45 @@ class ComprobadorRobots
      */
     public function disallowsDeHost(string $host, string $urlBase): array
     {
+        return $this->reglasDeHost($host, $urlBase)['disallows'];
+    }
+
+    /**
+     * Segundos de espera entre peticiones que pide el sitio, o null si no lo
+     * dice. Se ignora si robots está desactivado por configuración.
+     */
+    public function crawlDelayDe(string $urlBase): ?float
+    {
+        if (! ($this->config['respetar_robots'] ?? true)) {
+            return null;
+        }
+
+        $host = parse_url($urlBase, PHP_URL_HOST);
+
+        if (! is_string($host) || $host === '') {
+            return null;
+        }
+
+        return $this->reglasDeHost(strtolower($host), $urlBase)['crawl_delay'];
+    }
+
+    /**
+     * @return array{disallows: list<string>, crawl_delay: ?float}
+     */
+    private function reglasDeHost(string $host, string $urlBase): array
+    {
+        /** @var array{disallows: list<string>, crawl_delay: ?float} */
         return Cache::remember(
             'robots:'.$host,
             self::TTL_SEGUNDOS,
-            fn (): array => $this->descargarDisallows($urlBase)
+            fn (): array => $this->descargarReglas($urlBase)
         );
     }
 
     /**
-     * @return list<string>
+     * @return array{disallows: list<string>, crawl_delay: ?float}
      */
-    private function descargarDisallows(string $urlBase): array
+    private function descargarReglas(string $urlBase): array
     {
         $userAgent = (string) ($this->config['user_agent'] ?? config('outreach.scraper.user_agent'));
         $url = rtrim($urlBase, '/').'/robots.txt';
@@ -58,21 +89,22 @@ class ComprobadorRobots
                 ->get($url);
 
             if (! $respuesta->successful()) {
-                return [];
+                return ['disallows' => [], 'crawl_delay' => null];
             }
 
             return $this->parsear((string) $respuesta->body(), $userAgent);
         } catch (\Throwable) {
-            return [];
+            return ['disallows' => [], 'crawl_delay' => null];
         }
     }
 
     /**
-     * @return list<string>
+     * @return array{disallows: list<string>, crawl_delay: ?float}
      */
     private function parsear(string $cuerpo, string $userAgent): array
     {
         $disallows = [];
+        $crawlDelay = null;
         $aplica = false;
 
         foreach (preg_split('/\r\n|\r|\n/', $cuerpo) as $linea) {
@@ -99,10 +131,25 @@ class ComprobadorRobots
                 if ($ruta !== '') {
                     $disallows[] = $ruta;
                 }
+
+                continue;
+            }
+
+            if (preg_match('/^crawl-delay:\s*([0-9]+(?:[.,][0-9]+)?)\s*$/i', $linea, $m) === 1) {
+                if (! $aplica) {
+                    continue;
+                }
+
+                $valor = (float) str_replace(',', '.', $m[1]);
+
+                if ($valor > 0) {
+                    // Con varios bloques aplicables mandamos el más lento.
+                    $crawlDelay = min(max($crawlDelay ?? 0.0, $valor), self::CRAWL_DELAY_MAXIMO);
+                }
             }
         }
 
-        return $disallows;
+        return ['disallows' => $disallows, 'crawl_delay' => $crawlDelay];
     }
 
     /**

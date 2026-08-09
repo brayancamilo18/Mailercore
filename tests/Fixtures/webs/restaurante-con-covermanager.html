@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Casa Marés · Cocina de mercado en Valencia</title>
+    <meta name="description" content="Restaurante de cocina de mercado en el centro de Valencia. Terraza, carta de temporada y reservas online.">
+    <link rel="canonical" href="https://casamares.es/">
+    <link rel="icon" href="/favicon.ico">
+    <meta property="og:title" content="Casa Marés Valencia">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Restaurant","name":"Casa Marés","address":{"@type":"PostalAddress","addressLocality":"Valencia"}}
+    </script>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">Inicio</a>
+            <a href="/carta">Carta</a>
+            <a href="/nosotros">Quiénes somos</a>
+            <a href="/contacto">Contacto</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Casa Marés</h1>
+        <p>Cocina de mercado con producto de temporada. Abiertos de martes a domingo.</p>
+        <h2>Nuestra carta</h2>
+        <p>Entrantes, arroces y pescado fresco del día.</p>
+
+        <!-- Widget típico de CoverManager embebido en el body -->
+        <section id="reservas" class="cm-widget">
+            <h2>Reserva tu mesa</h2>
+            <p>Gestionamos las mesas con CoverManager. Elige día, hora y comensales.</p>
+            <script src="https://www.covermanager.com/js/widget.js" data-restaurant="casamares"></script>
+            <div id="covermanager-widget" data-covermanager="casamares"></div>
+            <a href="https://www.covermanager.com/reserve/casamares" class="btn-reserva">Reservar mesa</a>
+        </section>
+
+        <form action="/contacto" method="post">
+            <label for="email">Tu correo</label>
+            <input type="email" name="email" id="email" placeholder="tu@correo.es">
+            <textarea name="mensaje" placeholder="Cuéntanos"></textarea>
+            <button type="submit">Enviar</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>Calle Colón 12, Valencia · <a href="tel:+34963111222">963 111 222</a></p>
+        <a href="https://instagram.com/casamares">Instagram</a>
+        <a href="/aviso-legal">Aviso legal</a>
+        <a href="/politica-de-privacidad">Política de privacidad</a>
+        <a href="/cookies">Política de cookies</a>
+        <p>© 2024 Casa Marés SL</p>
+    </footer>
+</body>
+</html>

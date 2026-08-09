@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -49,7 +50,9 @@ class ImagenesSinAlt implements ContratoComprobacion
                 $this->peso(),
                 'Imágenes sin alt',
                 "{$porcentaje}% de las imágenes sin texto alternativo",
+                Certeza::INDICIO,
                 ['porcentaje' => $porcentaje],
+                evidencia: $home->imagenes_sin_alt.' de '.$home->imagenes_total.' imágenes sin alt en '.$home->url,
             );
         }
 

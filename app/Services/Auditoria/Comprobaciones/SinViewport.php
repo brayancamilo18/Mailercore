@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -41,6 +42,8 @@ class SinViewport implements ContratoComprobacion
             $this->peso(),
             'Sin viewport móvil',
             'La web no declara viewport móvil',
+            Certeza::INDICIO,
+            evidencia: 'tiene_viewport=false en '.$home->url,
         );
     }
 }

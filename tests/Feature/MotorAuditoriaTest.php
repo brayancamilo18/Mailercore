@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
+use App\Enums\PropositoRastreo;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Models\Pagina;
@@ -105,6 +107,74 @@ class MotorAuditoriaTest extends TestCase
         $this->assertSame([], $auditoria->hallazgos ?? []);
     }
 
+    /**
+     * El motivo de todo el tri-estado: si el rastreo solo buscaba correos,
+     * nadie abrió la página de reservas y la auditoría no puede echarlas de menos.
+     */
+    public function test_lead_sin_pagina_de_reservas_visitada_no_genera_hallazgo(): void
+    {
+        $lead = Lead::factory()->create(['sector' => 'hosteleria']);
+        Pagina::factory()->create([
+            'lead_id' => $lead->id,
+            'ruta' => '/',
+            'proposito' => PropositoRastreo::EMAIL->value,
+            'tiene_reservas' => null,
+            'capturada_at' => now(),
+        ]);
+
+        $auditoria = (new MotorAuditoria([new SinReservas]))->auditar($lead->fresh());
+
+        $this->assertNotNull($auditoria);
+        $this->assertNull($auditoria->hallazgo_codigo);
+        $this->assertSame(0, $auditoria->puntuacion);
+        $this->assertSame([], $auditoria->hallazgos ?? []);
+    }
+
+    public function test_con_rastreo_de_auditoria_las_reservas_ausentes_son_observado(): void
+    {
+        $lead = Lead::factory()->create(['sector' => 'hosteleria']);
+
+        foreach (['/', '/reservas'] as $ruta) {
+            Pagina::factory()->create([
+                'lead_id' => $lead->id,
+                'ruta' => $ruta,
+                'proposito' => PropositoRastreo::AUDITORIA->value,
+                'tiene_reservas' => null,
+                'capturada_at' => now(),
+            ]);
+        }
+
+        $auditoria = (new MotorAuditoria([new SinReservas]))->auditar($lead->fresh());
+
+        $this->assertNotNull($auditoria);
+        $this->assertSame('sin_reservas', $auditoria->hallazgo_codigo);
+        $this->assertSame(Certeza::OBSERVADO->value, $auditoria->hallazgo_certeza);
+        $this->assertSame(Certeza::OBSERVADO->value, $auditoria->hallazgos[0]['certeza']);
+        $this->assertStringContainsString(
+            'buscado en /, /reservas',
+            (string) $auditoria->hallazgos[0]['evidencia']
+        );
+    }
+
+    public function test_guarda_la_certeza_del_principal_y_la_de_cada_hallazgo(): void
+    {
+        $lead = $this->leadConHome();
+        $motor = new MotorAuditoria([
+            $this->comprobacionFija('indicio', 40, 'uno', Certeza::INDICIO),
+            $this->comprobacionFija('hecho', 20, 'dos', Certeza::HECHO),
+        ]);
+
+        $auditoria = $motor->auditar($lead);
+
+        $this->assertNotNull($auditoria);
+        $this->assertSame(Certeza::INDICIO->value, $auditoria->hallazgo_certeza);
+        $this->assertSame(
+            [Certeza::INDICIO->value, Certeza::HECHO->value],
+            array_column($auditoria->hallazgos, 'certeza')
+        );
+        $this->assertSame('evidencia de indicio', $auditoria->hallazgos[0]['evidencia']);
+    }
+
     public function test_usa_la_captura_mas_reciente_de_cada_ruta(): void
     {
         $lead = Lead::factory()->create(['sector' => 'retail']);
@@ -169,14 +239,19 @@ class MotorAuditoriaTest extends TestCase
         return $lead->fresh();
     }
 
-    private function comprobacionFija(string $codigo, int $peso, string $detalle = 'detalle'): ContratoComprobacion
-    {
-        return new class($codigo, $peso, $detalle) implements ContratoComprobacion
+    private function comprobacionFija(
+        string $codigo,
+        int $peso,
+        string $detalle = 'detalle',
+        Certeza $certeza = Certeza::HECHO,
+    ): ContratoComprobacion {
+        return new class($codigo, $peso, $detalle, $certeza) implements ContratoComprobacion
         {
             public function __construct(
                 private string $codigo,
                 private int $peso,
                 private string $detalle,
+                private Certeza $certeza,
             ) {}
 
             public function codigo(): string
@@ -196,7 +271,14 @@ class MotorAuditoriaTest extends TestCase
 
             public function evaluar(Lead $lead, Collection $paginas, ?Auditoria $auditoria): ?Hallazgo
             {
-                return new Hallazgo($this->codigo, $this->peso, 'Título '.$this->codigo, $this->detalle);
+                return new Hallazgo(
+                    $this->codigo,
+                    $this->peso,
+                    'Título '.$this->codigo,
+                    $this->detalle,
+                    $this->certeza,
+                    evidencia: 'evidencia de '.$this->codigo,
+                );
             }
         };
     }

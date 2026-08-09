@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\PropositoRastreo;
 use App\Jobs\RastrearSitioJob;
 use App\Models\Lead;
 use Illuminate\Console\Command;
@@ -13,7 +14,8 @@ class RastrearCommand extends Command
                             {--sector=}
                             {--dias-desde=90 : Rastrear los que no se tocan desde hace N días}
                             {--solo-sin-rastrear}
-                            {--forzar}';
+                            {--forzar}
+                            {--proposito=completo : Para qué se rastrea: email|auditoria|completo}';
 
     protected $description = 'Encola el rastreo de sitios web de leads';
 
@@ -21,6 +23,15 @@ class RastrearCommand extends Command
     {
         $limite = max(1, (int) $this->option('limite'));
         $diasDesde = max(1, (int) $this->option('dias-desde'));
+        $proposito = PropositoRastreo::tryFrom(
+            strtolower(trim((string) $this->option('proposito')))
+        );
+
+        if ($proposito === null) {
+            $this->error('Propósito no válido. Valores aceptados: '.PropositoRastreo::valoresAceptados().'.');
+
+            return self::FAILURE;
+        }
 
         $query = Lead::query()->whereNotNull('website');
 
@@ -40,10 +51,10 @@ class RastrearCommand extends Command
         $leads = $query->orderBy('id')->limit($limite)->get(['id']);
 
         foreach ($leads as $lead) {
-            RastrearSitioJob::dispatch($lead->id);
+            RastrearSitioJob::dispatch($lead->id, $proposito);
         }
 
-        $this->info("Encolados {$leads->count()} jobs en la cola «scraping».");
+        $this->info("Encolados {$leads->count()} jobs en la cola «scraping» con propósito «{$proposito->value}».");
         $this->comment('Asegúrate de que los workers queue-scraping estén levantados (docker compose up).');
 
         return self::SUCCESS;

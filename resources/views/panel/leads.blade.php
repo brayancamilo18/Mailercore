@@ -30,6 +30,28 @@
                     </select>
                 </div>
 
+                <div class="min-w-[150px]">
+                    <label for="filtro-pais" class="block text-[11px] font-bold text-marca-mut mb-1">País</label>
+                    <select id="filtro-pais" name="pais"
+                            class="w-full text-xs font-semibold text-marca-txt border border-[#D6DDD8] rounded-lg px-2 py-1.5 bg-hueso focus:outline-none focus:ring-2 focus:ring-brote/40 focus:border-savia">
+                        <option value="">Todos</option>
+                        @foreach ($paises as $pais)
+                            <option value="{{ $pais->codigo }}" @selected($filtros['pais'] === $pais->codigo)>{{ $pais->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="min-w-[170px]">
+                    <label for="filtro-provincia" class="block text-[11px] font-bold text-marca-mut mb-1">Provincia</label>
+                    <select id="filtro-provincia" name="provincia"
+                            class="w-full text-xs font-semibold text-marca-txt border border-[#D6DDD8] rounded-lg px-2 py-1.5 bg-hueso focus:outline-none focus:ring-2 focus:ring-brote/40 focus:border-savia">
+                        <option value="">Todas</option>
+                        @foreach ($provinciasOpciones as $provincia)
+                            <option value="{{ $provincia }}" @selected($filtros['provincia'] === $provincia)>{{ $provincia }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="min-w-[120px]">
                     <label for="filtro-puntuacion" class="block text-[11px] font-bold text-marca-mut mb-1">Puntuación mínima</label>
                     <input id="filtro-puntuacion" type="number" name="puntuacion_min" min="0" max="100"
@@ -150,3 +172,53 @@
 
     </div>
 @endsection
+
+@push('scripts')
+<script>
+(() => {
+    const porPais = @json($provinciasPorPais);
+    const selectPais = document.getElementById('filtro-pais');
+    const selectProvincia = document.getElementById('filtro-provincia');
+    if (!selectPais || !selectProvincia) return;
+
+    const provinciaActual = @json($filtros['provincia'] ?? '');
+
+    const todas = () => {
+        const set = new Set();
+        Object.values(porPais).forEach((lista) => lista.forEach((p) => set.add(p)));
+        return Array.from(set).sort((a, b) => a.localeCompare(b, 'es'));
+    };
+
+    const rellenar = (pais) => {
+        const lista = pais && porPais[pais] ? porPais[pais] : todas();
+        selectProvincia.innerHTML = '<option value="">Todas</option>';
+        lista.forEach((nombre) => {
+            const opt = document.createElement('option');
+            opt.value = nombre;
+            opt.textContent = nombre;
+            if (nombre === provinciaActual) opt.selected = true;
+            selectProvincia.appendChild(opt);
+        });
+        // Si la provincia ya no pertenece al país, limpia la selección.
+        if (provinciaActual && !lista.includes(provinciaActual)) {
+            selectProvincia.value = '';
+        }
+    };
+
+    selectPais.addEventListener('change', () => {
+        // Al cambiar país, la provincia deja de aplicar hasta que elijan otra.
+        selectProvincia.dataset.reset = '1';
+        const lista = selectPais.value && porPais[selectPais.value]
+            ? porPais[selectPais.value]
+            : todas();
+        selectProvincia.innerHTML = '<option value="">Todas</option>';
+        lista.forEach((nombre) => {
+            const opt = document.createElement('option');
+            opt.value = nombre;
+            opt.textContent = nombre;
+            selectProvincia.appendChild(opt);
+        });
+    });
+})();
+</script>
+@endpush

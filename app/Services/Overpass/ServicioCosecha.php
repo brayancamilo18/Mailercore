@@ -7,10 +7,12 @@ use App\Jobs\RastrearSitioJob;
 use App\Models\AreaCosecha;
 use App\Models\Lead;
 use App\Models\LeadEmail;
+use App\Models\PaisCosecha;
 use App\Models\Suppression;
 use App\Services\Clasificacion\CatalogoSectores;
 use App\Services\Soporte\Latido;
 use App\Services\Web\ClasificadorEmail;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ServicioCosecha
@@ -40,7 +42,7 @@ class ServicioCosecha
         ])->save();
 
         if ($area->pais_codigo) {
-            \App\Models\PaisCosecha::query()
+            PaisCosecha::query()
                 ->where('codigo', $area->pais_codigo)
                 ->where('estado', '!=', 'hecho')
                 ->update(['estado' => 'en_proceso']);
@@ -217,7 +219,7 @@ class ServicioCosecha
                 'ultimo_error' => null,
             ])->save();
 
-            \Illuminate\Support\Facades\Cache::forget("cosecha:reintentos:{$area->id}");
+            Cache::forget("cosecha:reintentos:{$area->id}");
         } catch (OverpassNoDisponible $e) {
             $area->forceFill([
                 'estado' => 'error',

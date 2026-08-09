@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -39,7 +40,9 @@ class H1Incorrecto implements ContratoComprobacion
                 $this->peso(),
                 'H1 incorrecto',
                 $total === 0 ? 'No hay H1' : "Hay {$total} H1",
+                Certeza::INDICIO,
                 ['total' => $total],
+                evidencia: 'h1_total='.$total.' en '.$home->url,
             );
         }
 

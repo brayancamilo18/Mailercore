@@ -6,6 +6,7 @@ use App\Models\DiaEnvio;
 use App\Models\EventoInbox;
 use App\Models\Mensaje;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class RampaEnvio
 {
@@ -31,27 +32,42 @@ class RampaEnvio
         $enviados = $this->enviadosRecientes();
 
         if ($enviados < config('outreach.rampa.minimo_para_evaluar')) {
-            $cuota = min($cuotaBase, config('outreach.rampa.cuota_si_pocos_datos'));
-            $motivo .= '; pocos datos todavía, cuota limitada';
+            $topePocos = config('outreach.rampa.cuota_si_pocos_datos');
+            $cuota = is_numeric($topePocos)
+                ? min($cuotaBase, (int) $topePocos)
+                : $cuotaBase;
+            $motivo .= is_numeric($topePocos)
+                ? '; pocos datos todavía, cuota limitada'
+                : '; pocos datos todavía, se mantiene la cuota del escalón';
 
             return $this->guardar($fecha, $cuota, $escalon, 'verde', $motivo, 0.0);
         }
 
         $tasa = $this->tasaRebote();
+        $minimoParado = (int) config('outreach.rampa.minimo_para_parado', 150);
+        $reanudado = (bool) Cache::get('envio:reanudado_manual', false);
+
+        if ($reanudado && in_array($salud, ['parado', 'rojo'], true)) {
+            $salud = 'verde';
+            $motivo .= '; reanudado manualmente (se ignora freno de salud)';
+        }
 
         $cuota = match ($salud) {
-            'parado' => 0,
+            'parado' => $enviados < $minimoParado ? $cuotaBase : 0,
             'rojo' => (int) floor($cuotaBase / 2),
             'ambar' => $this->cuotaDelDiaAnterior($fecha) ?: $cuotaBase,
             default => $cuotaBase,
         };
 
-        if ($salud === 'rojo' && $escalon > 1) {
+        if ($salud === 'parado' && $enviados < $minimoParado && $cuota > 0) {
+            $motivo .= sprintf('; salud parado suavizado (%.2f%% rebotes, muestra <%d)', $tasa, $minimoParado);
+        } elseif ($salud === 'rojo' && $escalon > 1) {
             $escalon--;
             $cuota = min($cuota, $this->cuotaDeEscalon($escalon));
+            $motivo .= sprintf('; salud %s (%.2f%% de rebotes duros)', $salud, $tasa);
+        } else {
+            $motivo .= sprintf('; salud %s (%.2f%% de rebotes duros)', $salud, $tasa);
         }
-
-        $motivo .= sprintf('; salud %s (%.2f%% de rebotes duros)', $salud, $tasa);
 
         $cuota = min($cuota, (int) config('outreach.envio.max_diario'));
 
@@ -91,7 +107,10 @@ class RampaEnvio
         return $dias + 1;   // el día que se está calculando cuenta
     }
 
-    /** ¿Han pasado más de N días naturales sin enviar nada? */
+    /**
+     * ¿Se saltaron demasiados días de envío (lun–jue)?
+     * Vie/sáb/dom no cuentan: un jueves→lunes normal no rompe la racha.
+     */
     private function rachaRota(Carbon $fecha): bool
     {
         $ultimo = DiaEnvio::query()
@@ -103,7 +122,18 @@ class RampaEnvio
             return false;
         }
 
-        $hueco = Carbon::parse($ultimo->fecha)->diffInDays($fecha);
+        /** @var list<int> $diasEnvio */
+        $diasEnvio = array_map('intval', config('outreach.envio.dias', [1, 2, 3, 4]));
+        $cursor = Carbon::parse($ultimo->fecha)->startOfDay()->addDay();
+        $fin = $fecha->copy()->startOfDay();
+        $hueco = 0;
+
+        while ($cursor->lt($fin)) {
+            if (in_array($cursor->dayOfWeekIso, $diasEnvio, true)) {
+                $hueco++;
+            }
+            $cursor->addDay();
+        }
 
         return $hueco > (int) config('outreach.rampa.dias_hueco_rompe_racha');
     }
@@ -219,8 +249,11 @@ class RampaEnvio
     /** Saca el sistema del estado 'parado' (acción manual). */
     public function reanudar(): void
     {
+        // Persiste para que planificar/calcular no vuelvan a cuota 0 al instante.
+        Cache::put('envio:reanudado_manual', true, now()->addDays(14));
+
         DiaEnvio::query()
-            ->where('fecha', today()->toDateString())
+            ->where('fecha', '>=', today()->toDateString())
             ->update(['salud' => 'verde', 'nota' => 'Reanudado manualmente']);
     }
 }

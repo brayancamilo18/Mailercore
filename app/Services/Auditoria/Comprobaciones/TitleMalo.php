@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -38,7 +39,9 @@ class TitleMalo implements ContratoComprobacion
                 $this->peso(),
                 'Título incorrecto',
                 'Sin título',
+                Certeza::INDICIO,
                 ['longitud' => 0],
+                evidencia: 'Sin <title> en '.$home->url,
             );
         }
 
@@ -49,7 +52,9 @@ class TitleMalo implements ContratoComprobacion
                 $this->peso(),
                 'Título incorrecto',
                 "Título de {$n} caracteres",
+                Certeza::INDICIO,
                 ['longitud' => $n],
+                evidencia: 'title de '.$n.' caracteres en '.$home->url,
             );
         }
 

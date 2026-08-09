@@ -49,32 +49,25 @@ class RampaEnvioTest extends TestCase
         $this->assertSame(15, $resultado['cuota']);
     }
 
-    public function test_hueco_de_cinco_dias_retrocede_escalon(): void
+    public function test_finde_jueves_a_lunes_no_rompe_la_racha(): void
     {
         $this->crearMensajesEnviados(30);
 
-        // Racha lun–jue durante dos semanas; último envío el jueves 5.
-        // Vie/sáb/dom no rompen diasConsecutivos. Hueco jueves→lunes = 4 > 3
-        // (y jueves→martes = 5) activa rachaRota y baja el escalón.
+        // Último envío jueves; el lunes siguiente debe seguir la racha (vie–dom no cuentan).
         foreach ([
-            '2026-02-23', '2026-02-24', '2026-02-25', '2026-02-26',
             '2026-03-02', '2026-03-03', '2026-03-04', '2026-03-05',
         ] as $dia) {
             DiaEnvio::factory()->create([
                 'fecha' => $dia,
-                'enviados' => 3,
+                'enviados' => 5,
             ]);
         }
 
-        $this->assertSame(5, (int) Carbon::parse('2026-03-05')->diffInDays(Carbon::parse('2026-03-10')));
+        $resultado = app(RampaEnvio::class)->calcular(Carbon::parse('2026-03-09')); // lunes
 
-        $sinHueco = app(RampaEnvio::class)->calcular(Carbon::parse('2026-03-06')); // viernes
-        DiaEnvio::query()->whereDate('fecha', '2026-03-06')->delete();
-
-        $conHueco = app(RampaEnvio::class)->calcular(Carbon::parse('2026-03-09')); // lunes, hueco 4
-
-        $this->assertGreaterThan(1, $sinHueco['escalon']);
-        $this->assertSame($sinHueco['escalon'] - 1, $conHueco['escalon']);
+        // 4 días previos + hoy = 5 → escalón 2 → cuota 15
+        $this->assertSame(2, $resultado['escalon']);
+        $this->assertSame(15, $resultado['cuota']);
     }
 
     public function test_fin_de_semana_no_rompe_la_racha(): void
@@ -147,7 +140,7 @@ class RampaEnvioTest extends TestCase
         $this->assertSame(5, $resultado['cuota']);
     }
 
-    public function test_con_menos_de_treinta_envios_la_cuota_se_limita_a_diez(): void
+    public function test_con_pocos_envios_se_mantiene_la_cuota_del_escalon(): void
     {
         $this->crearMensajesEnviados(10);
 
@@ -158,8 +151,26 @@ class RampaEnvioTest extends TestCase
         $resultado = app(RampaEnvio::class)->calcular(Carbon::parse('2026-03-16'));
 
         $this->assertSame(2, $resultado['escalon']);
-        $this->assertSame(10, $resultado['cuota']);
+        $this->assertSame(15, $resultado['cuota']);
         $this->assertSame('verde', $resultado['salud']);
+    }
+
+    public function test_parado_con_poca_muestra_no_anula_la_cuota(): void
+    {
+        config(['outreach.rampa.minimo_para_parado' => 150]);
+
+        $mensajes = $this->crearMensajesEnviados(40);
+        foreach ($mensajes->take(8) as $mensaje) {
+            EventoInbox::factory()->create([
+                'mensaje_id' => $mensaje->id,
+                'tipo' => 'rebote_duro',
+            ]);
+        }
+
+        $resultado = app(RampaEnvio::class)->calcular(Carbon::parse('2026-03-10'));
+
+        $this->assertSame('parado', $resultado['salud']);
+        $this->assertSame(10, $resultado['cuota']);
     }
 
     public function test_nunca_supera_max_diario(): void

@@ -11,6 +11,7 @@ use App\Models\LeadEmail;
 use App\Models\Mensaje;
 use App\Models\Suppression;
 use App\Services\Soporte\Latido;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -142,7 +143,8 @@ class ProcesadorBandeja
         if ($mensaje !== null && $mensaje->estado === 'enviado') {
             $mensaje->update([
                 'estado' => 'pendiente',
-                'programado_para' => now()->addHours(48),
+                // +48h y, si cae en finde, al siguiente día de envío (lun–jue).
+                'programado_para' => $this->proximaFechaReintento(now('Europe/Madrid')->addHours(48)),
                 'enviado_at' => null,
                 'message_id' => null,
                 'bloqueado_at' => null,
@@ -246,5 +248,33 @@ class ProcesadorBandeja
     private function claveOmitido(string $rawHash): string
     {
         return 'bandeja:omitido:'.$rawHash;
+    }
+
+    /** Reprograma en un día de envío (lun–jue) y dentro del horario, nunca en finde. */
+    private function proximaFechaReintento(Carbon $desde): Carbon
+    {
+        /** @var list<int> $dias */
+        $dias = array_map('intval', config('outreach.envio.dias', [1, 2, 3, 4]));
+        [$hIni, $mIni] = array_map('intval', explode(':', (string) config('outreach.envio.hora_inicio', '09:15')));
+        [$hFin, $mFin] = array_map('intval', explode(':', (string) config('outreach.envio.hora_fin', '17:45')));
+
+        $cursor = $desde->copy();
+
+        // Fuera de la ventana el correo saldría a deshora (o lo cancelaría
+        // «envio:recuperar» por vencido), así que se encaja dentro del horario.
+        if ($cursor->gt($cursor->copy()->setTime($hFin, $mFin))) {
+            $cursor->addDay()->setTime($hIni, $mIni);
+        } elseif ($cursor->lt($cursor->copy()->setTime($hIni, $mIni))) {
+            $cursor->setTime($hIni, $mIni);
+        }
+
+        for ($i = 0; $i < 14; $i++) {
+            if (in_array($cursor->dayOfWeekIso, $dias, true)) {
+                return $cursor;
+            }
+            $cursor->addDay()->setTime($hIni, $mIni);
+        }
+
+        return $desde;
     }
 }

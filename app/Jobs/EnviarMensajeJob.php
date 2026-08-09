@@ -6,6 +6,7 @@ use App\Mail\CorreoOutreach;
 use App\Models\DiaEnvio;
 use App\Models\Mensaje;
 use App\Models\Suppression;
+use App\Services\Envio\PlanificadorDiario;
 use App\Services\Soporte\Latido;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -44,6 +45,7 @@ class EnviarMensajeJob implements ShouldQueue
         if (Suppression::existe($mensaje->destinatario)) {
             $mensaje->cancelar('Destinatario suprimido antes del envío');
             $mensaje->lead?->update(['estado' => 'baja']);
+            $this->prepararSiguienteColaSiTermino($mensaje);
 
             return;
         }
@@ -54,6 +56,7 @@ class EnviarMensajeJob implements ShouldQueue
             $mensaje->marcarFallido($e->getMessage());
             DiaEnvio::paraFecha($mensaje->programado_para)->incrementarContador('fallidos');
             report($e);
+            $this->prepararSiguienteColaSiTermino($mensaje);
 
             return;
         }
@@ -78,6 +81,23 @@ class EnviarMensajeJob implements ShouldQueue
             'paso' => $mensaje->paso,
             'dominio' => Suppression::dominioDeEmail($mensaje->destinatario),
         ]);
+
+        $this->prepararSiguienteColaSiTermino($mensaje);
+    }
+
+    /** Si era el último del día, genera al instante la cola del siguiente día de envío. */
+    private function prepararSiguienteColaSiTermino(Mensaje $mensaje): void
+    {
+        try {
+            app(PlanificadorDiario::class)->asegurarSiguienteTrasTerminarDia(
+                $mensaje->programado_para?->timezone('Europe/Madrid')
+            );
+        } catch (\Throwable $e) {
+            Log::channel('outreach')->error('No se pudo planificar la cola siguiente tras envío', [
+                'mensaje_id' => $mensaje->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function failed(?\Throwable $e): void

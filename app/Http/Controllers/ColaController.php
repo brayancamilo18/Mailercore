@@ -7,6 +7,7 @@ use App\Models\Mensaje;
 use App\Models\Suppression;
 use App\Services\Panel\DatosPanel;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class ColaController extends Controller
@@ -15,15 +16,19 @@ class ColaController extends Controller
 
     public function indice(): View
     {
-        $hoy = today();
-        $manana = today()->addDay();
-        $dia = DiaEnvio::paraFecha($hoy);
+        $hoy = today('Europe/Madrid');
+        /** @var list<int> $dias */
+        $dias = array_map('intval', config('outreach.envio.dias', [1, 2, 3, 4]));
+        $proximoEnvio = $this->proximoDiaEnvio($hoy, $dias);
+        $dia = DiaEnvio::paraFecha(
+            in_array($hoy->dayOfWeekIso, $dias, true) ? $hoy : $proximoEnvio
+        );
 
         $mensajes = Mensaje::query()
             ->with(['lead.auditoria'])
-            ->where(function ($q) use ($hoy, $manana): void {
+            ->where(function ($q) use ($hoy, $proximoEnvio): void {
                 $q->whereDate('programado_para', $hoy->toDateString())
-                    ->orWhereDate('programado_para', $manana->toDateString());
+                    ->orWhereDate('programado_para', $proximoEnvio->toDateString());
             })
             ->orderBy('programado_para')
             ->get()
@@ -42,6 +47,8 @@ class ColaController extends Controller
             'mensajes' => $mensajes,
             'enviados' => (int) $dia->enviados,
             'cuota' => (int) $dia->cuota_planificada,
+            'proximoEnvio' => $proximoEnvio,
+            'esDiaEnvio' => in_array($hoy->dayOfWeekIso, $dias, true),
         ]);
     }
 
@@ -60,5 +67,20 @@ class ColaController extends Controller
         }
 
         return redirect()->route('cola.indice');
+    }
+
+    /** @param  list<int>  $dias */
+    private function proximoDiaEnvio(Carbon $desde, array $dias): Carbon
+    {
+        $cursor = $desde->copy()->startOfDay()->addDay();
+
+        for ($i = 0; $i < 14; $i++) {
+            if (in_array($cursor->dayOfWeekIso, $dias, true)) {
+                return $cursor;
+            }
+            $cursor->addDay();
+        }
+
+        return $desde->copy()->addDay();
     }
 }

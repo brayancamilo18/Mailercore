@@ -7,6 +7,13 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class ExtractorMetadatos
 {
+    private LectorEnlaces $lector;
+
+    public function __construct(?LectorEnlaces $lector = null)
+    {
+        $this->lector = $lector ?? new LectorEnlaces;
+    }
+
     public function extraer(
         string $html,
         string $url,
@@ -15,9 +22,13 @@ class ExtractorMetadatos
         ?string $contentType = null,
         ?string $redirigidaA = null,
     ): MetadatosPagina {
+        // El pie (copyright, legales, redes) suele estar al final: si cortamos
+        // por el principio se pierde. Conservamos cabeza y cola del límite.
+        $truncado = false;
         $maxBytes = (int) config('outreach.scraper.max_bytes_html');
-        if (strlen($html) > $maxBytes) {
-            $html = substr($html, 0, $maxBytes);
+        if ($maxBytes > 0 && strlen($html) > $maxBytes) {
+            $html = $this->recortarConservandoPie($html, $maxBytes);
+            $truncado = true;
         }
 
         $htmlDecodificado = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -97,7 +108,22 @@ class ExtractorMetadatos
             htmlHash: $this->hash($html),
             error: null,
             capturadaAt: now(),
+            contenidoTruncado: $truncado,
         );
+    }
+
+    /**
+     * Une el 60 % inicial y el 40 % final del límite. El comentario marca el
+     * hueco para quien lea el HTML guardado; el parser lo ignora.
+     */
+    private function recortarConservandoPie(string $html, int $maxBytes): string
+    {
+        $cabeza = (int) floor($maxBytes * 0.6);
+        $cola = $maxBytes - $cabeza;
+
+        return substr($html, 0, $cabeza)
+            .'<!-- TRUNCADO -->'
+            .substr($html, -$cola);
     }
 
     /**
@@ -383,39 +409,11 @@ class ExtractorMetadatos
      */
     private function enlaces(Crawler $c, string $url): array
     {
-        $hostPropio = strtolower((string) parse_url($url, PHP_URL_HOST));
         $internos = 0;
         $externos = 0;
 
-        foreach ($c->filter('a') as $nodo) {
-            if (! $nodo instanceof \DOMElement) {
-                continue;
-            }
-
-            $href = trim($nodo->getAttribute('href'));
-            if ($href === '') {
-                continue;
-            }
-
-            $hrefLower = strtolower($href);
-
-            if (
-                str_starts_with($hrefLower, '#')
-                || str_starts_with($hrefLower, 'mailto:')
-                || str_starts_with($hrefLower, 'tel:')
-                || str_starts_with($hrefLower, 'javascript:')
-            ) {
-                continue;
-            }
-
-            if (str_starts_with($href, '/') || ! preg_match('#^https?://#i', $href)) {
-                $internos++;
-
-                continue;
-            }
-
-            $host = strtolower((string) parse_url($href, PHP_URL_HOST));
-            if ($host === $hostPropio) {
+        foreach ($this->lector->leer($c, $url) as $enlace) {
+            if ($enlace->esInterno) {
                 $internos++;
             } else {
                 $externos++;
@@ -544,7 +542,12 @@ class ExtractorMetadatos
         return array_values(array_unique($emails));
     }
 
-    private function tieneFormulario(Crawler $c): bool
+    /**
+     * Señal presente en la página, nunca prueba de ausencia: true si se detecta
+     * aquí, null si no. Un false diría «esta empresa no tiene formulario», que
+     * no es algo que una sola página pueda demostrar.
+     */
+    private function tieneFormulario(Crawler $c): ?bool
     {
         foreach ($c->filter('form') as $formDom) {
             $form = new Crawler($formDom);
@@ -567,10 +570,11 @@ class ExtractorMetadatos
             }
         }
 
-        return false;
+        return null;
     }
 
-    private function tieneWhatsapp(Crawler $c): bool
+    /** true o null: ver tieneFormulario(). */
+    private function tieneWhatsapp(Crawler $c): ?bool
     {
         foreach ($c->filter('a') as $nodo) {
             if (! $nodo instanceof \DOMElement) {
@@ -583,10 +587,11 @@ class ExtractorMetadatos
             }
         }
 
-        return false;
+        return null;
     }
 
-    private function tieneReservas(Crawler $c, string $texto): bool
+    /** true o null: ver tieneFormulario(). */
+    private function tieneReservas(Crawler $c, string $texto): ?bool
     {
         $patrones = [
             'reserva', 'reservar', 'booking', 'cita previa', 'pedir cita', 'book now',
@@ -613,10 +618,11 @@ class ExtractorMetadatos
             }
         }
 
-        return false;
+        return null;
     }
 
-    private function tieneCarrito(Crawler $c, string $texto, ?string $generador): bool
+    /** true o null: ver tieneFormulario(). */
+    private function tieneCarrito(Crawler $c, string $texto, ?string $generador): ?bool
     {
         if (in_array($generador, ['shopify', 'prestashop'], true)) {
             return true;
@@ -658,18 +664,21 @@ class ExtractorMetadatos
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
-     * @return array{aviso_legal: bool, privacidad: bool, cookies: bool}
+     * Los enlaces legales suelen vivir en el pie, pero no todas las páginas lo
+     * traen: true o null, nunca false. Ver tieneFormulario().
+     *
+     * @return array{aviso_legal: ?bool, privacidad: ?bool, cookies: ?bool}
      */
     private function enlacesLegales(Crawler $c): array
     {
         $resultado = [
-            'aviso_legal' => false,
-            'privacidad' => false,
-            'cookies' => false,
+            'aviso_legal' => null,
+            'privacidad' => null,
+            'cookies' => null,
         ];
 
         foreach ($c->filter('a') as $nodo) {

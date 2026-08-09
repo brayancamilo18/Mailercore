@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -43,7 +44,9 @@ class PsiRendimientoMalo implements ContratoComprobacion
             $this->peso(),
             'Rendimiento PageSpeed bajo',
             "Puntuación de rendimiento: {$n}",
+            Certeza::HECHO,
             ['puntuacion' => $n],
+            evidencia: 'PageSpeed Insights: rendimiento '.$n.'/100',
         );
     }
 }

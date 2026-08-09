@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -45,6 +46,8 @@ class SinRedesSociales implements ContratoComprobacion
             $this->peso(),
             'Sin redes sociales',
             'No se encontraron enlaces a redes sociales',
+            Certeza::INDICIO,
+            evidencia: 'Sin enlaces a redes en las '.$paginas->count().' páginas capturadas',
         );
     }
 }

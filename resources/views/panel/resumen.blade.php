@@ -27,7 +27,8 @@
 
         $baseEmbudo = max(1, (int) (($embudo[0]['total'] ?? 0)));
         $totalEtapas = count($embudo);
-        $cuotasEscalon = [10, 15, 22, 30, 40];
+        $cuotasEscalon = [10, 15, 22, 30, 40, 50];
+        $totalEscalones = count($cuotasEscalon);
     @endphp
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 max-w-[1240px]">
@@ -40,7 +41,7 @@
                     <div class="flex items-center gap-2.5 mb-2.5 flex-wrap">
                         <span class="text-[11px] font-extrabold tracking-[0.08em] uppercase text-marca-mut">Rampa de envío</span>
                         <span class="text-[11px] font-bold text-savia bg-[#EAF4F0] rounded-full px-[9px] py-0.5">
-                            Escalón {{ $escalon }} de 5 · {{ $dia->cuota_planificada }} correos/día
+                            Escalón {{ $escalon }} de {{ $totalEscalones }} · {{ $dia->cuota_planificada }} correos/día
                         </span>
                     </div>
 
@@ -55,7 +56,7 @@
 
                     <div class="flex items-center gap-3.5 flex-wrap">
                         <div class="flex items-center gap-[5px]">
-                            @for ($i = 1; $i <= 5; $i++)
+                            @for ($i = 1; $i <= $totalEscalones; $i++)
                                 @php
                                     $colorDot = $i < $escalon ? '#5DCAA5' : ($i === $escalon ? '#0F6E56' : '#E2E8E3');
                                     $outline = $i === $escalon ? '2px solid #C8E8DC' : 'none';

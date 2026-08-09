@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -40,7 +41,9 @@ class PsiAccesibilidadBaja implements ContratoComprobacion
             $this->peso(),
             'Accesibilidad baja',
             "Puntuación de accesibilidad: {$auditoria->psi_accesibilidad}",
+            Certeza::HECHO,
             ['puntuacion' => (int) $auditoria->psi_accesibilidad],
+            evidencia: 'PageSpeed Insights: accesibilidad '.(int) $auditoria->psi_accesibilidad.'/100',
         );
     }
 }

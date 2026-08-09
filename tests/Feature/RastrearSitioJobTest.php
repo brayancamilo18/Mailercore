@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PropositoRastreo;
 use App\Excepciones\LimiteRitmoExcedido;
 use App\Jobs\RastrearSitioJob;
 use App\Models\Lead;
@@ -93,5 +94,40 @@ class RastrearSitioJobTest extends TestCase
 
         Queue::assertPushed(RastrearSitioJob::class, 2);
         Queue::assertPushedOn('scraping', RastrearSitioJob::class);
+        Queue::assertPushed(
+            fn (RastrearSitioJob $job): bool => $job->proposito === PropositoRastreo::COMPLETO
+        );
+    }
+
+    public function test_comando_propaga_el_proposito_al_job(): void
+    {
+        Queue::fake();
+
+        Lead::factory()->create([
+            'website' => 'https://a.es',
+            'rastreado_at' => null,
+        ]);
+
+        $this->artisan('leads:rastrear', ['--solo-sin-rastrear' => true, '--proposito' => 'auditoria'])
+            ->assertExitCode(0);
+
+        Queue::assertPushed(
+            fn (RastrearSitioJob $job): bool => $job->proposito === PropositoRastreo::AUDITORIA
+        );
+    }
+
+    public function test_comando_rechaza_un_proposito_desconocido(): void
+    {
+        Queue::fake();
+
+        Lead::factory()->create([
+            'website' => 'https://a.es',
+            'rastreado_at' => null,
+        ]);
+
+        $this->artisan('leads:rastrear', ['--proposito' => 'lo-que-sea'])
+            ->assertExitCode(1);
+
+        Queue::assertNothingPushed();
     }
 }

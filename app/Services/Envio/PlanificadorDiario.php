@@ -142,7 +142,7 @@ class PlanificadorDiario
                 continue;
             }
 
-            $host = \App\Models\Suppression::dominioDeEmail((string) config('mail.from.address'))
+            $host = Suppression::dominioDeEmail((string) config('mail.from.address'))
                 ?: parse_url((string) config('app.url'), PHP_URL_HOST)
                 ?: 'localhost';
 

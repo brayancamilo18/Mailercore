@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -44,6 +45,8 @@ class SinAvisoLegal implements ContratoComprobacion
             $this->peso(),
             'Sin aviso legal',
             'No hay aviso legal ni política de privacidad',
+            Certeza::INDICIO,
+            evidencia: 'Sin aviso legal ni privacidad en las '.$paginas->count().' páginas capturadas',
         );
     }
 }

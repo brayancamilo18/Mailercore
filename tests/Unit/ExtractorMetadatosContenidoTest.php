@@ -111,6 +111,50 @@ class ExtractorMetadatosContenidoTest extends TestCase
         $this->assertTrue($meta->tieneCookies);
     }
 
+    /**
+     * Estas señales solo prueban presencia: si no aparecen en la página, el
+     * valor es null. Un false diría que la empresa no las tiene, y una sola
+     * página no puede demostrar eso.
+     */
+    public function test_las_senales_no_observadas_son_null_y_nunca_false(): void
+    {
+        $meta = $this->extractor->extraer($this->fixture('minima.html'), 'https://ejemplo.es/');
+
+        $this->assertNull($meta->tieneFormulario);
+        $this->assertNull($meta->tieneWhatsapp);
+        $this->assertNull($meta->tieneReservas);
+        $this->assertNull($meta->tieneCarrito);
+        $this->assertNull($meta->tieneAvisoLegal);
+        $this->assertNull($meta->tienePrivacidad);
+        $this->assertNull($meta->tieneCookies);
+    }
+
+    public function test_los_legales_no_encontrados_quedan_en_null_por_separado(): void
+    {
+        $html = <<<'HTML'
+        <html><body>
+          <footer><a href="/politica-de-cookies">Cookies</a></footer>
+        </body></html>
+        HTML;
+
+        $meta = $this->extractor->extraer($html, 'https://ejemplo.es/');
+
+        $this->assertTrue($meta->tieneCookies);
+        $this->assertNull($meta->tieneAvisoLegal);
+        $this->assertNull($meta->tienePrivacidad);
+    }
+
+    public function test_las_senales_observables_en_la_pagina_siguen_siendo_bool(): void
+    {
+        $meta = $this->extractor->extraer($this->fixture('minima.html'), 'https://ejemplo.es/');
+
+        // Estas sí se pueden negar mirando solo el HTML de esta página.
+        $this->assertFalse($meta->tieneViewport);
+        $this->assertFalse($meta->tieneFavicon);
+        $this->assertFalse($meta->tieneOg);
+        $this->assertFalse($meta->tieneJsonld);
+    }
+
     public function test_anio_copyright_2019(): void
     {
         $meta = $this->extractor->extraer($this->fixture('abandonada.html'), 'https://empresa.es/');
@@ -123,6 +167,42 @@ class ExtractorMetadatosContenidoTest extends TestCase
         $meta = $this->extractor->extraer($this->fixture('minima.html'), 'https://ejemplo.es/');
 
         $this->assertNull($meta->anioCopyright);
+    }
+
+    /**
+     * Un HTML enorme se cortaba por el principio y el pie desaparecía. Ahora se
+     * conservan cabeza y cola, así que copyright y legales del footer siguen
+     * detectándose.
+     */
+    public function test_un_html_enorme_sigue_viendo_el_pie(): void
+    {
+        config(['outreach.scraper.max_bytes_html' => 2_097_152]);
+
+        $relleno = str_repeat('<!-- relleno -->', (int) ceil(3_000_000 / 16));
+        $html = '<!DOCTYPE html><html><head><title>Grande</title></head><body>'
+            .$relleno
+            .'<footer>© 2019 Empresa Demo SL. '
+            .'<a href="/aviso-legal">Aviso legal</a>'
+            .'</footer></body></html>';
+
+        $this->assertGreaterThan(3_000_000, strlen($html));
+
+        $meta = $this->extractor->extraer($html, 'https://ejemplo.es/');
+
+        $this->assertTrue($meta->contenidoTruncado);
+        $this->assertSame(2019, $meta->anioCopyright);
+        $this->assertTrue($meta->tieneAvisoLegal);
+        $this->assertLessThanOrEqual(
+            (int) config('outreach.scraper.max_bytes_html') + strlen('<!-- TRUNCADO -->'),
+            $meta->bytes
+        );
+    }
+
+    public function test_sin_truncar_contenido_truncado_es_false(): void
+    {
+        $meta = $this->extractor->extraer($this->fixture('minima.html'), 'https://ejemplo.es/');
+
+        $this->assertFalse($meta->contenidoTruncado);
     }
 
     public function test_hash_estable(): void

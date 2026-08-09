@@ -2,6 +2,7 @@
 
 namespace App\Services\Auditoria;
 
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 
@@ -49,6 +50,14 @@ class RedactorHallazgo
             return null;
         }
 
+        $hallazgo = collect($auditoria->hallazgos ?? [])->firstWhere('codigo', $codigo);
+
+        // Un indicio no se puede afirmar en un correo frío: puntúa y ordena,
+        // pero la apertura se queda en la genérica del sector.
+        if (! $this->sePuedeAfirmar($auditoria, $hallazgo, $secundario)) {
+            return null;
+        }
+
         $frases = $this->frases();
         $sector = $lead->sector ?? 'generico';
         $bloque = $frases[$codigo][$sector] ?? $frases[$codigo]['generico'] ?? null;
@@ -57,7 +66,6 @@ class RedactorHallazgo
             return null;
         }
 
-        $hallazgo = collect($auditoria->hallazgos ?? [])->firstWhere('codigo', $codigo);
         /** @var array<string, mixed> $datos */
         $datos = is_array($hallazgo) ? ($hallazgo['datos'] ?? []) : [];
 
@@ -74,6 +82,28 @@ class RedactorHallazgo
         }
 
         return ['asunto' => $asunto, 'apertura' => $apertura];
+    }
+
+    /**
+     * La certeza vive en cada entrada del JSON; para el principal se acepta
+     * también la columna. Sin certeza registrada (auditorías anteriores a la
+     * columna) no se afirma nada: se cae a la apertura genérica del sector.
+     *
+     * @param  mixed  $hallazgo  entrada del JSON hallazgos, si la hay
+     */
+    private function sePuedeAfirmar(Auditoria $auditoria, mixed $hallazgo, bool $secundario): bool
+    {
+        $certeza = is_array($hallazgo) ? ($hallazgo['certeza'] ?? null) : null;
+
+        if ($certeza === null && ! $secundario) {
+            $certeza = $auditoria->hallazgo_certeza;
+        }
+
+        if (! is_string($certeza) || $certeza === '') {
+            return false;
+        }
+
+        return Certeza::tryFrom($certeza)?->sePuedeAfirmar() ?? false;
     }
 
     /** @param  array<string, mixed>  $sustituciones */

@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -42,7 +43,9 @@ class PsiPesoExcesivo implements ContratoComprobacion
             $this->peso(),
             'Peso de página excesivo',
             'La página pesa '.round($kb / 1024, 1).' MB',
+            Certeza::HECHO,
             ['mb' => round($kb / 1024, 1)],
+            evidencia: 'PageSpeed Insights: '.$kb.' KB transferidos',
         );
     }
 }

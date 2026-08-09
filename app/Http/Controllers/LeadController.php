@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AreaCosecha;
 use App\Models\EventoInbox;
 use App\Models\Lead;
+use App\Models\PaisCosecha;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class LeadController extends Controller
@@ -24,6 +27,14 @@ class LeadController extends Controller
             $query->where('sector', $request->string('sector')->toString());
         }
 
+        if ($request->filled('pais')) {
+            $query->where('pais_codigo', strtoupper($request->string('pais')->toString()));
+        }
+
+        if ($request->filled('provincia')) {
+            $query->where('provincia', $request->string('provincia')->toString());
+        }
+
         if ($request->boolean('email_verificado')) {
             $query->whereHas('emails', fn ($q) => $q->where('estado_verificacion', 'valido'));
         }
@@ -33,16 +44,29 @@ class LeadController extends Controller
             $query->whereHas('auditoria', fn ($q) => $q->where('puntuacion', '>=', $min));
         }
 
+        $paises = PaisCosecha::query()->ordenados()->get(['codigo', 'nombre']);
+        $provinciasPorPais = $this->provinciasPorPais();
+        $paisSeleccionado = $request->filled('pais')
+            ? strtoupper($request->string('pais')->toString())
+            : '';
+
         return view('panel.leads', [
             'leads' => $query->paginate(50)->withQueryString(),
             'filtros' => [
                 'estado' => $request->input('estado'),
                 'sector' => $request->input('sector'),
+                'pais' => $paisSeleccionado !== '' ? $paisSeleccionado : null,
+                'provincia' => $request->input('provincia'),
                 'email_verificado' => $request->boolean('email_verificado'),
                 'puntuacion_min' => $request->input('puntuacion_min'),
             ],
             'estados' => Lead::ESTADOS,
             'sectores' => config('sectores', []),
+            'paises' => $paises,
+            'provinciasPorPais' => $provinciasPorPais,
+            'provinciasOpciones' => $paisSeleccionado !== ''
+                ? ($provinciasPorPais[$paisSeleccionado] ?? collect())
+                : $provinciasPorPais->flatten()->unique()->sort()->values(),
         ]);
     }
 
@@ -81,5 +105,18 @@ class LeadController extends Controller
         $lead->update(['estado' => $datos['estado']]);
 
         return redirect()->route('leads.ficha', $lead);
+    }
+
+    /**
+     * @return Collection<string, Collection<int, string>>
+     */
+    private function provinciasPorPais(): Collection
+    {
+        return AreaCosecha::query()
+            ->whereNotNull('pais_codigo')
+            ->orderBy('nombre')
+            ->get(['pais_codigo', 'nombre'])
+            ->groupBy('pais_codigo')
+            ->map(fn (Collection $areas): Collection => $areas->pluck('nombre')->unique()->values());
     }
 }

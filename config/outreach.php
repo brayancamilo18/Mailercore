@@ -25,17 +25,71 @@ return [
         'timeout' => 15,
         'user_agent' => 'SilgoDevBot/2.0 (contacto@silgodev.es; +https://silgodev.es)',
         'respetar_robots' => true,
-        'max_paginas_por_sitio' => 6,
+        'max_paginas' => ['email' => 6, 'auditoria' => 10, 'completo' => 12],
         'max_bytes_html' => 2_097_152,
         'max_redirecciones' => 5,
         'peticiones_por_minuto' => 20,
         'peticiones_por_dominio_por_minuto' => 4,
         'rutas' => [
-            '', '/contacto', '/contact', '/es/contacto', '/aviso-legal', '/legal',
-            '/politica-de-privacidad', '/sobre-nosotros', '/nosotros',
-            '/quienes-somos', '/equipo', '/about',
+            'email' => ['', '/contacto', '/contact', '/es/contacto', '/aviso-legal',
+                '/legal', '/politica-de-privacidad', '/sobre-nosotros',
+                '/nosotros', '/quienes-somos', '/equipo', '/about'],
+            'auditoria_comunes' => ['', '/contacto', '/aviso-legal',
+                '/politica-de-privacidad'],
+            'auditoria_sector' => [
+                'hosteleria' => ['/reservas', '/reservar', '/carta', '/menu', '/la-carta'],
+                'retail' => ['/tienda', '/shop', '/productos', '/catalogo'],
+                'salud' => ['/cita', '/citas', '/pedir-cita', '/cita-previa', '/servicios'],
+                'belleza' => ['/reservar', '/cita-previa', '/servicios'],
+                'oficios' => ['/servicios', '/presupuesto'],
+                'servicios_profesionales' => ['/servicios', '/areas'],
+                'agencias' => ['/servicios', '/portfolio', '/proyectos'],
+            ],
         ],
         'max_emails_por_lead' => 3,
+
+        // Palabras con las que DescubridorRutas puntúa los enlaces de la home.
+        // Las familias son las de CatalogoSectores (config/sectores.php).
+        // Sin tildes y en minúsculas: así es como se comparan.
+        'palabras_clave_sector' => [
+            'hosteleria' => ['reserva', 'reservar', 'mesa', 'carta', 'menu', 'menus',
+                'cocina', 'platos', 'habitacion', 'habitaciones', 'alojamiento', 'desayuno'],
+            'salud' => ['cita', 'citas', 'pedir cita', 'cita previa', 'consulta', 'consultas',
+                'tratamiento', 'tratamientos', 'especialidad', 'especialidades', 'pacientes'],
+            'retail' => ['tienda', 'shop', 'producto', 'productos', 'catalogo', 'coleccion',
+                'colecciones', 'comprar', 'carrito', 'novedades', 'ofertas'],
+            'servicios_profesionales' => ['servicio', 'servicios', 'area', 'areas',
+                'especialidad', 'especialidades', 'asesoria', 'consultoria', 'despacho'],
+            'oficios' => ['servicio', 'servicios', 'presupuesto', 'presupuestos', 'obra',
+                'obras', 'reforma', 'reformas', 'trabajos', 'instalacion', 'instalaciones'],
+            'belleza' => ['reserva', 'reservar', 'cita', 'cita previa', 'servicio', 'servicios',
+                'tratamiento', 'tratamientos', 'tarifas', 'precios'],
+            'agencias' => ['servicio', 'servicios', 'portfolio', 'porfolio', 'proyecto',
+                'proyectos', 'casos', 'trabajos', 'clientes'],
+        ],
+
+        // Con qué palabras se reconoce, en los enlaces de la home, que el sitio
+        // tiene reservas, carrito, formulario o WhatsApp en alguna otra página.
+        // Se comparan contra el href y el texto ancla ya normalizados: en
+        // minúsculas, sin tildes y con /, -, _ y . convertidos en espacios, así
+        // que «wa.me» se escribe aquí «wa me».
+        'palabras_clave_senal' => [
+            'reservas' => ['reserva', 'reservas', 'reservar', 'reservar mesa', 'reserva online',
+                'booking', 'book', 'book now', 'book a table', 'reservation', 'reservations',
+                'cita', 'citas', 'pedir cita', 'cita previa', 'agenda', 'agendar',
+                'covermanager', 'thefork', 'eltenedor', 'opentable', 'resengo', 'bookline',
+                'restoo', 'quandoo', 'doctoralia', 'booksy', 'treatwell', 'calendly'],
+            'carrito' => ['carrito', 'cesta', 'cart', 'add to cart', 'basket', 'checkout',
+                'finalizar compra', 'comprar', 'compra online', 'tienda', 'tienda online',
+                'shop', 'store', 'productos', 'catalogo', 'woocommerce', 'prestashop',
+                'shopify', 'wc ajax', 'cart html'],
+            'formulario' => ['contacto', 'contactar', 'contactanos', 'contact', 'contact us',
+                'escribenos', 'formulario', 'formulario de contacto', 'presupuesto',
+                'pedir presupuesto', 'solicitar informacion', 'typeform', 'jotform',
+                'docs google com forms'],
+            'whatsapp' => ['whatsapp', 'whats app', 'wasap', 'wa me', 'api whatsapp com',
+                'chat whatsapp', 'escribenos por whatsapp'],
+        ],
     ],
 
     'clasificador_email' => [
@@ -93,7 +147,7 @@ return [
         'hora_inicio' => '09:15',
         'hora_fin' => '17:45',
         'minutos_min_entre_correos' => 4,
-        'max_diario' => (int) env('OUTREACH_MAX_DIARIO', 40),
+        'max_diario' => (int) env('OUTREACH_MAX_DIARIO', 50),
         'max_por_dominio_destino' => 3,
         'ventana_seguimiento_dias' => [5, 9],
         'porcentaje_seguimientos' => 25,
@@ -129,11 +183,15 @@ return [
             ['dia_desde' => 4, 'dia_hasta' => 7, 'cuota' => 15],
             ['dia_desde' => 8, 'dia_hasta' => 12, 'cuota' => 22],
             ['dia_desde' => 13, 'dia_hasta' => 20, 'cuota' => 30],
-            ['dia_desde' => 21, 'dia_hasta' => 9999, 'cuota' => 40],
+            ['dia_desde' => 21, 'dia_hasta' => 28, 'cuota' => 40],
+            ['dia_desde' => 29, 'dia_hasta' => 9999, 'cuota' => 50],
         ],
         'ventana_salud' => 200,
         'minimo_para_evaluar' => 30,
-        'cuota_si_pocos_datos' => 10,
+        // En calentamiento no recortamos la cuota del escalón (antes forzaba 10).
+        'cuota_si_pocos_datos' => null,
+        // Con poca muestra la tasa de rebote se infla; no parar envíos hasta tener datos.
+        'minimo_para_parado' => 150,
         'dias_hueco_rompe_racha' => 3,
         'umbrales' => ['ambar' => 2.0, 'rojo' => 4.0, 'parado' => 6.0],
     ],

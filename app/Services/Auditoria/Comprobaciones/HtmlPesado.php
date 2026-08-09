@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -44,7 +45,9 @@ class HtmlPesado implements ContratoComprobacion
             $this->peso(),
             'HTML demasiado pesado',
             "La home pesa {$kb} KB",
+            Certeza::HECHO,
             ['kb' => $kb],
+            evidencia: 'bytes='.$home->bytes.' en '.$home->url,
         );
     }
 }

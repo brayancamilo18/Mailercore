@@ -5,6 +5,8 @@ namespace App\Services\Auditoria;
 use App\DTO\Hallazgo;
 use App\Models\Auditoria;
 use App\Models\Lead;
+use App\Models\Pagina;
+use Illuminate\Support\Collection;
 
 class MotorAuditoria
 {
@@ -27,8 +29,49 @@ class MotorAuditoria
 
         // Nos quedamos con la captura más reciente de cada ruta.
         $paginas = $paginas->unique('ruta')->values();
+        $hallazgos = $this->evaluar($lead, $paginas, $lead->auditoria);
 
-        $auditoria = $lead->auditoria;
+        $puntuacion = min(
+            (int) config('outreach.auditoria.peso_maximo'),
+            array_sum(array_map(fn (Hallazgo $h): int => $h->peso, $hallazgos))
+        );
+
+        $principal = $hallazgos[0] ?? null;
+        $secundario = $hallazgos[1] ?? null;
+
+        return Auditoria::updateOrCreate(
+            ['lead_id' => $lead->id],
+            [
+                'puntuacion' => $puntuacion,
+                'hallazgo_codigo' => $principal?->codigo,
+                'hallazgo_certeza' => $principal?->certeza->value,
+                'hallazgo_principal' => $principal?->detalle,
+                'hallazgo_secundario_codigo' => $secundario?->codigo,
+                'hallazgo_secundario' => $secundario?->detalle,
+                'hallazgos' => array_map(fn (Hallazgo $h): array => [
+                    'codigo' => $h->codigo,
+                    'peso' => $h->peso,
+                    'titulo' => $h->titulo,
+                    'detalle' => $h->detalle,
+                    'certeza' => $h->certeza->value,
+                    'evidencia' => $h->evidencia,
+                    'datos' => $h->datos,
+                ], $hallazgos),
+                'auditada_at' => now(),
+            ]
+        );
+    }
+
+    /**
+     * Misma evaluación que auditar(), sin escribir en auditorias.
+     * Sirve para el diagnóstico en seco y para tests de cobertura.
+     *
+     * @param  Collection<int, Pagina>  $paginas
+     * @return list<Hallazgo>
+     */
+    public function evaluar(Lead $lead, Collection $paginas, ?Auditoria $auditoria = null): array
+    {
+        $paginas = $paginas->unique('ruta')->values();
         $hallazgos = [];
 
         foreach ($this->comprobaciones as $comprobacion) {
@@ -47,31 +90,6 @@ class MotorAuditoria
 
         usort($hallazgos, fn (Hallazgo $a, Hallazgo $b): int => $b->peso <=> $a->peso);
 
-        $puntuacion = min(
-            (int) config('outreach.auditoria.peso_maximo'),
-            array_sum(array_map(fn (Hallazgo $h): int => $h->peso, $hallazgos))
-        );
-
-        $principal = $hallazgos[0] ?? null;
-        $secundario = $hallazgos[1] ?? null;
-
-        return Auditoria::updateOrCreate(
-            ['lead_id' => $lead->id],
-            [
-                'puntuacion' => $puntuacion,
-                'hallazgo_codigo' => $principal?->codigo,
-                'hallazgo_principal' => $principal?->detalle,
-                'hallazgo_secundario_codigo' => $secundario?->codigo,
-                'hallazgo_secundario' => $secundario?->detalle,
-                'hallazgos' => array_map(fn (Hallazgo $h): array => [
-                    'codigo' => $h->codigo,
-                    'peso' => $h->peso,
-                    'titulo' => $h->titulo,
-                    'detalle' => $h->detalle,
-                    'datos' => $h->datos,
-                ], $hallazgos),
-                'auditada_at' => now(),
-            ]
-        );
+        return $hallazgos;
     }
 }

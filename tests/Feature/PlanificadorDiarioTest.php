@@ -203,6 +203,92 @@ class PlanificadorDiarioTest extends TestCase
         $this->assertSame(1, Mensaje::query()->where('lead_id', $conHallazgo->id)->count());
     }
 
+    public function test_un_mensaje_suelto_no_bloquea_la_cola_del_dia(): void
+    {
+        // Un reintento de rebote blando caído en la fecha dejaba el día sin cola.
+        Mensaje::factory()->create([
+            'programado_para' => Carbon::parse('2026-03-10 10:00:00'),
+            'estado' => 'pendiente',
+            'destinatario' => 'reintento@otro.es',
+        ]);
+
+        for ($i = 0; $i < 12; $i++) {
+            $this->candidato(['puntuacion' => 50 + $i, 'dominio' => "hueco{$i}.es"]);
+        }
+
+        $resultado = app(PlanificadorDiario::class)->planificar(Carbon::parse('2026-03-10'));
+
+        $this->assertSame(9, $resultado['primer_contacto']);
+        $this->assertSame(10, Mensaje::query()->whereDate('programado_para', '2026-03-10')->count());
+    }
+
+    public function test_completa_la_cola_si_se_quedo_corta(): void
+    {
+        $this->candidato(['dominio' => 'unico.es']);
+
+        $planificador = app(PlanificadorDiario::class);
+        $primera = $planificador->planificar(Carbon::parse('2026-03-10'));
+
+        $this->assertSame(1, $primera['primer_contacto']);
+
+        // Más tarde aparecen candidatos nuevos: el día debe completarse solo.
+        for ($i = 0; $i < 15; $i++) {
+            $this->candidato(['puntuacion' => 30 + $i, 'dominio' => "tarde{$i}.es"]);
+        }
+
+        $segunda = $planificador->planificar(Carbon::parse('2026-03-10'));
+
+        $this->assertSame(9, $segunda['primer_contacto']);
+        $this->assertSame(10, Mensaje::query()->count());
+    }
+
+    public function test_no_vuelve_a_planificar_si_ya_llega_a_la_cuota(): void
+    {
+        for ($i = 0; $i < 12; $i++) {
+            $this->candidato(['puntuacion' => 50 + $i, 'dominio' => "lleno{$i}.es"]);
+        }
+
+        $planificador = app(PlanificadorDiario::class);
+        $planificador->planificar(Carbon::parse('2026-03-10'));
+        $segunda = $planificador->planificar(Carbon::parse('2026-03-10'));
+
+        $this->assertSame(0, $segunda['primer_contacto']);
+        $this->assertStringContainsString('Ya planificado', $segunda['motivo']);
+        $this->assertSame(10, Mensaje::query()->count());
+    }
+
+    public function test_al_completar_hoy_no_programa_en_el_pasado(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-03-10 16:00:00', 'Europe/Madrid'));
+
+        for ($i = 0; $i < 12; $i++) {
+            $this->candidato(['puntuacion' => 50 + $i, 'dominio' => "tarde{$i}.es"]);
+        }
+
+        app(PlanificadorDiario::class)->planificar(Carbon::parse('2026-03-10', 'Europe/Madrid'));
+
+        $this->assertGreaterThan(0, Mensaje::query()->count());
+        $this->assertSame(0, Mensaje::query()->where('programado_para', '<=', now())->count());
+
+        Carbon::setTestNow();
+    }
+
+    public function test_no_programa_nada_pasada_la_ventana(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-03-10 18:30:00', 'Europe/Madrid'));
+
+        for ($i = 0; $i < 12; $i++) {
+            $this->candidato(['puntuacion' => 50 + $i, 'dominio' => "noche{$i}.es"]);
+        }
+
+        $resultado = app(PlanificadorDiario::class)->planificar(Carbon::parse('2026-03-10', 'Europe/Madrid'));
+
+        $this->assertSame(0, $resultado['primer_contacto']);
+        $this->assertSame(0, Mensaje::query()->count());
+
+        Carbon::setTestNow();
+    }
+
     public function test_dry_run_no_crea_mensajes(): void
     {
         for ($i = 0; $i < 5; $i++) {

@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -41,7 +42,9 @@ class PsiSeoBajo implements ContratoComprobacion
             $this->peso(),
             'SEO PageSpeed bajo',
             "Puntuación SEO: {$auditoria->psi_seo}",
+            Certeza::HECHO,
             ['puntuacion' => (int) $auditoria->psi_seo],
+            evidencia: 'PageSpeed Insights: SEO '.(int) $auditoria->psi_seo.'/100',
         );
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -48,7 +49,9 @@ class PaginaContactoRota implements ContratoComprobacion
             $this->peso(),
             'Página de contacto rota',
             "La página de contacto responde HTTP {$rota->http_status}",
+            Certeza::HECHO,
             ['status' => (int) $rota->http_status],
+            evidencia: $rota->url.' devolvió HTTP '.$rota->http_status,
         );
     }
 }

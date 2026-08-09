@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\ProcesarBandejaCommand;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -68,7 +69,7 @@ Schedule::command('envio:recuperar')
 Schedule::command('outreach:bandeja')
     ->everyTenMinutes()
     ->withoutOverlapping()
-    ->when(fn (): bool => \App\Console\Commands\ProcesarBandejaCommand::imapConfigurado());
+    ->when(fn (): bool => ProcesarBandejaCommand::imapConfigurado());
 
 Schedule::command('emails:verificar --solo-cola')
     ->weekdays()

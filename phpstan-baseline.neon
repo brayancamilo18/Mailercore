@@ -25,12 +25,6 @@ parameters:
 			path: app/Console/Commands/BackfillSectoresCommand.php
 
 		-
-			message: '#^Cannot call method diffInSeconds\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Console/Commands/CosechaRunCommand.php
-
-		-
 			message: '#^Cannot call method toDateString\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -85,6 +79,18 @@ parameters:
 			path: app/Console/Commands/PodarCommand.php
 
 		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Console/Commands/RastreoDiagnosticoCommand.php
+
+		-
+			message: '#^Parameter \#3 \$auditoria of method App\\Services\\Auditoria\\MotorAuditoria\:\:evaluar\(\) expects App\\Models\\Auditoria\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/RastreoDiagnosticoCommand.php
+
+		-
 			message: '#^Using nullsafe property access "\?\-\>salud" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -133,9 +139,27 @@ parameters:
 			path: app/Http/Controllers/ColaController.php
 
 		-
+			message: '#^Method App\\Http\\Controllers\\LeadController\:\:provinciasPorPais\(\) should return Illuminate\\Support\\Collection\<string, Illuminate\\Support\\Collection\<int, string\>\> but returns Illuminate\\Support\\Collection\<\(int\|string\), Illuminate\\Support\\Collection\<int, mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/LeadController.php
+
+		-
 			message: '#^Access to an undefined property App\\Models\\Mensaje\:\:\$lead\.$#'
 			identifier: property.notFound
 			count: 2
+			path: app/Jobs/EnviarMensajeJob.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\Envio\\PlanificadorDiario\:\:asegurarSiguienteTrasTerminarDia\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Jobs/EnviarMensajeJob.php
+
+		-
+			message: '#^Cannot call method timezone\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
 			path: app/Jobs/EnviarMensajeJob.php
 
 		-
@@ -145,13 +169,7 @@ parameters:
 			path: app/Jobs/EnviarMensajeJob.php
 
 		-
-			message: '#^Unknown parameter \$textString in call to Illuminate\\Mail\\Mailables\\Content constructor\.$#'
-			identifier: argument.unknown
-			count: 1
-			path: app/Mail/CorreoOutreach.php
-
-		-
-			message: '#^Method App\\Models\\AreaCosecha\:\:scopeOrdenadas\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			message: '#^Method App\\Models\\AreaCosecha\:\:scopeDelPais\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/AreaCosecha.php
@@ -421,22 +439,46 @@ parameters:
 			path: app/Models/Pagina.php
 
 		-
+			message: '#^Method App\\Models\\PaisCosecha\:\:scopeActivos\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PaisCosecha.php
+
+		-
+			message: '#^Method App\\Models\\PaisCosecha\:\:scopeActivos\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PaisCosecha.php
+
+		-
+			message: '#^Method App\\Models\\PaisCosecha\:\:scopeOrdenados\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PaisCosecha.php
+
+		-
 			message: '#^Cannot call method greaterThanOrEqualTo\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 1
 			path: app/Services/Auditoria/Comprobaciones/CertificadoCaduca.php
 
 		-
-			message: '#^Parameter \#2 \$paginas of method App\\Services\\Auditoria\\ContratoComprobacion\:\:evaluar\(\) expects Illuminate\\Support\\Collection\<int, App\\Models\\Pagina\>, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\> given\.$#'
+			message: '#^Parameter \#2 \$paginas of method App\\Services\\Auditoria\\MotorAuditoria\:\:evaluar\(\) expects Illuminate\\Support\\Collection\<int, App\\Models\\Pagina\>, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Auditoria/MotorAuditoria.php
 
 		-
-			message: '#^Parameter \#3 \$auditoria of method App\\Services\\Auditoria\\ContratoComprobacion\:\:evaluar\(\) expects App\\Models\\Auditoria\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			message: '#^Parameter \#3 \$auditoria of method App\\Services\\Auditoria\\MotorAuditoria\:\:evaluar\(\) expects App\\Models\\Auditoria\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Auditoria/MotorAuditoria.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$es_https\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Auditoria/RedactorHallazgo.php
 
 		-
 			message: '#^Method App\\Services\\Clasificacion\\CatalogoSectores\:\:familias\(\) return type has no value type specified in iterable type array\.$#'
@@ -505,7 +547,7 @@ parameters:
 			path: app/Services/Envio/PlanificadorDiario.php
 
 		-
-			message: '#^Parameter \#2 \$auditoria of method App\\Services\\Auditoria\\RedactorHallazgo\:\:redactar\(\) expects App\\Models\\Auditoria, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			message: '#^Parameter \#2 \$auditoria of method App\\Services\\Auditoria\\RedactorHallazgo\:\:redactar\(\) expects App\\Models\\Auditoria\|null, Illuminate\\Database\\Eloquent\\Model given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Envio/Renderizador.php
@@ -514,12 +556,6 @@ parameters:
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
 			count: 2
-			path: app/Services/Inbox/LectorBandejaImap.php
-
-		-
-			message: '#^Parameter \#1 \$config of method Webklex\\PHPIMAP\\Client\:\:setConfig\(\) expects Webklex\\PHPIMAP\\Config, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
 			path: app/Services/Inbox/LectorBandejaImap.php
 
 		-
@@ -547,6 +583,18 @@ parameters:
 			path: app/Services/Inbox/ProcesadorBandeja.php
 
 		-
+			message: '#^Method App\\Services\\Overpass\\OverpassClient\:\:construirConsulta\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/Overpass/OverpassClient.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Services/Overpass/ServicioCosecha.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$lead\.$#'
 			identifier: property.notFound
 			count: 1
@@ -555,7 +603,7 @@ parameters:
 		-
 			message: '#^Method App\\Services\\Panel\\DatosPanel\:\:cosecha\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
-			count: 1
+			count: 2
 			path: app/Services/Panel/DatosPanel.php
 
 		-
@@ -583,13 +631,7 @@ parameters:
 			path: app/Services/Panel/DatosPanel.php
 
 		-
-			message: '#^Call to an undefined method DOMNode\:\:getAttribute\(\)\.$#'
-			identifier: method.notFound
-			count: 11
-			path: app/Services/Web/ExtractorMetadatos.php
-
-		-
-			message: '#^Call to an undefined method DOMNode\:\:hasAttribute\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Web/ExtractorMetadatos.php
+			message: '#^Using nullsafe property access "\?\-\>codigo" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/Panel/DatosPanel.php

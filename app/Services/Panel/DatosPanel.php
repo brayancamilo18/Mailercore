@@ -9,9 +9,11 @@ use App\Models\EventoInbox;
 use App\Models\Lead;
 use App\Models\LeadEmail;
 use App\Models\Mensaje;
+use App\Models\PaisCosecha;
 use App\Models\Suppression;
 use App\Services\Envio\RampaEnvio;
 use App\Services\Soporte\Latido;
+use App\Support\MapaCosecha;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -213,7 +215,7 @@ class DatosPanel
     /**
      * @return array{
      *   paises: Collection,
-     *   pais_activo: \App\Models\PaisCosecha|null,
+     *   pais_activo: PaisCosecha|null,
      *   areas: Collection,
      *   avance: float,
      *   total: int,
@@ -224,7 +226,7 @@ class DatosPanel
      */
     public function cosecha(?string $paisCodigo = null): array
     {
-        $paises = \App\Models\PaisCosecha::query()->ordenados()->withCount([
+        $paises = PaisCosecha::query()->ordenados()->withCount([
             'areas',
             'areas as areas_hechas_count' => fn ($q) => $q->where('estado', 'hecho'),
             'areas as areas_proceso_count' => fn ($q) => $q->where('estado', 'en_proceso'),
@@ -253,7 +255,7 @@ class DatosPanel
             'total' => $total,
             'hechas' => $hechas,
             'avance' => $total > 0 ? round(($hechas / $total) * 100, 1) : 0.0,
-            'mapa_estados' => \App\Support\MapaCosecha::statusesDesdeAreas($areas),
+            'mapa_estados' => MapaCosecha::statusesDesdeAreas($areas),
             'max_ciclos' => (int) config('outreach.cosecha.max_ciclos_pais', 3),
         ];
     }

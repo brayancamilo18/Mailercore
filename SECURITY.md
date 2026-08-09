@@ -15,6 +15,26 @@ Por cada lead (negocio) el sistema puede conservar:
 
 No se almacenan contraseñas de terceros ni contenidos de paneles privados de las empresas contactadas.
 
+## Verificación TLS al rastrear
+
+Al inspeccionar el certificado de la home, `InspectorCertificado` hace **dos
+pasos**:
+
+1. Conexión con `verify_peer` y `verify_peer_name` a `true`. Si conecta,
+   `cert_cadena_valida = true` (cadena y nombre aceptados por OpenSSL).
+2. Si falla, reintenta **sin** verificar solo para leer la fecha de caducidad:
+   entonces `cert_cadena_valida = false`, pero `cert_expira_at` (y
+   `cert_valido` = «no ha caducado») pueden rellenarse igual.
+
+`cert_valido` ya no implica que la cadena sea de confianza: un certificado
+autofirmado o con nombre incorrecto queda como cadena inválida aunque la fecha
+siga vigente. La auditoría (`sin_https`, `cert_caduca`) usa esos campos por
+separado.
+
+Esa inspección es solo lectura del handshake TLS de la web pública del lead; no
+se desactiva la verificación TLS del cliente HTTP de Laravel para el resto de
+peticiones del sistema (correo, APIs, etc.).
+
 ## De dónde salen los datos
 
 1. **OpenStreetMap / Overpass** — directorio abierto de puntos de interés (nombre, web, teléfono, ubicación).

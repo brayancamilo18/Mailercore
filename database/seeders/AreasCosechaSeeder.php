@@ -10,7 +10,7 @@ class AreasCosechaSeeder extends Seeder
 {
     /**
      * Siembra países + áreas desde resources/data/paises_cosecha.php.
-     * Idempotente por (pais_codigo, nombre, admin_level).
+     * Idempotente por (pais_codigo, nombre). Actualiza admin_level si cambia.
      */
     public function run(): void
     {
@@ -40,22 +40,29 @@ class AreasCosechaSeeder extends Seeder
             foreach ($areas as $nombre) {
                 $adminLevel = $especiales[$nombre] ?? $adminDefault;
 
-                $area = AreaCosecha::query()->firstOrCreate(
-                    [
-                        'pais_codigo' => $codigo,
-                        'nombre' => $nombre,
-                        'admin_level' => $adminLevel,
-                    ],
-                    [
-                        'prioridad' => $prioridadArea,
-                        'estado' => 'pendiente',
-                    ]
-                );
+                $area = AreaCosecha::query()->firstOrNew([
+                    'pais_codigo' => $codigo,
+                    'nombre' => $nombre,
+                ]);
 
-                if (! $area->wasRecentlyCreated && (int) $area->prioridad !== $prioridadArea) {
-                    $area->forceFill(['prioridad' => $prioridadArea])->save();
+                $nivelAnterior = $area->exists ? (int) $area->admin_level : null;
+
+                $area->fill([
+                    'admin_level' => $adminLevel,
+                    'prioridad' => $prioridadArea,
+                ]);
+
+                if (! $area->exists) {
+                    $area->estado = 'pendiente';
                 }
 
+                // Si el admin_level OSM cambia, hay que volver a cosechar el área.
+                if ($nivelAnterior !== null && $nivelAnterior !== $adminLevel) {
+                    $area->estado = 'pendiente';
+                    $area->ultimo_error = null;
+                }
+
+                $area->save();
                 $prioridadArea++;
             }
         }

@@ -91,6 +91,9 @@ class VerificarEmailsCommand extends Command
 
         $dias = max(1, (int) $this->option('reverificar-dias'));
 
+        // Prioridad: emails de rol sin verificar, luego los que ya tienen auditoría
+        // con buena puntuación. Así el filtro «email verificado» y el planificador
+        // crecen con candidatos útiles, no con correos personales sueltos.
         return LeadEmail::query()
             ->where(function ($q) use ($dias): void {
                 $q->whereNull('verificado_at')
@@ -98,6 +101,8 @@ class VerificarEmailsCommand extends Command
             })
             ->leftJoin('auditorias', 'auditorias.lead_id', '=', 'lead_emails.lead_id')
             ->select('lead_emails.*')
+            ->orderByRaw("case when lead_emails.tipo = 'rol' then 0 else 1 end")
+            ->orderByDesc('lead_emails.es_principal')
             ->orderByDesc('auditorias.puntuacion')
             ->limit($limite)
             ->get();

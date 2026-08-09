@@ -3,6 +3,7 @@
 namespace App\Services\Auditoria\Comprobaciones;
 
 use App\DTO\Hallazgo;
+use App\Enums\Certeza;
 use App\Models\Auditoria;
 use App\Models\Lead;
 use App\Services\Auditoria\ContratoComprobacion;
@@ -42,6 +43,9 @@ class SinHttps implements ContratoComprobacion
                 $this->peso(),
                 'Sin HTTPS seguro',
                 $detalle,
+                Certeza::HECHO,
+                evidencia: 'Home '.$home->url.': es_https='.var_export($home->es_https, true)
+                    .', cert_valido='.var_export($home->cert_valido, true),
             );
         }
 

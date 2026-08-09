@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Comprobaciones;
 
+use App\Enums\Certeza;
 use App\Models\Lead;
 use App\Models\Pagina;
 use App\Services\Auditoria\Comprobaciones\CertificadoCaduca;
@@ -211,5 +212,48 @@ class ComprobacionesBasicasTest extends TestCase
             'tiene_viewport' => true,
         ])]), null);
         $this->assertNull($h);
+    }
+
+    /**
+     * Lo que se ve en una sola página no basta para afirmar nada en un correo.
+     */
+    public function test_las_comprobaciones_de_una_sola_pagina_son_indicio(): void
+    {
+        $casos = [
+            [new SinViewport, ['tiene_viewport' => false]],
+            [new TitleMalo, ['title' => str_repeat('x', 80), 'title_longitud' => 80]],
+            [new TitleMalo, ['title' => null, 'title_longitud' => null]],
+            [new SinMetaDescription, ['meta_description' => null, 'meta_desc_longitud' => null]],
+            [new H1Incorrecto, ['h1_total' => 0]],
+            [new ImagenesSinAlt, ['imagenes_total' => 10, 'imagenes_sin_alt' => 6]],
+            [new SinJsonLd, ['tiene_jsonld' => false]],
+            [new GeneradorObsoleto, ['generador' => 'wix']],
+            [new WebAbandonada, ['anio_copyright' => (int) now()->year - 3]],
+        ];
+
+        foreach ($casos as [$comprobacion, $attrs]) {
+            $h = $comprobacion->evaluar($this->lead(), collect([$this->home($attrs)]), null);
+
+            $this->assertNotNull($h, $comprobacion->codigo());
+            $this->assertSame(Certeza::INDICIO, $h->certeza, $comprobacion->codigo());
+            $this->assertNotNull($h->evidencia, $comprobacion->codigo());
+        }
+    }
+
+    public function test_https_y_certificado_son_hechos(): void
+    {
+        $https = (new SinHttps)->evaluar($this->lead(), collect([$this->home([
+            'es_https' => false,
+            'cert_valido' => null,
+        ])]), null);
+
+        $cert = (new CertificadoCaduca)->evaluar($this->lead(), collect([$this->home([
+            'cert_expira_at' => now()->addDays(10),
+        ])]), null);
+
+        $this->assertNotNull($https);
+        $this->assertNotNull($cert);
+        $this->assertSame(Certeza::HECHO, $https->certeza);
+        $this->assertSame(Certeza::HECHO, $cert->certeza);
     }
 }
